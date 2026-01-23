@@ -426,8 +426,7 @@ local function CreatePage(name)
 end
 
 local Page_Webhook = CreatePage("Webhook")
-local Page_Send = CreatePage("Send")
-local Page_Config = CreatePage("Config") 
+
 local Page_Save = CreatePage("SaveConfig") 
 local Page_Url = CreatePage("UrlWebhook") 
 local Page_Tag = CreatePage("TagDiscord")
@@ -456,7 +455,7 @@ local function CreateTab(name, target, isDefault)
     Instance.new("UICorner", Indicator).CornerRadius = UDim.new(1, 0)
 
     TabBtn.MouseButton1Click:Connect(function()
-        Page_Webhook.Visible = false; Page_Send.Visible = false; Page_Config.Visible = false; Page_Tag.Visible = false; Page_Url.Visible = false; Page_Save.Visible = false; Page_AdminBoost.Visible = false
+        Page_Webhook.Visible = false; Page_Config.Visible = false; Page_Tag.Visible = false; Page_Url.Visible = false; Page_Save.Visible = false; Page_AdminBoost = false
         target.Visible = true
         
         for _, child in pairs(MenuContainer:GetChildren()) do
@@ -487,7 +486,7 @@ local function CreateTab(name, target, isDefault)
 end
 
 CreateTab("Notification", Page_Webhook, true) 
-CreateTab("Connection", Page_Send)
+
 CreateTab("Admin Boost", Page_AdminBoost)
 CreateTab("Webhook", Page_Url)
 CreateTab("List Player", Page_Tag)
@@ -786,6 +785,26 @@ end)
 
 RefreshConfigList() 
 
+local TestAllBtn = Instance.new("TextButton", Page_Url)
+TestAllBtn.BackgroundColor3 = Theme.Accent
+TestAllBtn.Size = UDim2.new(1, -5, 0, 30)
+TestAllBtn.Font = Enum.Font.GothamBold
+TestAllBtn.Text = "TEST ALL CONNECTION"
+TestAllBtn.TextColor3 = Color3.new(1, 1, 1)
+TestAllBtn.TextSize = 12
+Instance.new("UICorner", TestAllBtn).CornerRadius = UDim.new(0, 6)
+
+TestAllBtn.MouseButton1Click:Connect(function()
+    local c = 0
+    if Current_Webhook_Fish ~= "" then TestWebhook(Current_Webhook_Fish, "Fish"); c=c+1 end
+    if Current_Webhook_Leave ~= "" then TestWebhook(Current_Webhook_Leave, "Leave"); c=c+1 end
+    if Current_Webhook_List ~= "" then TestWebhook(Current_Webhook_List, "Player List"); c=c+1 end
+    if Current_Webhook_Admin ~= "" then TestWebhook(Current_Webhook_Admin, "Admin"); c=c+1 end
+    if c == 0 then ShowNotification("No Webhooks Set!", true) else ShowNotification("Testing " .. c .. " Webhooks...", false) end
+end)
+
+local SpacerW = Instance.new("Frame", Page_Url); SpacerW.BackgroundTransparency=1; SpacerW.Size=UDim2.new(1,0,0,10)
+
 UI_FishInput = CreateInput(Page_Url, "Fish Caught", Current_Webhook_Fish, function(v) Current_Webhook_Fish = v end)
 UI_LeaveInput = CreateInput(Page_Url, "Player Leave", Current_Webhook_Leave, function(v) Current_Webhook_Leave = v end)
 UI_ListInput = CreateInput(Page_Url, "Player List", Current_Webhook_List, function(v) Current_Webhook_List = v end)
@@ -833,6 +852,51 @@ CreateToggle(Page_Webhook, "Mutation Leviathan Rage", Settings.LeviathanRageEnab
 CreateToggle(Page_Webhook, "Player Leave Server", Settings.LeaveEnabled, function(v) Settings.LeaveEnabled = v end, function() return Current_Webhook_Leave ~= "" end)
 CreateToggle(Page_Webhook, "Player Not On Server (Auto)", Settings.PlayerNonPSAuto, function(v) Settings.PlayerNonPSAuto = v end, function() return Current_Webhook_List ~= "" end)
 
+-- Admin Boost Header Buttons
+local AdminBtnContainer = Instance.new("Frame", Page_AdminBoost)
+AdminBtnContainer.BackgroundTransparency = 1
+AdminBtnContainer.Size = UDim2.new(1, -5, 0, 32)
+AdminBtnContainer.LayoutOrder = -1 
+
+local AdminGrid = Instance.new("UIGridLayout", AdminBtnContainer)
+AdminGrid.CellSize = UDim2.new(0.5, -3, 1, 0)
+AdminGrid.CellPadding = UDim2.new(0, 5, 0, 0)
+
+local BtnPS = Instance.new("TextButton", AdminBtnContainer)
+BtnPS.BackgroundColor3 = Theme.Accent
+BtnPS.Font = Enum.Font.GothamBold
+BtnPS.Text = "Player On Server"
+BtnPS.TextColor3 = Color3.new(1, 1, 1)
+BtnPS.TextSize = 10
+Instance.new("UICorner", BtnPS).CornerRadius = UDim.new(0, 6)
+
+BtnPS.MouseButton1Click:Connect(function()
+    if not ScriptActive then return end
+    if Current_Webhook_List == "" then ShowNotification("Webhook Missing!", true) return end
+    ShowNotification("Sending List...", false)
+    local all = Players:GetPlayers(); local str = "Current Players (" .. #all .. "):\n\n"
+    for i, p in ipairs(all) do str = str .. "**" .. i .. ". " .. p.DisplayName .. " (@" .. p.Name .. ")**\n" end
+    task.spawn(function()
+        local p = { ["username"] = "XAL Notifications!", ["avatar_url"] = "https://i.imgur.com/GWx0mX9.jpeg", ["embeds"] = {{ ["title"] = "👥 Manual Player List", ["description"] = str, ["color"] = 5763719, ["footer"] = { ["text"] = "XAL PS Monitoring", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" } }} }
+        httpRequest({ Url = Current_Webhook_List, Method = "POST", Headers = {["Content-Type"]="application/json"}, Body = HttpService:JSONEncode(p) })
+    end)
+end)
+
+local BtnNonPS = Instance.new("TextButton", AdminBtnContainer)
+BtnNonPS.BackgroundColor3 = Color3.fromRGB(200, 100, 50)
+BtnNonPS.Font = Enum.Font.GothamBold
+BtnNonPS.Text = "Player NOT On Server"
+BtnNonPS.TextColor3 = Color3.new(1, 1, 1)
+BtnNonPS.TextSize = 10
+Instance.new("UICorner", BtnNonPS).CornerRadius = UDim.new(0, 6)
+
+BtnNonPS.MouseButton1Click:Connect(function()
+    CheckAndSendNonPS(true) 
+end)
+
+local SpacerAdmin = Instance.new("Frame", Page_AdminBoost)
+SpacerAdmin.BackgroundTransparency = 1; SpacerAdmin.Size = UDim2.new(1,0,0,5)
+
 CreateToggle(Page_AdminBoost, "Deteksi Player Asing", Settings.ForeignDetection, function(v) Settings.ForeignDetection = v end, function() return Current_Webhook_Admin ~= "" end)
 
 
@@ -847,17 +911,7 @@ local function TestWebhook(url, name)
     end)
 end
 
-CreateActionWithLabel(Page_AdminBoost, "Player On Server", "Send", Theme.Accent, function()
-    if not ScriptActive then return end
-    if Current_Webhook_List == "" then ShowNotification("Webhook Missing!", true) return end
-    ShowNotification("Sending List...", false)
-    local all = Players:GetPlayers(); local str = "Current Players (" .. #all .. "):\n\n"
-    for i, p in ipairs(all) do str = str .. "**" .. i .. ". " .. p.DisplayName .. " (@" .. p.Name .. ")**\n" end
-    task.spawn(function()
-        local p = { ["username"] = "XAL Notifications!", ["avatar_url"] = "https://i.imgur.com/GWx0mX9.jpeg", ["embeds"] = {{ ["title"] = "👥 Manual Player List", ["description"] = str, ["color"] = 5763719, ["footer"] = { ["text"] = "XAL PS Monitoring", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" } }} }
-        httpRequest({ Url = Current_Webhook_List, Method = "POST", Headers = {["Content-Type"]="application/json"}, Body = HttpService:JSONEncode(p) })
-    end)
-end)
+
 
 local function CheckAndSendNonPS(isManual)
     if not ScriptActive then return end
@@ -895,9 +949,7 @@ local function CheckAndSendNonPS(isManual)
     end)
 end
 
-CreateActionWithLabel(Page_AdminBoost, "Player Not On Server", "Send", Color3.fromRGB(200, 100, 50), function()
-    CheckAndSendNonPS(true)
-end)
+
 
 task.spawn(function()
     while ScriptActive do
@@ -908,10 +960,7 @@ task.spawn(function()
     end
 end)
 
-CreateActionWithLabel(Page_Send, "Check Notif Fish", "Test", Theme.Input, function() TestWebhook(Current_Webhook_Fish, "Webhook 1") end)
-CreateActionWithLabel(Page_Send, "Check Notif Leave", "Test", Theme.Input, function() TestWebhook(Current_Webhook_Leave, "Webhook 2") end)
-CreateActionWithLabel(Page_Send, "Check Notif Player", "Test", Theme.Input, function() TestWebhook(Current_Webhook_List, "Webhook 3") end)
-CreateActionWithLabel(Page_Send, "Check Notif Admin", "Test", Theme.Input, function() TestWebhook(Current_Webhook_Admin, "Webhook Admin") end)
+
 
 local IconPath = "XAL_Min_Icon.jpg"
 local IconUrl = "https://i.imgur.com/Z92uLfK.jpeg"
