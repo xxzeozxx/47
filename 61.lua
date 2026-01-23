@@ -426,7 +426,7 @@ local function CreatePage(name)
 end
 
 local Page_Webhook = CreatePage("Webhook")
-
+local Page_Config = CreatePage("Config") 
 local Page_Save = CreatePage("SaveConfig") 
 local Page_Url = CreatePage("UrlWebhook") 
 local Page_Tag = CreatePage("TagDiscord")
