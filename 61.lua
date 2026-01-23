@@ -421,6 +421,7 @@ local function CreatePage(name)
     
     local layout = Instance.new("UIListLayout", Page)
     layout.Padding = UDim.new(0, 6) 
+    layout.SortOrder = Enum.SortOrder.LayoutOrder 
     
     return Page
 end
