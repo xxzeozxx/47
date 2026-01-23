@@ -786,6 +786,17 @@ end)
 
 RefreshConfigList() 
 
+
+local function TestWebhook(url, name)
+    if not ScriptActive then return end
+    if url == "" then ShowNotification("URL Empty!", true) return end
+    ShowNotification("Sending Test...", false)
+    task.spawn(function()
+        local p = { content = "✅ **TEST:** " .. name .. " Connected!", username = "XAL Notifications!", avatar_url = "https://i.imgur.com/GWx0mX9.jpeg" }
+        httpRequest({ Url = url, Method = "POST", Headers = {["Content-Type"]="application/json"}, Body = HttpService:JSONEncode(p) })
+    end)
+end
+
 local TestAllBtn = Instance.new("TextButton", Page_Url)
 TestAllBtn.BackgroundColor3 = Theme.Accent
 TestAllBtn.Size = UDim2.new(1, -5, 0, 30)
@@ -854,6 +865,43 @@ CreateToggle(Page_Webhook, "Mutation Leviathan Rage", Settings.LeviathanRageEnab
 CreateToggle(Page_Webhook, "Player Leave Server", Settings.LeaveEnabled, function(v) Settings.LeaveEnabled = v end, function() return Current_Webhook_Leave ~= "" end)
 CreateToggle(Page_Webhook, "Player Not On Server (Auto)", Settings.PlayerNonPSAuto, function(v) Settings.PlayerNonPSAuto = v end, function() return Current_Webhook_List ~= "" end)
 
+
+local function CheckAndSendNonPS(isManual)
+    if not ScriptActive then return end
+    if Current_Webhook_List == "" then 
+        if isManual then ShowNotification("Webhook Missing!", true) end
+        return 
+    end
+    
+    if isManual then ShowNotification("Checking Players...", false) end
+    
+    local current = {}
+    for _, p in ipairs(Players:GetPlayers()) do current[string.lower(p.Name)] = true end
+    local missingNames = {}; local missingTags = {}
+    for i = 1, 20 do
+        local name = TagList[i][1]; local discId = TagList[i][2]
+        if name ~= "" and not current[string.lower(name)] then 
+            table.insert(missingNames, name)
+            if discId and discId ~= "" then table.insert(missingTags, "<@" .. discId .. ">") end
+        end
+    end
+    
+    if not isManual and #missingNames == 0 then
+        return
+    end
+    
+    local txt = "Missing Players (" .. #missingNames .. "):\n\n"
+    if #missingNames == 0 then txt = "All tagged players are in the server!" else for i, v in ipairs(missingNames) do txt = txt .. i .. ". " .. v .. "\n" end end
+    
+    local contentMsg = ""
+    if #missingTags > 0 then contentMsg = "⚠️ **Peringatan:** " .. table.concat(missingTags, " ") .. " belum masuk server!" end
+    
+    task.spawn(function()
+        local p = { ["username"] = "XAL Notifications!", ["avatar_url"] = "https://i.imgur.com/GWx0mX9.jpeg", ["content"] = contentMsg, ["embeds"] = {{ ["title"] = "🚫 Player Not On Server", ["description"] = txt, ["color"] = 16733440, ["footer"] = { ["text"] = "XAL PS Monitoring", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" } }} }
+        httpRequest({ Url = Current_Webhook_List, Method = "POST", Headers = {["Content-Type"]="application/json"}, Body = HttpService:JSONEncode(p) })
+    end)
+end
+
 -- Admin Boost Header Buttons
 local AdminBtnContainer = Instance.new("Frame", Page_AdminBoost)
 AdminBtnContainer.BackgroundTransparency = 1
@@ -904,53 +952,11 @@ CreateToggle(Page_AdminBoost, "Deteksi Player Asing", Settings.ForeignDetection,
 
 
 
-local function TestWebhook(url, name)
-    if not ScriptActive then return end
-    if url == "" then ShowNotification("URL Empty!", true) return end
-    ShowNotification("Sending Test...", false)
-    task.spawn(function()
-        local p = { content = "✅ **TEST:** " .. name .. " Connected!", username = "XAL Notifications!", avatar_url = "https://i.imgur.com/GWx0mX9.jpeg" }
-        httpRequest({ Url = url, Method = "POST", Headers = {["Content-Type"]="application/json"}, Body = HttpService:JSONEncode(p) })
-    end)
-end
 
 
 
-local function CheckAndSendNonPS(isManual)
-    if not ScriptActive then return end
-    if Current_Webhook_List == "" then 
-        if isManual then ShowNotification("Webhook Missing!", true) end
-        return 
-    end
-    
-    if isManual then ShowNotification("Checking Players...", false) end
-    
-    local current = {}
-    for _, p in ipairs(Players:GetPlayers()) do current[string.lower(p.Name)] = true end
-    local missingNames = {}; local missingTags = {}
-    for i = 1, 20 do
-        local name = TagList[i][1]; local discId = TagList[i][2]
-        if name ~= "" and not current[string.lower(name)] then 
-            table.insert(missingNames, name)
-            if discId and discId ~= "" then table.insert(missingTags, "<@" .. discId .. ">") end
-        end
-    end
-    
-    if not isManual and #missingNames == 0 then
-        return
-    end
-    
-    local txt = "Missing Players (" .. #missingNames .. "):\n\n"
-    if #missingNames == 0 then txt = "All tagged players are in the server!" else for i, v in ipairs(missingNames) do txt = txt .. i .. ". " .. v .. "\n" end end
-    
-    local contentMsg = ""
-    if #missingTags > 0 then contentMsg = "⚠️ **Peringatan:** " .. table.concat(missingTags, " ") .. " belum masuk server!" end
-    
-    task.spawn(function()
-        local p = { ["username"] = "XAL Notifications!", ["avatar_url"] = "https://i.imgur.com/GWx0mX9.jpeg", ["content"] = contentMsg, ["embeds"] = {{ ["title"] = "🚫 Player Not On Server", ["description"] = txt, ["color"] = 16733440, ["footer"] = { ["text"] = "XAL PS Monitoring", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" } }} }
-        httpRequest({ Url = Current_Webhook_List, Method = "POST", Headers = {["Content-Type"]="application/json"}, Body = HttpService:JSONEncode(p) })
-    end)
-end
+
+
 
 
 
