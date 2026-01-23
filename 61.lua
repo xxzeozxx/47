@@ -847,7 +847,7 @@ local function TestWebhook(url, name)
     end)
 end
 
-CreateActionWithLabel(Page_Send, "Player On Server", "Send", Theme.Accent, function()
+CreateActionWithLabel(Page_AdminBoost, "Player On Server", "Send", Theme.Accent, function()
     if not ScriptActive then return end
     if Current_Webhook_List == "" then ShowNotification("Webhook Missing!", true) return end
     ShowNotification("Sending List...", false)
@@ -895,7 +895,7 @@ local function CheckAndSendNonPS(isManual)
     end)
 end
 
-CreateActionWithLabel(Page_Send, "Player Not On Server", "Send", Color3.fromRGB(200, 100, 50), function()
+CreateActionWithLabel(Page_AdminBoost, "Player Not On Server", "Send", Color3.fromRGB(200, 100, 50), function()
     CheckAndSendNonPS(true)
 end)
 
