@@ -893,6 +893,7 @@ BtnNonPS.TextSize = 10
 Instance.new("UICorner", BtnNonPS).CornerRadius = UDim.new(0, 6)
 
 BtnNonPS.MouseButton1Click:Connect(function()
+    if Current_Webhook_List == "" then ShowNotification("Webhook Player List Empty!", true) return end
     CheckAndSendNonPS(true) 
 end)
 
