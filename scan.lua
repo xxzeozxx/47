@@ -6,6 +6,7 @@ local WEBHOOK_URL = "https://discord.com/api/webhooks/1461657990762594405/hy05f2
 -- Layanan yang dibutuhkan
 local HttpService = game:GetService("HttpService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local StarterGui = game:GetService("StarterGui") -- Ditambahkan untuk notifikasi layar
 
 -- Fungsi request HTTP (Kompatibilitas berbagai eksekutor)
 local httpRequest = (syn and syn.request) or (http and http.request) or (http_request) or (fluxus and fluxus.request) or request
@@ -21,28 +22,45 @@ local TierList = {
     "Secret" -- Kita menargetkan index ini
 }
 
+-- Fungsi Notifikasi Visual
+local function notify(judul, pesan)
+    pcall(function()
+        StarterGui:SetCore("SendNotification", {
+            Title = judul;
+            Text = pesan;
+            Duration = 5;
+        })
+    end)
+    -- Tetap print ke console untuk debugging
+    if judul == "Error" or judul == "Peringatan" then
+        warn(judul .. ": " .. pesan)
+    else
+        print(judul .. ": " .. pesan)
+    end
+end
+
 -- Fungsi utama
 local function scanAndSend()
     if not httpRequest then
-        warn("Eksekutor kamu tidak mendukung HTTP Request!")
+        notify("Error", "Eksekutor kamu tidak mendukung HTTP Request!")
         return
     end
 
     if WEBHOOK_URL == "" or WEBHOOK_URL == "MASUKKAN_WEBHOOK_URL_DISINI" then
-        warn("Mohon masukkan Webhook URL terlebih dahulu!")
+        notify("Peringatan", "Mohon masukkan Webhook URL di script!")
         return
     end
 
+    notify("Status", "Sedang memindai database...")
+
     local itemsFolder = ReplicatedStorage:WaitForChild("Items", 10)
     if not itemsFolder then
-        warn("Folder Items tidak ditemukan di ReplicatedStorage!")
+        notify("Error", "Folder Items tidak ditemukan/gagal dimuat!")
         return
     end
 
     local secretFishes = {}
     local counter = 0
-
-    print("Sedang memindai database ikan...")
 
     -- Loop melalui semua ModuleScript di folder Items
     for _, itemModule in ipairs(itemsFolder:GetChildren()) do
@@ -71,7 +89,7 @@ local function scanAndSend()
 
     -- Jika tidak ada ikan secret ditemukan
     if #secretFishes == 0 then
-        warn("Tidak ada ikan Secret yang ditemukan dalam database saat ini.")
+        notify("Info", "Tidak ada ikan Secret ditemukan di database.")
         return
     end
 
@@ -110,9 +128,9 @@ local function scanAndSend()
     })
 
     if response and (response.StatusCode == 200 or response.StatusCode == 204) then
-        print("Data berhasil dikirim ke Discord!")
+        notify("Sukses", "Data berhasil dikirim ke Discord!")
     else
-        warn("Gagal mengirim ke Webhook. Status Code: " .. (response and response.StatusCode or "Unknown"))
+        notify("Gagal", "Gagal kirim Webhook. Code: " .. (response and response.StatusCode or "Unknown"))
     end
 end
 
