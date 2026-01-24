@@ -83,6 +83,8 @@ local Current_Webhook_Leave = ""
 local Current_Webhook_List = ""
 local Current_Webhook_Admin = ""
 
+local LastDisconnectTime = 0 -- Debounce Disconnect Notif
+
 local AdminID_1 = ""
 local AdminID_2 = ""
 
@@ -1266,11 +1268,31 @@ local function SendDisconnectWebhook(reason)
     if not ScriptActive then return end
     if Current_Webhook_List == "" then return end
     
+    -- Rate limit 30 detik
+    if tick() - LastDisconnectTime < 30 then 
+        print("⚠️ XAL: Disconnect Webhook Cooldown Active")
+        return 
+    end
+    LastDisconnectTime = tick()
+    
     print("⚠️ XAL: Sending Disconnect Webhook (Reason: " .. tostring(reason) .. ")")
+    
+    local adminTags = ""
+    local id1 = (TagList[1] and TagList[1][2]) or ""
+    local id2 = (TagList[2] and TagList[2][2]) or ""
+    
+    if id1 ~= "" then adminTags = adminTags .. "<@" .. id1 .. "> " end
+    if id2 ~= "" then adminTags = adminTags .. "<@" .. id2 .. "> " end
+
+    local contentMsg = ""
+    if adminTags ~= "" then 
+        contentMsg = "⚠️ **DISCONNECT ALERT:** " .. adminTags 
+    end
     
     local embed = {
         ["username"] = "XAL Notifications!",
         ["avatar_url"] = "https://i.imgur.com/GWx0mX9.jpeg",
+        ["content"] = contentMsg,
         ["embeds"] = {{
             ["title"] = "🔌 LocalPlayer Disconnected",
             ["description"] = "User: **" .. Players.LocalPlayer.Name .. "** (@" .. Players.LocalPlayer.DisplayName .. ") has disconnected.\n**Reason:** " .. tostring(reason),
