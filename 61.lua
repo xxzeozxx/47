@@ -1040,10 +1040,10 @@ end
 
 local function ParseDataSmart(cleanMsg)
     local msg = string.gsub(cleanMsg, "%[Server%]: ", "")
-    local p, f, w = string.match(msg, "^(.*) obtained a (.*) %((.*)%)")
+    local p, f, w = string.match(msg, "^(.*) obtained an? (.*) %((.*)%)")
     
     if not p then 
-        p, f = string.match(msg, "^(.*) obtained a (.*)")
+        p, f = string.match(msg, "^(.*) obtained an? (.*)")
         w = "N/A" 
     end
 
@@ -1129,7 +1129,7 @@ local function CheckAndSend(msg)
     
     if string.find(lowerMsg, "evolved enchant stone") then
         local tempMsg = string.gsub(cleanMsg, "^%[Server%]:%s*", "") 
-        local p = string.match(tempMsg, "^(.*) obtained a")
+        local p = string.match(tempMsg, "^(.*) obtained an?")
         if p then 
             p = p:match("^%s*(.-)%s*$")
         else 
@@ -1156,7 +1156,7 @@ local function CheckAndSend(msg)
         end
     end
 
-    if string.find(lowerMsg, "obtained a") or string.find(lowerMsg, "chance!") then
+    if string.find(lowerMsg, "obtained an?") or string.find(lowerMsg, "chance!") then
         local data = ParseDataSmart(cleanMsg)
         if data then
             if string.find(string.lower(data.Item), "evolved enchant stone") then
