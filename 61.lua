@@ -98,7 +98,7 @@ local SecretList = {
     "Bone Whale", "Elshark Gran Maja", "Elpirate Gran Maja", "Ancient Whale", "Gladiator Shark",
     "Ancient Lochness Monster", "Talon Serpent", "Hacker Shark", "ElRetro Gran Maja",
     "Strawberry Choc Megalodon", "Krampus Shark", "Emerald Winter Whale",
-    "Winter Frost Shark", "Icebreaker Whale", "Leviathan", "Pirate Megalodon",
+    "Winter Frost Shark", "Icebreaker Whale", "Leviathan", "Pirate Megalodon", "Viridis Lurker",
     "Cursed Kraken",
 }
 
