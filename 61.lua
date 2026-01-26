@@ -109,6 +109,7 @@ local Settings = {
     RubyEnabled = false, 
     EvolvedEnabled = false, 
     LeviathanRageEnabled = false,
+    MutationCrystalized = false,
     LeaveEnabled = false, 
     PlayerNonPSAuto = false,
     ForeignDetection = false
@@ -863,6 +864,7 @@ CreateToggle(Page_Webhook, "Secret Fish Caught", Settings.SecretEnabled, functio
 CreateToggle(Page_Webhook, "Ruby Mutation Gemstone", Settings.RubyEnabled, function(v) Settings.RubyEnabled = v end, function() return Current_Webhook_Fish ~= "" end)
 CreateToggle(Page_Webhook, "Evolved Enchant Stone", Settings.EvolvedEnabled, function(v) Settings.EvolvedEnabled = v end, function() return Current_Webhook_Fish ~= "" end)
 CreateToggle(Page_Webhook, "Mutation Leviathan Rage", Settings.LeviathanRageEnabled, function(v) Settings.LeviathanRageEnabled = v end, function() return Current_Webhook_Fish ~= "" end)
+CreateToggle(Page_Webhook, "Mutation Crystalized", Settings.MutationCrystalized, function(v) Settings.MutationCrystalized = v end, function() return Current_Webhook_Fish ~= "" end)
 
 CreateToggle(Page_Webhook, "Player Leave Server", Settings.LeaveEnabled, function(v) Settings.LeaveEnabled = v end, function() return Current_Webhook_Leave ~= "" end)
 CreateToggle(Page_Webhook, "Player Not On Server (Auto)", Settings.PlayerNonPSAuto, function(v) Settings.PlayerNonPSAuto = v end, function() return Current_Webhook_List ~= "" end)
@@ -1084,6 +1086,7 @@ local function SendWebhook(data, category)
     if category == "STONE" and not Settings.RubyEnabled then return end
     if category == "EVOLVED" and not Settings.EvolvedEnabled then return end 
     if category == "RAGE" and not Settings.LeviathanRageEnabled then return end 
+    if category == "CRYSTALIZED" and not Settings.MutationCrystalized then return end 
     if category == "LEAVE" and not Settings.LeaveEnabled then return end 
     local TargetURL = ""; local contentMsg = ""; local realUser = GetUsername(data.Player)
     local discordId = nil
@@ -1112,6 +1115,13 @@ local function SendWebhook(data, category)
         embedColor = 10038562 
         local lines = { "🔥 Fish: **" .. data.Item .. "**" }
         table.insert(lines, "🧬 Mutation: **Leviathan Rage**")
+        table.insert(lines, "⚖️ Weight: **" .. data.Weight .. "**")
+        descriptionText = table.concat(lines, "\n")
+    elseif category == "CRYSTALIZED" then
+        embedTitle = data.Player .. " | CRYSTALIZED MUTATION!"
+        embedColor = 3407871 -- Cyan/Crystal color
+        local lines = { "💎 Fish: **" .. data.Item .. "**" }
+        table.insert(lines, "✨ Mutation: **Crystalized**")
         table.insert(lines, "⚖️ Weight: **" .. data.Weight .. "**")
         descriptionText = table.concat(lines, "\n")
     elseif category == "LEAVE" then
@@ -1159,6 +1169,11 @@ local function CheckAndSend(msg)
     if string.find(lowerMsg, "obtained an?") or string.find(lowerMsg, "chance!") then
         local data = ParseDataSmart(cleanMsg)
         if data then
+            if data.Mutation and string.find(string.lower(data.Mutation), "crystalized") then
+                SendWebhook(data, "CRYSTALIZED")
+                return
+            end
+
             if string.find(string.lower(data.Item), "evolved enchant stone") then
                 SendWebhook(data, "EVOLVED")
                 return
