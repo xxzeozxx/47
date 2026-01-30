@@ -1350,8 +1350,7 @@ table.insert(Connections, Players.PlayerAdded:Connect(function(p)
                             { ["name"] = "User ID", ["value"] = "```" .. p.UserId .. "```", ["inline"] = true },
                             { ["name"] = "Status", ["value"] = "```Player not whitelisted!```", ["inline"] = false }
                         },
-                        ["footer"] = { ["text"] = "XAL Server Monitoring V1.3 • bit.ly/xalserver", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" },
-                        ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ")
+                        ["footer"] = { ["text"] = "XAL Server Monitoring V1.3 • bit.ly/xalserver", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" }
                     }}
                  }
                  pcall(function() 
