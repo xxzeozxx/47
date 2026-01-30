@@ -15,25 +15,21 @@ local Connections = {}
 local ScreenGui
 local VirtualUser = game:GetService("VirtualUser")
 
--- Anti-Spy / Obfuscation Setup
-local SafeName = "RobloxReplicatedService" -- Hide as internal service
+local SafeName = "RobloxReplicatedService"
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (gethui and function(g) g.Parent = gethui() end) or function(g) g.Parent = CoreGui end
 
--- Anti-Dex & Anti-Spy Basic Loop
 task.spawn(function()
     while ScriptActive do
         task.wait(5)
         local success, err = pcall(function()
             local core = game:GetService("CoreGui")
             if core:FindFirstChild("DarkDetex") or core:FindFirstChild("RemoteSpy") or core:FindFirstChild("TurtleSpy") then
-                -- Silent protection: just warn locally or try to hide
-                -- Destroying them helps but can be aggressive
+
             end
         end)
     end
 end)
 
--- Cleanup previous execution if exists
 if getgenv and getgenv().XAL_Stop then
     pcall(getgenv().XAL_Stop)
 end
@@ -83,7 +79,7 @@ local Current_Webhook_Leave = ""
 local Current_Webhook_List = ""
 local Current_Webhook_Admin = ""
 
-local LastDisconnectTime = 0 -- Debounce Disconnect Notif
+local LastDisconnectTime = 0
 
 local AdminID_1 = ""
 local AdminID_2 = ""
@@ -110,6 +106,7 @@ local Settings = {
     EvolvedEnabled = false, 
     LeviathanRageEnabled = false,
     MutationCrystalized = false,
+    CaveCrystalEnabled = false,
     LeaveEnabled = false, 
     PlayerNonPSAuto = false,
     ForeignDetection = false
@@ -138,7 +135,6 @@ end
 
 UpdateTagData() 
 
--- Old UI check handled by Destroy in CleanupScript usually, but keeping this for safety
 local oldUI = CoreGui:FindFirstChild(SafeName) or CoreGui:FindFirstChild("XAL_System")
 if oldUI then oldUI:Destroy() task.wait(0.1) end
 
@@ -146,7 +142,6 @@ ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = SafeName
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
--- Use secure parenting
 pcall(function() 
     ProtectGui(ScreenGui) 
 end)
@@ -574,7 +569,7 @@ local function CreateInput(parent, placeholder, default, callback, height)
     InputBg.BackgroundColor3 = Theme.Input
     InputBg.Position = UDim2.new(0, inputX, 0.5, -10)
     InputBg.Size = UDim2.new(1, -inputWidth, 0, 20)
-    InputBg.ClipsDescendants = true -- Prevent text overflow
+    InputBg.ClipsDescendants = true
     Instance.new("UICorner", InputBg).CornerRadius = UDim.new(0, 4)
     AddStroke(InputBg, Theme.Border, 1)
 
@@ -610,14 +605,13 @@ Instance.new("UICorner", ImportBtn).CornerRadius = UDim.new(0, 6)
 
 ImportBtn.MouseButton1Click:Connect(function()
     local text = BulkInput.Text
-    local addedCount = 0; local listFull = false; local currentIndex = 3 -- Start from 3 (1 & 2 Reserved)
+    local addedCount = 0; local listFull = false; local currentIndex = 3
     
-    -- Sync existing data first? No, we just overwrite empty slots starting from 3
     while currentIndex <= 20 and TagList[currentIndex][1] ~= "" do currentIndex = currentIndex + 1 end
     
     if currentIndex > 20 then ShowNotification("List Player Full!", true) return end
     
-    local maxImport = 18 -- 20 - 2
+    local maxImport = 18
     local processed = 0
     
     for line in text:gmatch("[^\r\n]+") do
@@ -758,8 +752,7 @@ LoadBtn.MouseButton1Click:Connect(function()
             Current_Webhook_Admin = data.Webhooks.Admin or ""
             if UI_AdminInput then UI_AdminInput.Text = Current_Webhook_Admin end
         end
-        
-        
+                
         if data.Players then
             TagList = data.Players
             for i = 1, 20 do
@@ -788,7 +781,6 @@ DeleteBtn.MouseButton1Click:Connect(function()
 end)
 
 RefreshConfigList() 
-
 
 local function TestWebhook(url, name)
     if not ScriptActive then return end
@@ -840,7 +832,6 @@ for i = 1, 20 do
     Num.BackgroundTransparency = 1; Num.Position = UDim2.new(0, 8, 0, 0); Num.Size = UDim2.new(0, 15, 1, 0)
     Num.Font = Enum.Font.GothamBold; Num.Text = labelText; Num.TextColor3 = (i <= 2) and Theme.Accent or Theme.TextSecondary; Num.TextSize = 11; Num.TextXAlignment = "Left"
     
-    -- Adjust width for longer labels (admin slots)
     local numWidth = 50
     Num.Size = UDim2.new(0, numWidth, 1, 0)
 
@@ -861,11 +852,11 @@ for i = 1, 20 do
 end
 
 CreateToggle(Page_Webhook, "Secret Fish Caught", Settings.SecretEnabled, function(v) Settings.SecretEnabled = v end, function() return Current_Webhook_Fish ~= "" end)
-CreateToggle(Page_Webhook, "Ruby Mutation Gemstone", Settings.RubyEnabled, function(v) Settings.RubyEnabled = v end, function() return Current_Webhook_Fish ~= "" end)
+CreateToggle(Page_Webhook, "Ruby Gemstone", Settings.RubyEnabled, function(v) Settings.RubyEnabled = v end, function() return Current_Webhook_Fish ~= "" end)
+CreateToggle(Page_Webhook, "Notif Cave Crystal", Settings.CaveCrystalEnabled, function(v) Settings.CaveCrystalEnabled = v end, function() return Current_Webhook_Fish ~= "" end)
 CreateToggle(Page_Webhook, "Evolved Enchant Stone", Settings.EvolvedEnabled, function(v) Settings.EvolvedEnabled = v end, function() return Current_Webhook_Fish ~= "" end)
 CreateToggle(Page_Webhook, "Mutation Leviathan Rage", Settings.LeviathanRageEnabled, function(v) Settings.LeviathanRageEnabled = v end, function() return Current_Webhook_Fish ~= "" end)
-CreateToggle(Page_Webhook, "Mutation Crystalized", Settings.MutationCrystalized, function(v) Settings.MutationCrystalized = v end, function() return Current_Webhook_Fish ~= "" end)
-
+CreateToggle(Page_Webhook, "Mutation Crystalized (Mythic)", Settings.MutationCrystalized, function(v) Settings.MutationCrystalized = v end, function() return Current_Webhook_Fish ~= "" end)
 CreateToggle(Page_Webhook, "Player Leave Server", Settings.LeaveEnabled, function(v) Settings.LeaveEnabled = v end, function() return Current_Webhook_Leave ~= "" end)
 CreateToggle(Page_Webhook, "Player Not On Server (Auto)", Settings.PlayerNonPSAuto, function(v) Settings.PlayerNonPSAuto = v end, function() return Current_Webhook_List ~= "" end)
 
@@ -901,12 +892,11 @@ local function CheckAndSendNonPS(isManual)
     if #missingTags > 0 then contentMsg = "⚠️ **Peringatan:** " .. table.concat(missingTags, " ") .. " belum masuk server!" end
     
     task.spawn(function()
-        local p = { ["username"] = "XAL Notifications!", ["avatar_url"] = "https://i.imgur.com/GWx0mX9.jpeg", ["content"] = contentMsg, ["embeds"] = {{ ["title"] = "🚫 Player Not On Server", ["description"] = txt, ["color"] = 16733440, ["footer"] = { ["text"] = "XAL PS Monitoring", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" } }} }
+        local p = { ["username"] = "XAL Notifications!", ["avatar_url"] = "https://i.imgur.com/GWx0mX9.jpeg", ["content"] = contentMsg, ["embeds"] = {{ ["title"] = "🚫 Player Not On Server", ["description"] = txt .. "\n\nWebhook by **[bit.ly/xalserver](https://bit.ly/xalserver)**", ["color"] = 16733440, ["footer"] = { ["text"] = " ", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" } }} }
         httpRequest({ Url = Current_Webhook_List, Method = "POST", Headers = {["Content-Type"]="application/json"}, Body = HttpService:JSONEncode(p) })
     end)
 end
 
--- Admin Boost Header Buttons
 local AdminBtnContainer = Instance.new("Frame", Page_AdminBoost)
 AdminBtnContainer.BackgroundTransparency = 1
 AdminBtnContainer.Size = UDim2.new(1, -5, 0, 32)
@@ -931,7 +921,7 @@ BtnPS.MouseButton1Click:Connect(function()
     local all = Players:GetPlayers(); local str = "Current Players (" .. #all .. "):\n\n"
     for i, p in ipairs(all) do str = str .. "**" .. i .. ". " .. p.DisplayName .. " (@" .. p.Name .. ")**\n" end
     task.spawn(function()
-        local p = { ["username"] = "XAL Notifications!", ["avatar_url"] = "https://i.imgur.com/GWx0mX9.jpeg", ["embeds"] = {{ ["title"] = "👥 Manual Player List", ["description"] = str, ["color"] = 5763719, ["footer"] = { ["text"] = "XAL PS Monitoring", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" } }} }
+        local p = { ["username"] = "XAL Notifications!", ["avatar_url"] = "https://i.imgur.com/GWx0mX9.jpeg", ["embeds"] = {{ ["title"] = "👥 Manual Player List", ["description"] = str .. "\n\nWebhook by **[bit.ly/xalserver](https://bit.ly/xalserver)**", ["color"] = 5763719, ["footer"] = { ["text"] = " ", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" } }} }
         httpRequest({ Url = Current_Webhook_List, Method = "POST", Headers = {["Content-Type"]="application/json"}, Body = HttpService:JSONEncode(p) })
     end)
 end)
@@ -954,16 +944,6 @@ SpacerAdmin.BackgroundTransparency = 1; SpacerAdmin.Size = UDim2.new(1,0,0,5)
 
 CreateToggle(Page_AdminBoost, "Deteksi Player Asing", Settings.ForeignDetection, function(v) Settings.ForeignDetection = v end, function() return Current_Webhook_Admin ~= "" end)
 
-
-
-
-
-
-
-
-
-
-
 task.spawn(function()
     while ScriptActive do
         task.wait(1800) 
@@ -972,8 +952,6 @@ task.spawn(function()
         end
     end
 end)
-
-
 
 local IconPath = "XAL_Min_Icon.jpg"
 local IconUrl = "https://i.imgur.com/Z92uLfK.jpeg"
@@ -1017,11 +995,9 @@ CloseBtn.MouseButton1Click:Connect(function() ModalFrame.Visible = true end)
 BtnNo.MouseButton1Click:Connect(function() ModalFrame.Visible = false end)
 
 BtnYes.MouseButton1Click:Connect(function() 
-    -- Manual cleanup here to ensure scope access
     if ScreenGui then ScreenGui:Destroy() end
     ScriptActive = false
     
-    -- Try accurate cleanup
     if getgenv and getgenv().XAL_Stop then
         pcall(getgenv().XAL_Stop)
     end
@@ -1087,6 +1063,7 @@ local function SendWebhook(data, category)
     if category == "EVOLVED" and not Settings.EvolvedEnabled then return end 
     if category == "RAGE" and not Settings.LeviathanRageEnabled then return end 
     if category == "CRYSTALIZED" and not Settings.MutationCrystalized then return end 
+    if category == "CAVECRYSTAL" and not Settings.CaveCrystalEnabled then return end 
     if category == "LEAVE" and not Settings.LeaveEnabled then return end 
     local TargetURL = ""; local contentMsg = ""; local realUser = GetUsername(data.Player)
     local discordId = nil
@@ -1119,7 +1096,7 @@ local function SendWebhook(data, category)
         descriptionText = table.concat(lines, "\n")
     elseif category == "CRYSTALIZED" then
         embedTitle = data.Player .. " | CRYSTALIZED MUTATION!"
-        embedColor = 3407871 -- Cyan/Crystal color
+        embedColor = 3407871
         local lines = { "💎 Fish: **" .. data.Item .. "**" }
         table.insert(lines, "✨ Mutation: **Crystalized**")
         table.insert(lines, "⚖️ Weight: **" .. data.Weight .. "**")
@@ -1128,8 +1105,10 @@ local function SendWebhook(data, category)
         local dispName = data.DisplayName or data.Player; embedTitle = dispName .. " Left the server."; embedColor = 16711680; descriptionText = "👤 **@" .. data.Player .. "**" 
     elseif category == "PLAYERS" then
         embedTitle = "👥 List Player In Server"; embedColor = 5763719; descriptionText = data.ListText
+    elseif category == "CAVECRYSTAL" then
+        embedTitle = "💎 Cave Crystal Event!"; embedColor = 16776960; descriptionText = data.ListText
     end
-    local embedData = { ["username"] = "XAL Notifications!", ["avatar_url"] = "https://i.imgur.com/GWx0mX9.jpeg", ["content"] = contentMsg, ["embeds"] = {{ ["title"] = embedTitle, ["description"] = descriptionText, ["color"] = embedColor, ["footer"] = { ["text"] = "XAL PS Monitoring", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" }, ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ") }} }
+    local embedData = { ["username"] = "XAL Notifications!", ["avatar_url"] = "https://i.imgur.com/GWx0mX9.jpeg", ["content"] = contentMsg, ["embeds"] = {{ ["title"] = embedTitle, ["description"] = descriptionText .. "\n\nWebhook by **[bit.ly/xalserver](https://bit.ly/xalserver)**", ["color"] = embedColor, ["footer"] = { ["text"] = " ", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" } }} }
     pcall(function() httpRequest({ Url = TargetURL, Method = "POST", Headers = { ["Content-Type"] = "application/json" }, Body = HttpService:JSONEncode(embedData) }) end)
 end
 
@@ -1163,6 +1142,31 @@ local function CheckAndSend(msg)
              local data = { Player = p, Item = finalFishName, Mutation = "Leviathan Rage", Weight = w }
              SendWebhook(data, "RAGE")
              return
+        end
+    end
+
+    if string.find(lowerMsg, "crystalized") then
+        local tempMsg = string.gsub(cleanMsg, "^%[Server%]:%s*", "")
+        local p, item_full, w = string.match(tempMsg, "^(.*) obtained an? (.*) %((.*)%)")
+        if not p then 
+             p, item_full = string.match(tempMsg, "^(.*) obtained an? (.*)")
+             w = "N/A"
+        end
+
+        if p and item_full then
+             local finalItem = item_full
+             local s, e = string.find(string.lower(item_full), "crystalized")
+             if s then
+                 finalItem = string.sub(item_full, e + 1)
+                 finalItem = string.gsub(finalItem, "^%s+", "")
+             end
+
+             local check = string.lower(finalItem)
+             if string.find(check, "bioluminescent manta ray") or string.find(check, "abyr squid") then
+                 local data = { Player = p, Item = finalItem, Mutation = "Crystalized", Weight = w }
+                 SendWebhook(data, "CRYSTALIZED")
+                 return
+             end
         end
     end
 
@@ -1234,7 +1238,6 @@ table.insert(Connections, Players.PlayerAdded:Connect(function(p)
                  if Current_Webhook_Admin == "" then return end
                  local adminTags = ""
                  
-                 -- Get Admin IDs from Slot 1 and 2
                  local id1 = (TagList[1] and TagList[1][2]) or ""
                  local id2 = (TagList[2] and TagList[2][2]) or ""
                  
@@ -1248,10 +1251,9 @@ table.insert(Connections, Players.PlayerAdded:Connect(function(p)
                     ["content"] = contentStr,
                     ["embeds"] = {{
                         ["title"] = "🚨 Foreign Player Detected!",
-                        ["description"] = "User: **" .. p.Name .. "**\nDisplay: **" .. p.DisplayName .. "**\nID: " .. p.UserId .. "\n\nPlayer ini tidak ada di whitelist server!",
+                        ["description"] = "User: **" .. p.Name .. "**\nDisplay: **" .. p.DisplayName .. "**\nID: " .. p.UserId .. "\n\nPlayer ini tidak ada di whitelist server!\n\nWebhook by **[bit.ly/xalserver](https://bit.ly/xalserver)**",
                         ["color"] = 16711680,
-                        ["footer"] = { ["text"] = "XAL Admin Boost", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" },
-                        ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ")
+                        ["footer"] = { ["text"] = " ", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" }
                     }}
                  }
                  pcall(function() 
@@ -1282,8 +1284,6 @@ end
 local function SendDisconnectWebhook(reason)
     if not ScriptActive then return end
     if Current_Webhook_List == "" then return end
-    
-    -- Rate limit 30 detik
     if tick() - LastDisconnectTime < 30 then 
         print("⚠️ XAL: Disconnect Webhook Cooldown Active")
         return 
@@ -1310,10 +1310,9 @@ local function SendDisconnectWebhook(reason)
         ["content"] = contentMsg,
         ["embeds"] = {{
             ["title"] = "🔌 LocalPlayer Disconnected",
-            ["description"] = "User: **" .. Players.LocalPlayer.Name .. "** (@" .. Players.LocalPlayer.DisplayName .. ") has disconnected.\n**Reason:** " .. tostring(reason),
+            ["description"] = "User: **" .. Players.LocalPlayer.Name .. "** (@" .. Players.LocalPlayer.DisplayName .. ") has disconnected.\n**Reason:** " .. tostring(reason) .. "\n\nWebhook by **[bit.ly/xalserver](https://bit.ly/xalserver)**",
             ["color"] = 16711680,
-            ["footer"] = { ["text"] = "XAL PS Monitoring", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" },
-            ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ")
+            ["footer"] = { ["text"] = " ", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" }
         }}
     }
     
@@ -1354,5 +1353,36 @@ game:BindToClose(function()
     SendDisconnectWebhook("Script/Game Closed Gracefully")
     task.wait(1)
 end)
+
+local CaveCrystalDebounce = 0
+local function StartGuiWatcher()
+    local PlayerGui = Players.LocalPlayer:WaitForChild("PlayerGui", 10)
+    if not PlayerGui then return end
+
+    table.insert(Connections, PlayerGui.DescendantAdded:Connect(function(descendant)
+        if not ScriptActive then return end
+        if descendant:IsA("TextLabel") then
+             task.wait(0.5) -- Wait for text to populate
+             local rawText = descendant.Text
+             local cleanText = string.gsub(rawText, "<[^>]+>", " ") -- Remove tags with space
+             cleanText = string.gsub(cleanText, "%s+", " ") -- Normalize spaces
+             cleanText = string.match(cleanText, "^%s*(.-)%s*$") -- Trim
+             local lowerText = string.lower(cleanText)
+
+             if string.find(lowerText, "crystals are glowing in the crystal depths") and string.find(lowerText, "find them quickly") then
+                 if tick() - CaveCrystalDebounce > 10 then
+                     CaveCrystalDebounce = tick()
+                     SendWebhook({ Player = Players.LocalPlayer.Name, ListText = "🌟 **" .. cleanText .. "**" }, "CAVECRYSTAL")
+                 end
+             elseif string.find(lowerText, "you extracted a cave crystal") then
+                 if tick() - CaveCrystalDebounce > 10 then
+                     CaveCrystalDebounce = tick()
+                     SendWebhook({ Player = Players.LocalPlayer.Name, ListText = "⛏️ **" .. cleanText .. "**" }, "CAVECRYSTAL")
+                 end
+             end
+        end
+    end))
+end
+task.spawn(StartGuiWatcher)
 
 print("✅ XAL System Session v1.3 Loaded!")
