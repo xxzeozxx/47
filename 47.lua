@@ -893,7 +893,7 @@ local function CheckAndSendNonPS(isManual)
     
     task.spawn(function()
         if Current_Webhook_List ~= "" then
-            local p = { 
+            local payload = { 
                 ["username"] = "XAL Notifications!", 
                 ["avatar_url"] = "https://i.imgur.com/GWx0mX9.jpeg", 
                 ["content"] = contentMsg, 
@@ -902,7 +902,7 @@ local function CheckAndSendNonPS(isManual)
                     { ["description"] = "Webhook by **[bit.ly/xalserver](https://bit.ly/xalserver)**", ["color"] = 0 }
                 } 
             }
-            httpRequest({ Url = Current_Webhook_List, Method = "POST", Headers = {["Content-Type"]="application/json"}, Body = HttpService:JSONEncode(p) })
+            httpRequest({ Url = Current_Webhook_List, Method = "POST", Headers = {["Content-Type"]="application/json"}, Body = HttpService:JSONEncode(payload) })
         end
     end)
 end
@@ -931,7 +931,7 @@ BtnPS.MouseButton1Click:Connect(function()
     local all = Players:GetPlayers(); local str = "Current Players (" .. #all .. "):\n\n"
     for i, p in ipairs(all) do str = str .. "**" .. i .. ". " .. p.DisplayName .. " (@" .. p.Name .. ")**\n" end
     task.spawn(function()
-        local p = { 
+        local payload = { 
             ["username"] = "XAL Notifications!", 
             ["avatar_url"] = "https://i.imgur.com/GWx0mX9.jpeg", 
             ["embeds"] = {
@@ -939,7 +939,7 @@ BtnPS.MouseButton1Click:Connect(function()
                 { ["description"] = "Webhook by **[bit.ly/xalserver](https://bit.ly/xalserver)**", ["color"] = 0 }
             } 
         }
-        httpRequest({ Url = Current_Webhook_List, Method = "POST", Headers = {["Content-Type"]="application/json"}, Body = HttpService:JSONEncode(p) })
+        httpRequest({ Url = Current_Webhook_List, Method = "POST", Headers = {["Content-Type"]="application/json"}, Body = HttpService:JSONEncode(payload) })
     end)
 end)
 
