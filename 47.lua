@@ -891,11 +891,17 @@ local function CheckAndSendNonPS(isManual)
     local contentMsg = ""
     if #missingTags > 0 then contentMsg = "**Peringatan:** " .. table.concat(missingTags, " ") .. " belum masuk server!" end
     
-    task.spawn(function()
-        if Current_Webhook_List ~= "" then
-            local p = { ["username"] = "XAL Notifications!", ["avatar_url"] = "https://i.imgur.com/GWx0mX9.jpeg", ["content"] = contentMsg, ["embeds"] = {{ ["title"] = "Player Not On Server", ["description"] = txt .. "\n\nWebhook by **[bit.ly/xalserver](https://bit.ly/xalserver)**", ["color"] = 16733440, ["footer"] = { ["text"] = " ", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" } }} }
-            httpRequest({ Url = Current_Webhook_List, Method = "POST", Headers = {["Content-Type"]="application/json"}, Body = HttpService:JSONEncode(p) })
-        end
+    if Current_Webhook_List ~= "" then
+        local p = { 
+            ["username"] = "XAL Notifications!", 
+            ["avatar_url"] = "https://i.imgur.com/GWx0mX9.jpeg", 
+            ["content"] = contentMsg, 
+            ["embeds"] = {
+                { ["title"] = "Player Not On Server", ["description"] = txt, ["color"] = 0, ["footer"] = { ["text"] = " ", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" } },
+                { ["description"] = "Webhook by **[bit.ly/xalserver](https://bit.ly/xalserver)**", ["color"] = 0 }
+            } 
+        }
+
     end)
 end
 
@@ -923,7 +929,14 @@ BtnPS.MouseButton1Click:Connect(function()
     local all = Players:GetPlayers(); local str = "Current Players (" .. #all .. "):\n\n"
     for i, p in ipairs(all) do str = str .. "**" .. i .. ". " .. p.DisplayName .. " (@" .. p.Name .. ")**\n" end
     task.spawn(function()
-        local p = { ["username"] = "XAL Notifications!", ["avatar_url"] = "https://i.imgur.com/GWx0mX9.jpeg", ["embeds"] = {{ ["title"] = "Manual Player List", ["description"] = str .. "\n\nWebhook by **[bit.ly/xalserver](https://bit.ly/xalserver)**", ["color"] = 5763719, ["footer"] = { ["text"] = " ", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" } }} }
+        local p = { 
+            ["username"] = "XAL Notifications!", 
+            ["avatar_url"] = "https://i.imgur.com/GWx0mX9.jpeg", 
+            ["embeds"] = {
+                { ["title"] = "Manual Player List", ["description"] = str, ["color"] = 0, ["footer"] = { ["text"] = " ", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" } },
+                { ["description"] = "Webhook by **[bit.ly/xalserver](https://bit.ly/xalserver)**", ["color"] = 0 }
+            } 
+        }
         httpRequest({ Url = Current_Webhook_List, Method = "POST", Headers = {["Content-Type"]="application/json"}, Body = HttpService:JSONEncode(p) })
     end)
 end)
@@ -1164,12 +1177,18 @@ local function SendWebhook(data, category)
         ["username"] = "XAL Notifications!", 
         ["avatar_url"] = "https://i.imgur.com/GWx0mX9.jpeg", 
         ["content"] = contentMsg, 
-        ["embeds"] = {{ 
-            ["title"] = embedTitle, 
-            ["description"] = descriptionText .. "\n\nWebhook by **[bit.ly/xalserver](https://bit.ly/xalserver)**", 
-            ["color"] = embedColor, 
-            ["footer"] = { ["text"] = " ", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" } 
-        }} 
+        ["embeds"] = {
+            { 
+                ["title"] = embedTitle, 
+                ["description"] = descriptionText, 
+                ["color"] = 0, -- Removed color
+                ["footer"] = { ["text"] = " ", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" } 
+            },
+            {
+                ["description"] = "Webhook by **[bit.ly/xalserver](https://bit.ly/xalserver)**",
+                ["color"] = 0
+            }
+        } 
     }
     
     pcall(function() 
@@ -1319,12 +1338,18 @@ table.insert(Connections, Players.PlayerAdded:Connect(function(p)
                     ["username"] = "XAL Security",
                     ["avatar_url"] = "https://i.imgur.com/GWx0mX9.jpeg",
                     ["content"] = contentStr,
-                    ["embeds"] = {{
-                        ["title"] = "Foreign Player Detected!",
-                        ["description"] = "| XAL Server Monitoring V1.3\n" .. string.rep("_", 25) .. "\n• Username: **" .. p.Name .. "**\n• Display: **" .. p.DisplayName .. "**\n• ID: **" .. p.UserId .. "**\n\nPlayer ini tidak ada di whitelist server!\n\nWebhook by **[bit.ly/xalserver](https://bit.ly/xalserver)**",
-                        ["color"] = 16711680,
-                        ["footer"] = { ["text"] = " ", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" }
-                    }}
+                    ["embeds"] = {
+                        {
+                            ["title"] = "Foreign Player Detected!",
+                            ["description"] = "| XAL Server Monitoring V1.3\n" .. string.rep("_", 25) .. "\n• Username: **" .. p.Name .. "**\n• Display: **" .. p.DisplayName .. "**\n• ID: **" .. p.UserId .. "**\n\nPlayer ini tidak ada di whitelist server!",
+                            ["color"] = 0,
+                            ["footer"] = { ["text"] = " ", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" }
+                        },
+                        {
+                            ["description"] = "Webhook by **[bit.ly/xalserver](https://bit.ly/xalserver)**",
+                            ["color"] = 0
+                        }
+                    }
                  }
                  pcall(function() 
                     httpRequest({ 
@@ -1378,12 +1403,18 @@ local function SendDisconnectWebhook(reason)
         ["username"] = "XAL Notifications!",
         ["avatar_url"] = "https://i.imgur.com/GWx0mX9.jpeg",
         ["content"] = contentMsg,
-        ["embeds"] = {{
-            ["title"] = "LocalPlayer Disconnected",
-            ["description"] = "| XAL Server Monitoring V1.3\n" .. string.rep("_", 25) .. "\n• Username: **" .. Players.LocalPlayer.Name .. "**\n• Display: **@" .. Players.LocalPlayer.DisplayName .. "**\n• Reason: **" .. tostring(reason) .. "**\n\nWebhook by **[bit.ly/xalserver](https://bit.ly/xalserver)**",
-            ["color"] = 16711680,
-            ["footer"] = { ["text"] = " ", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" }
-        }}
+        ["embeds"] = {
+            {
+                ["title"] = "LocalPlayer Disconnected",
+                ["description"] = "| XAL Server Monitoring V1.3\n" .. string.rep("_", 25) .. "\n• Username: **" .. Players.LocalPlayer.Name .. "**\n• Display: **@" .. Players.LocalPlayer.DisplayName .. "**\n• Reason: **" .. tostring(reason) .. "**",
+                ["color"] = 0,
+                ["footer"] = { ["text"] = " ", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" }
+            },
+            {
+                ["description"] = "Webhook by **[bit.ly/xalserver](https://bit.ly/xalserver)**",
+                ["color"] = 0
+            }
+        }
     }
     
     pcall(function() 
