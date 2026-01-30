@@ -891,17 +891,19 @@ local function CheckAndSendNonPS(isManual)
     local contentMsg = ""
     if #missingTags > 0 then contentMsg = "**Peringatan:** " .. table.concat(missingTags, " ") .. " belum masuk server!" end
     
-    if Current_Webhook_List ~= "" then
-        local p = { 
-            ["username"] = "XAL Notifications!", 
-            ["avatar_url"] = "https://i.imgur.com/GWx0mX9.jpeg", 
-            ["content"] = contentMsg, 
-            ["embeds"] = {
-                { ["title"] = "Player Not On Server", ["description"] = txt, ["color"] = 0, ["footer"] = { ["text"] = " ", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" } },
-                { ["description"] = "Webhook by **[bit.ly/xalserver](https://bit.ly/xalserver)**", ["color"] = 0 }
-            } 
-        }
-
+    task.spawn(function()
+        if Current_Webhook_List ~= "" then
+            local p = { 
+                ["username"] = "XAL Notifications!", 
+                ["avatar_url"] = "https://i.imgur.com/GWx0mX9.jpeg", 
+                ["content"] = contentMsg, 
+                ["embeds"] = {
+                    { ["title"] = "Player Not On Server", ["description"] = txt, ["color"] = 0, ["footer"] = { ["text"] = " ", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" } },
+                    { ["description"] = "Webhook by **[bit.ly/xalserver](https://bit.ly/xalserver)**", ["color"] = 0 }
+                } 
+            }
+            httpRequest({ Url = Current_Webhook_List, Method = "POST", Headers = {["Content-Type"]="application/json"}, Body = HttpService:JSONEncode(p) })
+        end
     end)
 end
 
