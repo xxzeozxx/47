@@ -1065,51 +1065,119 @@ local function SendWebhook(data, category)
     if category == "CRYSTALIZED" and not Settings.MutationCrystalized then return end 
     if category == "CAVECRYSTAL" and not Settings.CaveCrystalEnabled then return end 
     if category == "LEAVE" and not Settings.LeaveEnabled then return end 
-    local TargetURL = ""; local contentMsg = ""; local realUser = GetUsername(data.Player)
+    
+    local TargetURL = ""
+    local contentMsg = ""
+    local realUser = GetUsername(data.Player)
     local discordId = nil
-    for i = 1, 20 do if TagList[i][1] ~= "" and string.lower(TagList[i][1]) == string.lower(realUser) then discordId = TagList[i][2]; break end end
-    if discordId and discordId ~= "" then if category == "LEAVE" then contentMsg = "User Left: <@" .. discordId .. ">" else contentMsg = "GG! <@" .. discordId .. ">" end end
-    if category == "LEAVE" then TargetURL = Current_Webhook_Leave elseif category == "PLAYERS" then TargetURL = Current_Webhook_List else TargetURL = Current_Webhook_Fish end
-    if not TargetURL or TargetURL == "" or string.find(TargetURL, "MASUKKAN_URL") then return end
-    local embedTitle = ""; local embedColor = 3447003; local descriptionText = "" 
-    if category == "SECRET" then
-        embedTitle = data.Player .. " | Secret Caught!"
-        embedColor = 3447003; local lines = { "⚓ Fish: **" .. data.Item .. "**" }
-        if data.Mutation and data.Mutation ~= "None" then table.insert(lines, "🧬 Mutation: **" .. data.Mutation .. "**") end
-        table.insert(lines, "⚖️ Weight: **" .. data.Weight .. "**"); descriptionText = table.concat(lines, "\n")
-    elseif category == "STONE" then
-        embedTitle = data.Player .. " | Ruby Gemstone!"
-        embedColor = 16753920; local lines = { "💎 Stone: **" .. data.Item .. "**" }
-        if data.Mutation and data.Mutation ~= "None" then table.insert(lines, "✨ Mutation: **" .. data.Mutation .. "**") end
-        table.insert(lines, "⚖️ Weight: **" .. data.Weight .. "**"); descriptionText = table.concat(lines, "\n")
-    elseif category == "EVOLVED" then
-        embedTitle = data.Player .. " | Evolved Stone!"
-        embedColor = 10181046 
-        local lines = { "🔮 Item: **" .. data.Item .. "**" }
-        descriptionText = table.concat(lines, "\n")
-    elseif category == "RAGE" then
-        embedTitle = data.Player .. " | LEVIATHAN RAGE!"
-        embedColor = 10038562 
-        local lines = { "🔥 Fish: **" .. data.Item .. "**" }
-        table.insert(lines, "🧬 Mutation: **Leviathan Rage**")
-        table.insert(lines, "⚖️ Weight: **" .. data.Weight .. "**")
-        descriptionText = table.concat(lines, "\n")
-    elseif category == "CRYSTALIZED" then
-        embedTitle = data.Player .. " | CRYSTALIZED MUTATION!"
-        embedColor = 3407871
-        local lines = { "💎 Fish: **" .. data.Item .. "**" }
-        table.insert(lines, "✨ Mutation: **Crystalized**")
-        table.insert(lines, "⚖️ Weight: **" .. data.Weight .. "**")
-        descriptionText = table.concat(lines, "\n")
-    elseif category == "LEAVE" then
-        local dispName = data.DisplayName or data.Player; embedTitle = dispName .. " Left the server."; embedColor = 16711680; descriptionText = "👤 **@" .. data.Player .. "**" 
-    elseif category == "PLAYERS" then
-        embedTitle = "👥 List Player In Server"; embedColor = 5763719; descriptionText = data.ListText
-    elseif category == "CAVECRYSTAL" then
-        embedTitle = "💎 Cave Crystal Event!"; embedColor = 16776960; descriptionText = data.ListText
+    
+    for i = 1, 20 do 
+        if TagList[i][1] ~= "" and string.lower(TagList[i][1]) == string.lower(realUser) then 
+            discordId = TagList[i][2]
+            break 
+        end 
     end
-    local embedData = { ["username"] = "XAL Notifications!", ["avatar_url"] = "https://i.imgur.com/GWx0mX9.jpeg", ["content"] = contentMsg, ["embeds"] = {{ ["title"] = embedTitle, ["description"] = descriptionText .. "\n\nWebhook by **[bit.ly/xalserver](https://bit.ly/xalserver)**", ["color"] = embedColor, ["footer"] = { ["text"] = " ", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" } }} }
-    pcall(function() httpRequest({ Url = TargetURL, Method = "POST", Headers = { ["Content-Type"] = "application/json" }, Body = HttpService:JSONEncode(embedData) }) end)
+    
+    if discordId and discordId ~= "" then 
+        if category == "LEAVE" then 
+            contentMsg = "User Left: <@" .. discordId .. ">" 
+        else 
+            contentMsg = "GG! <@" .. discordId .. ">" 
+        end 
+    end
+    
+    if category == "LEAVE" then TargetURL = Current_Webhook_Leave 
+    elseif category == "PLAYERS" then TargetURL = Current_Webhook_List 
+    else TargetURL = Current_Webhook_Fish end
+    
+    if not TargetURL or TargetURL == "" or string.find(TargetURL, "MASUKKAN_URL") then return end
+    
+    local embedTitle = ""
+    local embedColor = 3447003
+    local lines = {}
+    
+    -- Header common for most
+    local headerLine = "| XAL Server Monitoring V1.3\n" .. string.rep("_", 25) .. "\n"
+    table.insert(lines, headerLine)
+    
+    if category == "SECRET" then
+        embedTitle = "Secret Fish Caught!"
+        embedColor = 3447003
+        table.insert(lines, "• Username: **@" .. data.Player .. "**")
+        table.insert(lines, "• Fish Name: **" .. data.Item .. "**")
+        if data.Mutation and data.Mutation ~= "None" then table.insert(lines, "• Mutation: **" .. data.Mutation .. "**") end
+        table.insert(lines, "• Weight: **" .. data.Weight .. "**")
+        
+    elseif category == "STONE" then
+        embedTitle = "Ruby Gemstone Found!"
+        embedColor = 16753920
+        table.insert(lines, "• Username: **@" .. data.Player .. "**")
+        table.insert(lines, "• Item Name: **" .. data.Item .. "**")
+        if data.Mutation and data.Mutation ~= "None" then table.insert(lines, "• Mutation: **" .. data.Mutation .. "**") end
+        table.insert(lines, "• Weight: **" .. data.Weight .. "**")
+
+    elseif category == "EVOLVED" then
+        embedTitle = "Evolved Stone Found!"
+        embedColor = 10181046
+        table.insert(lines, "• Username: **@" .. data.Player .. "**")
+        table.insert(lines, "• Item Name: **" .. data.Item .. "**")
+        
+    elseif category == "RAGE" then
+        embedTitle = "Leviathan Rage Event!"
+        embedColor = 10038562
+        table.insert(lines, "• Username: **@" .. data.Player .. "**")
+        table.insert(lines, "• Fish Name: **" .. data.Item .. "**")
+        table.insert(lines, "• Mutation: **Leviathan Rage**")
+        table.insert(lines, "• Weight: **" .. data.Weight .. "**")
+
+    elseif category == "CRYSTALIZED" then
+        embedTitle = "Crystalized Mutation!"
+        embedColor = 3407871
+        table.insert(lines, "• Username: **@" .. data.Player .. "**")
+        table.insert(lines, "• Fish Name: **" .. data.Item .. "**")
+        table.insert(lines, "• Mutation: **Crystalized**")
+        table.insert(lines, "• Weight: **" .. data.Weight .. "**")
+
+    elseif category == "CAVECRYSTAL" then
+        embedTitle = "Cave Crystal Event!"
+        embedColor = 16776960
+        table.insert(lines, "• Username: **@" .. data.Player .. "**")
+        table.insert(lines, "• Event: **" .. data.ListText .. "**")
+
+    elseif category == "LEAVE" then
+        embedTitle = "Player Left Server!"
+        embedColor = 16711680
+        table.insert(lines, "• Username: **@" .. data.Player .. "**")
+        if data.DisplayName then table.insert(lines, "• Display: **" .. data.DisplayName .. "**") end
+        
+    elseif category == "PLAYERS" then
+        embedTitle = "Player List Info"
+        embedColor = 5763719
+        lines = { data.ListText } -- Keep original list format for bulk text
+    end
+    
+    local descriptionText = table.concat(lines, "\n")
+    
+    local embedData = { 
+        ["username"] = "XAL Notifications!", 
+        ["avatar_url"] = "https://i.imgur.com/GWx0mX9.jpeg", 
+        ["content"] = contentMsg, 
+        ["embeds"] = {{ 
+            ["title"] = embedTitle, 
+            ["description"] = descriptionText .. "\n\nWebhook by **[bit.ly/xalserver](https://bit.ly/xalserver)**", 
+            ["color"] = embedColor, 
+            ["footer"] = { ["text"] = " ", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" } 
+        }} 
+    }
+    
+    pcall(function() 
+        httpRequest({ 
+            Url = TargetURL, 
+            Method = "POST", 
+            Headers = { ["Content-Type"] = "application/json" }, 
+            Body = HttpService:JSONEncode(embedData) 
+        }) 
+    end)
 end
 
 local function CheckAndSend(msg)
