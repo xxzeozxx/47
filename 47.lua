@@ -906,7 +906,6 @@ local function CheckAndSendNonPS(isManual)
                 }}
             }
             httpRequest({ Url = Current_Webhook_List, Method = "POST", Headers = {["Content-Type"]="application/json"}, Body = HttpService:JSONEncode(payload) })
-        end
     end)
 end
 
