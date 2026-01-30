@@ -1146,6 +1146,28 @@ local function CheckAndSend(msg)
         end
     end
 
+    if string.find(lowerMsg, "crystalized") then
+        local tempMsg = string.gsub(cleanMsg, "^%[Server%]:%s*", "")
+        local p, item_full, w = string.match(tempMsg, "^(.*) obtained an? (.*) %((.*)%)")
+        if not p then 
+             p, item_full = string.match(tempMsg, "^(.*) obtained an? (.*)")
+             w = "N/A"
+        end
+
+        if p and item_full then
+             local finalItem = item_full
+             local s, e = string.find(string.lower(item_full), "crystalized")
+             if s then
+                 finalItem = string.sub(item_full, e + 1)
+                 finalItem = string.gsub(finalItem, "^%s+", "")
+             end
+             
+             local data = { Player = p, Item = finalItem, Mutation = "Crystalized", Weight = w }
+             SendWebhook(data, "CRYSTALIZED")
+             return
+        end
+    end
+
     if string.find(lowerMsg, "obtained an?") or string.find(lowerMsg, "chance!") then
         local data = ParseDataSmart(cleanMsg)
         if data then
