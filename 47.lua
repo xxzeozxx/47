@@ -10,6 +10,13 @@ local TweenService = game:GetService("TweenService")
 
 local httpRequest = (syn and syn.request) or (http and http.request) or http_request or (fluxus and fluxus.request) or request
 
+if not httpRequest then
+    print("❌ XAL Error: Your executor does not support HTTP requests!")
+    return
+end
+
+print("✅ XAL: HTTP Request Function Found!")
+
 local ScriptActive = true
 local Connections = {}
 local ScreenGui
@@ -905,7 +912,11 @@ local function CheckAndSendNonPS(isManual)
                     ["footer"] = { ["text"] = "XAL Server Monitoring V1.3 • bit.ly/xalserver", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" }
                 }}
             }
-            httpRequest({ Url = Current_Webhook_List, Method = "POST", Headers = {["Content-Type"]="application/json"}, Body = HttpService:JSONEncode(payload) })
+            local success, err = pcall(function()
+                httpRequest({ Url = Current_Webhook_List, Method = "POST", Headers = {["Content-Type"]="application/json"}, Body = HttpService:JSONEncode(payload) })
+            end)
+            if not success then warn("Webhook Failed: " .. tostring(err)) end
+        end
     end)
 end
 
@@ -945,7 +956,10 @@ BtnPS.MouseButton1Click:Connect(function()
                 ["footer"] = { ["text"] = "XAL Server Monitoring V1.3 • bit.ly/xalserver", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" }
             }}
         }
-        httpRequest({ Url = Current_Webhook_List, Method = "POST", Headers = {["Content-Type"]="application/json"}, Body = HttpService:JSONEncode(payload) })
+        local success, err = pcall(function()
+            httpRequest({ Url = Current_Webhook_List, Method = "POST", Headers = {["Content-Type"]="application/json"}, Body = HttpService:JSONEncode(payload) })
+        end)
+        if not success then warn("Manual Webhook Failed: " .. tostring(err)) end
     end)
 end)
 
@@ -1090,6 +1104,13 @@ local function SendWebhook(data, category)
     if category == "LEAVE" and not Settings.LeaveEnabled then return end 
     
     local TargetURL = ""
+    if category == "LEAVE" then TargetURL = Current_Webhook_Leave 
+    elseif category == "PLAYERS" then TargetURL = Current_Webhook_List 
+    else TargetURL = Current_Webhook_Fish end
+    
+    if not TargetURL or TargetURL == "" or string.find(TargetURL, "MASUKKAN_URL") then return end
+    
+    -- Prepare Content
     local contentMsg = ""
     local realUser = GetUsername(data.Player)
     local discordId = nil
@@ -1102,105 +1123,91 @@ local function SendWebhook(data, category)
     end
     
     if discordId and discordId ~= "" then 
-        if category == "LEAVE" then 
-            contentMsg = "User Left: <@" .. discordId .. ">" 
-        else 
-            contentMsg = "GG! <@" .. discordId .. ">" 
-        end 
+        if category == "LEAVE" then contentMsg = "User Left: <@" .. discordId .. ">" 
+        else contentMsg = "GG! <@" .. discordId .. ">" end 
     end
     
-    if category == "LEAVE" then TargetURL = Current_Webhook_Leave 
-    elseif category == "PLAYERS" then TargetURL = Current_Webhook_List 
-    else TargetURL = Current_Webhook_Fish end
-    
-    if not TargetURL or TargetURL == "" or string.find(TargetURL, "MASUKKAN_URL") then return end
-    
-    -- Construct Fields based on Category
-    local embedTitle = ""
+    -- Construct Embed Fields
+    local embedTitle = "Notification"
     local embedColor = 0
-    local fields = {}
+    local embedFields = {}
     
     if category == "SECRET" then
         embedTitle = "Secret Fish Caught!"
         embedColor = 3447003
-        table.insert(fields, { ["name"] = "Player", ["value"] = "```" .. data.Player .. "```", ["inline"] = true })
-        table.insert(fields, { ["name"] = "Fish Name", ["value"] = "```" .. data.Item .. "```", ["inline"] = true })
+        table.insert(embedFields, { ["name"] = "Player", ["value"] = "```" .. data.Player .. "```", ["inline"] = true })
+        table.insert(embedFields, { ["name"] = "Fish Name", ["value"] = "```" .. data.Item .. "```", ["inline"] = true })
         if data.Mutation and data.Mutation ~= "None" then 
-            table.insert(fields, { ["name"] = "Mutation", ["value"] = "```" .. data.Mutation .. "```", ["inline"] = true }) 
+            table.insert(embedFields, { ["name"] = "Mutation", ["value"] = "```" .. data.Mutation .. "```", ["inline"] = true }) 
         end
-        table.insert(fields, { ["name"] = "Weight", ["value"] = "```" .. data.Weight .. "```", ["inline"] = true })
+        table.insert(embedFields, { ["name"] = "Weight", ["value"] = "```" .. data.Weight .. "```", ["inline"] = true })
         
     elseif category == "STONE" then
         embedTitle = "Ruby Gemstone Found!"
         embedColor = 16753920
-        table.insert(fields, { ["name"] = "Player", ["value"] = "```" .. data.Player .. "```", ["inline"] = true })
-        table.insert(fields, { ["name"] = "Item", ["value"] = "```" .. data.Item .. "```", ["inline"] = true })
+        table.insert(embedFields, { ["name"] = "Player", ["value"] = "```" .. data.Player .. "```", ["inline"] = true })
+        table.insert(embedFields, { ["name"] = "Item", ["value"] = "```" .. data.Item .. "```", ["inline"] = true })
         if data.Mutation and data.Mutation ~= "None" then 
-            table.insert(fields, { ["name"] = "Mutation", ["value"] = "```" .. data.Mutation .. "```", ["inline"] = true }) 
+            table.insert(embedFields, { ["name"] = "Mutation", ["value"] = "```" .. data.Mutation .. "```", ["inline"] = true }) 
         end
-        table.insert(fields, { ["name"] = "Weight", ["value"] = "```" .. data.Weight .. "```", ["inline"] = true })
+        table.insert(embedFields, { ["name"] = "Weight", ["value"] = "```" .. data.Weight .. "```", ["inline"] = true })
 
     elseif category == "EVOLVED" then
         embedTitle = "Evolved Stone Found!"
         embedColor = 10181046
-        table.insert(fields, { ["name"] = "Player", ["value"] = "```" .. data.Player .. "```", ["inline"] = true })
-        table.insert(fields, { ["name"] = "Item", ["value"] = "```" .. data.Item .. "```", ["inline"] = true })
+        table.insert(embedFields, { ["name"] = "Player", ["value"] = "```" .. data.Player .. "```", ["inline"] = true })
+        table.insert(embedFields, { ["name"] = "Item", ["value"] = "```" .. data.Item .. "```", ["inline"] = true })
         
     elseif category == "RAGE" then
         embedTitle = "Leviathan Rage Event!"
         embedColor = 10038562
-        table.insert(fields, { ["name"] = "Player", ["value"] = "```" .. data.Player .. "```", ["inline"] = true })
-        table.insert(fields, { ["name"] = "Fish", ["value"] = "```" .. data.Item .. "```", ["inline"] = true })
-        table.insert(fields, { ["name"] = "Mutation", ["value"] = "```Leviathan Rage```", ["inline"] = true })
-        table.insert(fields, { ["name"] = "Weight", ["value"] = "```" .. data.Weight .. "```", ["inline"] = true })
+        table.insert(embedFields, { ["name"] = "Player", ["value"] = "```" .. data.Player .. "```", ["inline"] = true })
+        table.insert(embedFields, { ["name"] = "Fish", ["value"] = "```" .. data.Item .. "```", ["inline"] = true })
+        table.insert(embedFields, { ["name"] = "Mutation", ["value"] = "```Leviathan Rage```", ["inline"] = true })
+        table.insert(embedFields, { ["name"] = "Weight", ["value"] = "```" .. data.Weight .. "```", ["inline"] = true })
 
     elseif category == "CRYSTALIZED" then
         embedTitle = "Crystalized Mutation!"
         embedColor = 3407871
-        table.insert(fields, { ["name"] = "Player", ["value"] = "```" .. data.Player .. "```", ["inline"] = true })
-        table.insert(fields, { ["name"] = "Fish", ["value"] = "```" .. data.Item .. "```", ["inline"] = true })
-        table.insert(fields, { ["name"] = "Mutation", ["value"] = "```Crystalized```", ["inline"] = true })
-        table.insert(fields, { ["name"] = "Weight", ["value"] = "```" .. data.Weight .. "```", ["inline"] = true })
+        table.insert(embedFields, { ["name"] = "Player", ["value"] = "```" .. data.Player .. "```", ["inline"] = true })
+        table.insert(embedFields, { ["name"] = "Fish", ["value"] = "```" .. data.Item .. "```", ["inline"] = true })
+        table.insert(embedFields, { ["name"] = "Mutation", ["value"] = "```Crystalized```", ["inline"] = true })
+        table.insert(embedFields, { ["name"] = "Weight", ["value"] = "```" .. data.Weight .. "```", ["inline"] = true })
 
     elseif category == "CAVECRYSTAL" then
         embedTitle = "Cave Crystal Event!"
         embedColor = 16776960
-        table.insert(fields, { ["name"] = "Player", ["value"] = "```" .. data.Player .. "```", ["inline"] = true })
-        table.insert(fields, { ["name"] = "Event", ["value"] = "```" .. data.ListText .. "```", ["inline"] = false })
+        table.insert(embedFields, { ["name"] = "Player", ["value"] = "```" .. data.Player .. "```", ["inline"] = true })
+        table.insert(embedFields, { ["name"] = "Event", ["value"] = "```" .. data.ListText .. "```", ["inline"] = false })
 
     elseif category == "LEAVE" then
         embedTitle = "Player Left Server!"
         embedColor = 16711680
-        table.insert(fields, { ["name"] = "Player", ["value"] = "```" .. data.Player .. "```", ["inline"] = true })
+        table.insert(embedFields, { ["name"] = "Player", ["value"] = "```" .. data.Player .. "```", ["inline"] = true })
         if data.DisplayName then 
-            table.insert(fields, { ["name"] = "Display", ["value"] = "```" .. data.DisplayName .. "```", ["inline"] = true }) 
+            table.insert(embedFields, { ["name"] = "Display", ["value"] = "```" .. data.DisplayName .. "```", ["inline"] = true }) 
         end
         
     elseif category == "PLAYERS" then
         embedTitle = "Player List Info"
         embedColor = 5763719
-        table.insert(fields, { ["name"] = "List", ["value"] = "```\n" .. data.ListText .. "\n```", ["inline"] = false })
+        table.insert(embedFields, { ["name"] = "List", ["value"] = "```\n" .. data.ListText .. "\n```", ["inline"] = false })
     end
     
-    local embedData = { 
+    local payload = { 
         ["username"] = "XAL Notifications!", 
         ["avatar_url"] = "https://i.imgur.com/GWx0mX9.jpeg", 
         ["content"] = contentMsg, 
         ["embeds"] = {{ 
             ["title"] = embedTitle, 
             ["color"] = embedColor, 
-            ["fields"] = fields,
+            ["fields"] = embedFields,
             ["footer"] = { ["text"] = "XAL Server Monitoring V1.3 • bit.ly/xalserver", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" }
         }} 
     }
     
     pcall(function() 
-        httpRequest({ 
-            Url = TargetURL, 
-            Method = "POST", 
-            Headers = { ["Content-Type"] = "application/json" }, 
-            Body = HttpService:JSONEncode(embedData) 
-        }) 
+        httpRequest({ Url = TargetURL, Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = HttpService:JSONEncode(payload) }) 
     end)
 end
 
