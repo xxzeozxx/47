@@ -11,11 +11,11 @@ local TweenService = game:GetService("TweenService")
 local httpRequest = (syn and syn.request) or (http and http.request) or http_request or (fluxus and fluxus.request) or request
 
 if not httpRequest then
-    print("❌ XAL Error: Your executor does not support HTTP requests!")
-    return
+    warn("⚠️ XAL Warning: HTTP Request function not found! Webhooks might not work.")
+    httpRequest = function() end -- Dummy function to prevent errors
+else
+    print("✅ XAL: HTTP Request Function Found!")
 end
-
-print("✅ XAL: HTTP Request Function Found!")
 
 local ScriptActive = true
 local Connections = {}
