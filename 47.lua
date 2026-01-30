@@ -903,7 +903,7 @@ local function CheckAndSendNonPS(isManual)
                         { ["name"] = "Missing Players", ["value"] = "```\n" .. txt .. "\n```", ["inline"] = false }
                     },
                     ["footer"] = { ["text"] = "XAL Server Monitoring V1.3 • bit.ly/xalserver", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" },
-                    ["timestamp"] = DateTime.now():ToIsoDate()
+                    ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ")
                 }}
             }
             httpRequest({ Url = Current_Webhook_List, Method = "POST", Headers = {["Content-Type"]="application/json"}, Body = HttpService:JSONEncode(payload) })
@@ -945,7 +945,7 @@ BtnPS.MouseButton1Click:Connect(function()
                     { ["name"] = "Current Players", ["value"] = "```\n" .. str .. "\n```", ["inline"] = false }
                 },
                 ["footer"] = { ["text"] = "XAL Server Monitoring V1.3 • bit.ly/xalserver", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" },
-                ["timestamp"] = DateTime.now():ToIsoDate()
+                ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ")
             }}
         }
         httpRequest({ Url = Current_Webhook_List, Method = "POST", Headers = {["Content-Type"]="application/json"}, Body = HttpService:JSONEncode(payload) })
@@ -1119,6 +1119,8 @@ local function SendWebhook(data, category)
     if not TargetURL or TargetURL == "" or string.find(TargetURL, "MASUKKAN_URL") then return end
     
     -- Construct Fields based on Category
+    local embedTitle = ""
+    local embedColor = 0
     local fields = {}
     
     if category == "SECRET" then
@@ -1192,7 +1194,7 @@ local function SendWebhook(data, category)
             ["color"] = embedColor, 
             ["fields"] = fields,
             ["footer"] = { ["text"] = "XAL Server Monitoring V1.3 • bit.ly/xalserver", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" },
-            ["timestamp"] = DateTime.now():ToIsoDate()
+            ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ")
         }} 
     }
     
@@ -1353,7 +1355,7 @@ table.insert(Connections, Players.PlayerAdded:Connect(function(p)
                             { ["name"] = "Status", ["value"] = "```Player not whitelisted!```", ["inline"] = false }
                         },
                         ["footer"] = { ["text"] = "XAL Server Monitoring V1.3 • bit.ly/xalserver", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" },
-                        ["timestamp"] = DateTime.now():ToIsoDate()
+                        ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ")
                     }}
                  }
                  pcall(function() 
@@ -1417,7 +1419,7 @@ local function SendDisconnectWebhook(reason)
                 { ["name"] = "Reason", ["value"] = "```" .. tostring(reason) .. "```", ["inline"] = false }
             },
             ["footer"] = { ["text"] = "XAL Server Monitoring V1.3 • bit.ly/xalserver", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" },
-            ["timestamp"] = DateTime.now():ToIsoDate()
+            ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ")
         }}
     }
     
