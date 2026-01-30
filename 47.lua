@@ -902,8 +902,7 @@ local function CheckAndSendNonPS(isManual)
                     ["fields"] = {
                         { ["name"] = "Missing Players", ["value"] = "```\n" .. txt .. "\n```", ["inline"] = false }
                     },
-                    ["footer"] = { ["text"] = "XAL Server Monitoring V1.3 • bit.ly/xalserver", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" },
-                    ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ")
+                    ["footer"] = { ["text"] = "XAL Server Monitoring V1.3 • bit.ly/xalserver", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" }
                 }}
             }
             httpRequest({ Url = Current_Webhook_List, Method = "POST", Headers = {["Content-Type"]="application/json"}, Body = HttpService:JSONEncode(payload) })
@@ -944,8 +943,7 @@ BtnPS.MouseButton1Click:Connect(function()
                 ["fields"] = {
                     { ["name"] = "Current Players", ["value"] = "```\n" .. str .. "\n```", ["inline"] = false }
                 },
-                ["footer"] = { ["text"] = "XAL Server Monitoring V1.3 • bit.ly/xalserver", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" },
-                ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ")
+                ["footer"] = { ["text"] = "XAL Server Monitoring V1.3 • bit.ly/xalserver", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" }
             }}
         }
         httpRequest({ Url = Current_Webhook_List, Method = "POST", Headers = {["Content-Type"]="application/json"}, Body = HttpService:JSONEncode(payload) })
@@ -1193,8 +1191,7 @@ local function SendWebhook(data, category)
             ["title"] = embedTitle, 
             ["color"] = embedColor, 
             ["fields"] = fields,
-            ["footer"] = { ["text"] = "XAL Server Monitoring V1.3 • bit.ly/xalserver", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" },
-            ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ")
+            ["footer"] = { ["text"] = "XAL Server Monitoring V1.3 • bit.ly/xalserver", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" }
         }} 
     }
     
@@ -1418,8 +1415,7 @@ local function SendDisconnectWebhook(reason)
                 { ["name"] = "Display", ["value"] = "```" .. Players.LocalPlayer.DisplayName .. "```", ["inline"] = true },
                 { ["name"] = "Reason", ["value"] = "```" .. tostring(reason) .. "```", ["inline"] = false }
             },
-            ["footer"] = { ["text"] = "XAL Server Monitoring V1.3 • bit.ly/xalserver", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" },
-            ["timestamp"] = os.date("!%Y-%m-%dT%H:%M:%SZ")
+            ["footer"] = { ["text"] = "XAL Server Monitoring V1.3 • bit.ly/xalserver", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" }
         }}
     }
     
