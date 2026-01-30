@@ -106,6 +106,7 @@ local Settings = {
     EvolvedEnabled = false, 
     LeviathanRageEnabled = false,
     MutationCrystalized = false,
+    CaveCrystalEnabled = false,
     LeaveEnabled = false, 
     PlayerNonPSAuto = false,
     ForeignDetection = false
@@ -855,6 +856,7 @@ CreateToggle(Page_Webhook, "Ruby Mutation Gemstone", Settings.RubyEnabled, funct
 CreateToggle(Page_Webhook, "Evolved Enchant Stone", Settings.EvolvedEnabled, function(v) Settings.EvolvedEnabled = v end, function() return Current_Webhook_Fish ~= "" end)
 CreateToggle(Page_Webhook, "Mutation Leviathan Rage", Settings.LeviathanRageEnabled, function(v) Settings.LeviathanRageEnabled = v end, function() return Current_Webhook_Fish ~= "" end)
 CreateToggle(Page_Webhook, "Mutation Crystalized", Settings.MutationCrystalized, function(v) Settings.MutationCrystalized = v end, function() return Current_Webhook_Fish ~= "" end)
+CreateToggle(Page_Webhook, "Notif Cave Crystal", Settings.CaveCrystalEnabled, function(v) Settings.CaveCrystalEnabled = v end, function() return Current_Webhook_Fish ~= "" end)
 
 CreateToggle(Page_Webhook, "Player Leave Server", Settings.LeaveEnabled, function(v) Settings.LeaveEnabled = v end, function() return Current_Webhook_Leave ~= "" end)
 CreateToggle(Page_Webhook, "Player Not On Server (Auto)", Settings.PlayerNonPSAuto, function(v) Settings.PlayerNonPSAuto = v end, function() return Current_Webhook_List ~= "" end)
@@ -1062,6 +1064,7 @@ local function SendWebhook(data, category)
     if category == "EVOLVED" and not Settings.EvolvedEnabled then return end 
     if category == "RAGE" and not Settings.LeviathanRageEnabled then return end 
     if category == "CRYSTALIZED" and not Settings.MutationCrystalized then return end 
+    if category == "CAVECRYSTAL" and not Settings.CaveCrystalEnabled then return end 
     if category == "LEAVE" and not Settings.LeaveEnabled then return end 
     local TargetURL = ""; local contentMsg = ""; local realUser = GetUsername(data.Player)
     local discordId = nil
@@ -1103,6 +1106,8 @@ local function SendWebhook(data, category)
         local dispName = data.DisplayName or data.Player; embedTitle = dispName .. " Left the server."; embedColor = 16711680; descriptionText = "👤 **@" .. data.Player .. "**" 
     elseif category == "PLAYERS" then
         embedTitle = "👥 List Player In Server"; embedColor = 5763719; descriptionText = data.ListText
+    elseif category == "CAVECRYSTAL" then
+        embedTitle = "💎 Cave Crystal Event!"; embedColor = 16776960; descriptionText = data.ListText
     end
     local embedData = { ["username"] = "XAL Notifications!", ["avatar_url"] = "https://i.imgur.com/GWx0mX9.jpeg", ["content"] = contentMsg, ["embeds"] = {{ ["title"] = embedTitle, ["description"] = descriptionText .. "\n\nWebhook by **[bit.ly/xalserver](https://bit.ly/xalserver)**", ["color"] = embedColor, ["footer"] = { ["text"] = " ", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" } }} }
     pcall(function() httpRequest({ Url = TargetURL, Method = "POST", Headers = { ["Content-Type"] = "application/json" }, Body = HttpService:JSONEncode(embedData) }) end)
@@ -1324,5 +1329,31 @@ game:BindToClose(function()
     SendDisconnectWebhook("Script/Game Closed Gracefully")
     task.wait(1)
 end)
+
+local CaveCrystalDebounce = 0
+local function StartGuiWatcher()
+    local PlayerGui = Players.LocalPlayer:WaitForChild("PlayerGui", 10)
+    if not PlayerGui then return end
+
+    table.insert(Connections, PlayerGui.DescendantAdded:Connect(function(descendant)
+        if not ScriptActive then return end
+        if descendant:IsA("TextLabel") then
+             task.wait() 
+             local txt = descendant.Text
+             if string.find(txt, "Crystals are glowing in the Crystal Depths! Find them quickly!") then
+                 if tick() - CaveCrystalDebounce > 10 then
+                     CaveCrystalDebounce = tick()
+                     SendWebhook({ Player = Players.LocalPlayer.Name, ListText = "🌟 **Crystals are glowing in the Crystal Depths! Find them quickly!**" }, "CAVECRYSTAL")
+                 end
+             elseif string.find(txt, "You extracted a Cave Crystal!") then
+                 if tick() - CaveCrystalDebounce > 10 then
+                     CaveCrystalDebounce = tick()
+                     SendWebhook({ Player = Players.LocalPlayer.Name, ListText = "⛏️ **You extracted a Cave Crystal!**" }, "CAVECRYSTAL")
+                 end
+             end
+        end
+    end))
+end
+task.spawn(StartGuiWatcher)
 
 print("✅ XAL System Session v1.3 Loaded!")
