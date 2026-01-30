@@ -1360,17 +1360,22 @@ local function StartGuiWatcher()
     table.insert(Connections, PlayerGui.DescendantAdded:Connect(function(descendant)
         if not ScriptActive then return end
         if descendant:IsA("TextLabel") then
-             task.wait() 
-             local txt = descendant.Text
-             if string.find(txt, "Crystals are glowing in the Crystal Depths! Find them quickly!") then
+             task.wait(0.5) -- Wait for text to populate
+             local rawText = descendant.Text
+             local cleanText = string.gsub(rawText, "<[^>]+>", " ") -- Remove tags with space
+             cleanText = string.gsub(cleanText, "%s+", " ") -- Normalize spaces
+             cleanText = string.match(cleanText, "^%s*(.-)%s*$") -- Trim
+             local lowerText = string.lower(cleanText)
+
+             if string.find(lowerText, "crystals are glowing in the crystal depths") and string.find(lowerText, "find them quickly") then
                  if tick() - CaveCrystalDebounce > 10 then
                      CaveCrystalDebounce = tick()
-                     SendWebhook({ Player = Players.LocalPlayer.Name, ListText = "🌟 **Crystals are glowing in the Crystal Depths! Find them quickly!**" }, "CAVECRYSTAL")
+                     SendWebhook({ Player = Players.LocalPlayer.Name, ListText = "🌟 **" .. cleanText .. "**" }, "CAVECRYSTAL")
                  end
-             elseif string.find(txt, "You extracted a Cave Crystal!") then
+             elseif string.find(lowerText, "you extracted a cave crystal") then
                  if tick() - CaveCrystalDebounce > 10 then
                      CaveCrystalDebounce = tick()
-                     SendWebhook({ Player = Players.LocalPlayer.Name, ListText = "⛏️ **You extracted a Cave Crystal!**" }, "CAVECRYSTAL")
+                     SendWebhook({ Player = Players.LocalPlayer.Name, ListText = "⛏️ **" .. cleanText .. "**" }, "CAVECRYSTAL")
                  end
              end
         end
