@@ -1086,7 +1086,8 @@ SendStatsBtn.TextColor3 = Color3.new(1, 1, 1)
 SendStatsBtn.TextSize = 11
 Instance.new("UICorner", SendStatsBtn).CornerRadius = UDim.new(0, 6)
 
-CreateStatItem(Page_SessionStats, "Total Webhooks Sent", "TotalSent")
+local ServerTitle = "XALSCENT"
+CreateInput(Page_SessionStats, "Server Title", ServerTitle, function(v) ServerTitle = v end)
 CreateStatItem(Page_SessionStats, "Secret Fish Caught", "Secret")
 CreateStatItem(Page_SessionStats, "Ruby Gemstones", "Ruby")
 CreateStatItem(Page_SessionStats, "Evolved Stones", "Evolved")
@@ -1105,7 +1106,7 @@ SendStatsBtn.MouseButton1Click:Connect(function()
     local h = math.floor(diff / 3600); local m = math.floor((diff % 3600) / 60); local s = math.floor(diff % 60)
     local timeStr = string.format("%02dh %02dm %02ds", h, m, s)
     
-    local contentStr = "📊 XAL SERVER SESSION\n"
+    local contentStr = "📊 SERVER: " .. ServerTitle .. "\n"
     contentStr = contentStr .. "⏱️ Uptime: " .. timeStr .. "\n"
     contentStr = contentStr .. "📡 Total Webhooks: " .. SessionStats.TotalSent .. "\n\n"
     contentStr = contentStr .. "⚓ Secrets: " .. SessionStats.Secret .. "\n"
