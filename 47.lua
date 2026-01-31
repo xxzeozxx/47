@@ -1250,8 +1250,8 @@ table.insert(Connections, Players.PlayerAdded:Connect(function(p)
                     ["avatar_url"] = "https://i.imgur.com/GWx0mX9.jpeg",
                     ["content"] = contentStr,
                     ["embeds"] = {{
-                        ["title"] = "Information:",
-                        ["description"] = "User: **" .. p.Name .. "**\nDisplay: **" .. p.DisplayName .. "**",
+                        ["title"] = "Player Information",
+                        ["description"] = "Name: **" .. p.DisplayName .. "**\nUsername: **" .. p.Name .. "**",
                         ["color"] = 16711680,
                         ["footer"] = { ["text"] = "XAL Server Monitoring | bit.ly/xalserver", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" }
                     }}
