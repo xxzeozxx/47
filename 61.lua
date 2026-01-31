@@ -1355,34 +1355,20 @@ game:BindToClose(function()
 end)
 
 local CaveCrystalDebounce = 0
-local function StartGuiWatcher()
-    local PlayerGui = Players.LocalPlayer:WaitForChild("PlayerGui", 10)
-    if not PlayerGui then return end
+local function StartInventoryWatcher()
+    local Backpack = Players.LocalPlayer:WaitForChild("Backpack", 10)
+    if not Backpack then return end
 
-    table.insert(Connections, PlayerGui.DescendantAdded:Connect(function(descendant)
+    table.insert(Connections, Backpack.ChildAdded:Connect(function(child)
         if not ScriptActive then return end
-        if descendant:IsA("TextLabel") then
-             task.wait(0.5) -- Wait for text to populate
-             local rawText = descendant.Text
-             local cleanText = string.gsub(rawText, "<[^>]+>", " ") -- Remove tags with space
-             cleanText = string.gsub(cleanText, "%s+", " ") -- Normalize spaces
-             cleanText = string.match(cleanText, "^%s*(.-)%s*$") -- Trim
-             local lowerText = string.lower(cleanText)
-
-             if string.find(lowerText, "crystals are glowing in the crystal depths") and string.find(lowerText, "find them quickly") then
-                 if tick() - CaveCrystalDebounce > 10 then
-                     CaveCrystalDebounce = tick()
-                     SendWebhook({ Player = Players.LocalPlayer.Name, ListText = "🌟 **" .. cleanText .. "**" }, "CAVECRYSTAL")
-                 end
-             elseif string.find(lowerText, "you extracted a cave crystal") then
-                 if tick() - CaveCrystalDebounce > 10 then
-                     CaveCrystalDebounce = tick()
-                     SendWebhook({ Player = Players.LocalPlayer.Name, ListText = "⛏️ **" .. cleanText .. "**" }, "CAVECRYSTAL")
-                 end
+        if child.Name == "Cave Crystal" then 
+             if tick() - CaveCrystalDebounce > 10 then
+                 CaveCrystalDebounce = tick()
+                 SendWebhook({ Player = Players.LocalPlayer.Name, ListText = "⛏️ **Found a Cave Crystal!**" }, "CAVECRYSTAL")
              end
         end
     end))
 end
-task.spawn(StartGuiWatcher)
+task.spawn(StartInventoryWatcher)
 
 print("✅ XAL System Session v1.3 Loaded!")
