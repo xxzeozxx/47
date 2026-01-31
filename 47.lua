@@ -502,13 +502,10 @@ local function CreateTab(name, target, isDefault)
     end
 end
 
-CreateTab("Notification", Page_Webhook, true) 
-
+CreateTab("Server Info", Page_SessionStats, true)
+CreateTab("Notification", Page_Webhook)
 CreateTab("Admin Boost", Page_AdminBoost)
-
-CreateTab("Session Stats", Page_SessionStats)
 CreateTab("Webhook", Page_Url)
-
 CreateTab("List Player", Page_Tag)
 CreateTab("Import List", Page_Config) 
 CreateTab("Save Config", Page_Save) 
@@ -1044,7 +1041,6 @@ OpenBtn.MouseButton1Click:Connect(function()
      MainFrame.Visible = not MainFrame.Visible
 end)
 
--- Session Stats UI Helper
 local function CreateStatItem(parent, label, key)
     local Frame = Instance.new("Frame", parent)
     Frame.BackgroundColor3 = Theme.Content; Frame.Size = UDim2.new(1, -5, 0, 24); Frame.BorderSizePixel = 0
