@@ -915,7 +915,7 @@ local function CheckAndSendNonPS(isManual)
     if #missingTags > 0 then contentMsg = " **Peringatan:** " .. table.concat(missingTags, " ") .. " belum masuk server!" end
     
     task.spawn(function()
-        local p = { ["username"] = "XAL Notifications!", ["avatar_url"] = "https://i.imgur.com/GWx0mX9.jpeg", ["content"] = contentMsg, ["embeds"] = {{ ["title"] = "Player Not On Server", ["description"] = "Information\n```\n" .. txt .. "\n```", ["color"] = 16733440, ["footer"] = { ["text"] = "XAL Server Monitoring | bit.ly/xalserver", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" } }} }
+        local p = { ["username"] = "XAL Notifications!", ["avatar_url"] = "https://i.imgur.com/GWx0mX9.jpeg", ["content"] = contentMsg, ["embeds"] = {{ ["title"] = "Player Not On Server", ["description"] = "```\n" .. txt .. "\n```", ["color"] = 16733440, ["footer"] = { ["text"] = "XAL Server Monitoring | bit.ly/xalserver", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" } }} }
         httpRequest({ Url = Current_Webhook_List, Method = "POST", Headers = {["Content-Type"]="application/json"}, Body = HttpService:JSONEncode(p) })
     end)
 end
@@ -944,7 +944,7 @@ BtnPS.MouseButton1Click:Connect(function()
     local all = Players:GetPlayers(); local str = "Current Players (" .. #all .. "):\n\n"
     for i, p in ipairs(all) do str = str .. i .. ". " .. p.DisplayName .. " (@" .. p.Name .. ")\n" end
     task.spawn(function()
-        local p = { ["username"] = "XAL Notifications!", ["avatar_url"] = "https://i.imgur.com/GWx0mX9.jpeg", ["embeds"] = {{ ["title"] = " Manual Player List", ["description"] = "Information\n```\n" .. str .. "\n```", ["color"] = 5763719, ["footer"] = { ["text"] = "XAL Server Monitoring | bit.ly/xalserver", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" } }} }
+        local p = { ["username"] = "XAL Notifications!", ["avatar_url"] = "https://i.imgur.com/GWx0mX9.jpeg", ["embeds"] = {{ ["title"] = " Manual Player List", ["description"] = "```\n" .. str .. "\n```", ["color"] = 5763719, ["footer"] = { ["text"] = "XAL Server Monitoring | bit.ly/xalserver", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" } }} }
         httpRequest({ Url = Current_Webhook_List, Method = "POST", Headers = {["Content-Type"]="application/json"}, Body = HttpService:JSONEncode(p) })
     end)
 end)
@@ -989,7 +989,7 @@ task.spawn(function()
                              ["content"] = "⚠️ **HIGH PING DETECTED!**",
                              ["embeds"] = {{
                                  ["title"] = "Server Lag Alert",
-                                 ["description"] = "Information\n```\nCurrent Ping: " .. math.floor(ping) .. " ms\n```",
+                                 ["description"] = "```\nCurrent Ping: " .. math.floor(ping) .. " ms\n```",
                                  ["color"] = 16776960,
                                  ["footer"] = { ["text"] = "XAL Server Monitoring | bit.ly/xalserver", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" }
                              }}
@@ -1111,7 +1111,7 @@ SendStatsBtn.MouseButton1Click:Connect(function()
     local h = math.floor(diff / 3600); local m = math.floor((diff % 3600) / 60); local s = math.floor(diff % 60)
     local timeStr = string.format("%02dh %02dm %02ds", h, m, s)
     
-    local contentStr = "**📊 SESSION STATISTICS**\n"
+    local contentStr = "📊 XAL SERVER SESSION\n"
     contentStr = contentStr .. "⏱️ Uptime: " .. timeStr .. "\n"
     contentStr = contentStr .. "📡 Total Webhooks: " .. SessionStats.TotalSent .. "\n\n"
     contentStr = contentStr .. "⚓ Secrets: " .. SessionStats.Secret .. "\n"
@@ -1127,7 +1127,7 @@ SendStatsBtn.MouseButton1Click:Connect(function()
              ["avatar_url"] = "https://i.imgur.com/GWx0mX9.jpeg",
              ["embeds"] = {{
                  ["title"] = "Session Report",
-                 ["description"] = "Information\n```\n" .. contentStr .. "\n```",
+                 ["description"] = "```\n" .. contentStr .. "\n```",
                  ["color"] = 5763719,
                  ["footer"] = { ["text"] = "XAL Server Monitoring | bit.ly/xalserver", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" }
              }}
@@ -1265,7 +1265,7 @@ local function SendWebhook(data, category)
         table.insert(lines, "⚖️ Weight: " .. data.Weight)
         descriptionText = "Player: " .. pName .. "\n\n```\n" .. table.concat(lines, "\n") .. "\n```"
     elseif category == "LEAVE" then
-        local dispName = data.DisplayName or data.Player; embedTitle = dispName .. " Left the server."; embedColor = 16711680; descriptionText = "Information\n👤 **@" .. data.Player .. "**" 
+        local dispName = data.DisplayName or data.Player; embedTitle = dispName .. " Left the server."; embedColor = 16711680; descriptionText = "👤 **@" .. data.Player .. "**" 
     elseif category == "PLAYERS" then
         embedTitle = "👥 List Player In Server"; embedColor = 5763719; descriptionText = "Information\n" .. data.ListText
     elseif category == "CAVECRYSTAL" then
@@ -1426,7 +1426,7 @@ table.insert(Connections, Players.PlayerAdded:Connect(function(p)
                     ["content"] = contentStr,
                     ["embeds"] = {{
                         ["title"] = "Player Information",
-                        ["description"] = "Information\n```\nName: " .. p.DisplayName .. "\nUsername: " .. p.Name .. "\n```",
+                        ["description"] = "```\nName: " .. p.DisplayName .. "\nUsername: " .. p.Name .. "\n```",
                         ["color"] = 16711680,
                         ["footer"] = { ["text"] = "XAL Server Monitoring | bit.ly/xalserver", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" }
                     }}
