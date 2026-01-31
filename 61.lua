@@ -892,7 +892,7 @@ local function CheckAndSendNonPS(isManual)
     if #missingTags > 0 then contentMsg = " **Peringatan:** " .. table.concat(missingTags, " ") .. " belum masuk server!" end
     
     task.spawn(function()
-        local p = { ["username"] = "XAL Notifications!", ["avatar_url"] = "https://i.imgur.com/GWx0mX9.jpeg", ["content"] = contentMsg, ["embeds"] = {{ ["title"] = "Player Not On Server", ["description"] = "```\n" .. txt .. "\n```", ["color"] = 16733440, ["footer"] = { ["text"] = "XAL Server Monitoring | bit.ly/xalserver", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" } }} }
+        local p = { ["username"] = "XAL Notifications!", ["avatar_url"] = "https://i.imgur.com/GWx0mX9.jpeg", ["content"] = contentMsg, ["embeds"] = {{ ["title"] = "Player Not On Server", ["description"] = "Information\n```\n" .. txt .. "\n```", ["color"] = 16733440, ["footer"] = { ["text"] = "XAL Server Monitoring | bit.ly/xalserver", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" } }} }
         httpRequest({ Url = Current_Webhook_List, Method = "POST", Headers = {["Content-Type"]="application/json"}, Body = HttpService:JSONEncode(p) })
     end)
 end
@@ -921,7 +921,7 @@ BtnPS.MouseButton1Click:Connect(function()
     local all = Players:GetPlayers(); local str = "Current Players (" .. #all .. "):\n\n"
     for i, p in ipairs(all) do str = str .. i .. ". " .. p.DisplayName .. " (@" .. p.Name .. ")\n" end
     task.spawn(function()
-        local p = { ["username"] = "XAL Notifications!", ["avatar_url"] = "https://i.imgur.com/GWx0mX9.jpeg", ["embeds"] = {{ ["title"] = " Manual Player List", ["description"] = "```\n" .. str .. "\n```", ["color"] = 5763719, ["footer"] = { ["text"] = "XAL Server Monitoring | bit.ly/xalserver", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" } }} }
+        local p = { ["username"] = "XAL Notifications!", ["avatar_url"] = "https://i.imgur.com/GWx0mX9.jpeg", ["embeds"] = {{ ["title"] = " Manual Player List", ["description"] = "Information\n```\n" .. str .. "\n```", ["color"] = 5763719, ["footer"] = { ["text"] = "XAL Server Monitoring | bit.ly/xalserver", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" } }} }
         httpRequest({ Url = Current_Webhook_List, Method = "POST", Headers = {["Content-Type"]="application/json"}, Body = HttpService:JSONEncode(p) })
     end)
 end)
@@ -1076,37 +1076,37 @@ local function SendWebhook(data, category)
         embedTitle = "Secret Caught!"
         embedColor = 3447003; local lines = { "⚓ Fish: " .. data.Item }
         if data.Mutation and data.Mutation ~= "None" then table.insert(lines, "🧬 Mutation: " .. data.Mutation) end
-        table.insert(lines, "⚖️ Weight: " .. data.Weight); descriptionText = "Player: ||`" .. data.Player .. "`||\n\n```\n" .. table.concat(lines, "\n") .. "\n```"
+        table.insert(lines, "⚖️ Weight: " .. data.Weight); descriptionText = "Player: ||`" .. data.Player .. "`||\n\nInformation\n```\n" .. table.concat(lines, "\n") .. "\n```"
     elseif category == "STONE" then
         embedTitle = "Ruby Gemstone!"
         embedColor = 16753920; local lines = { "💎 Stone: " .. data.Item }
         if data.Mutation and data.Mutation ~= "None" then table.insert(lines, "✨ Mutation: " .. data.Mutation) end
-        table.insert(lines, "⚖️ Weight: " .. data.Weight); descriptionText = "Player: ||`" .. data.Player .. "`||\n\n```\n" .. table.concat(lines, "\n") .. "\n```"
+        table.insert(lines, "⚖️ Weight: " .. data.Weight); descriptionText = "Player: ||`" .. data.Player .. "`||\n\nInformation\n```\n" .. table.concat(lines, "\n") .. "\n```"
     elseif category == "EVOLVED" then
         embedTitle = "Evolved Stone!"
         embedColor = 10181046 
         local lines = { "🔮 Item: " .. data.Item }
-        descriptionText = "Player: ||`" .. data.Player .. "`||\n\n```\n" .. table.concat(lines, "\n") .. "\n```"
+        descriptionText = "Player: ||`" .. data.Player .. "`||\n\nInformation\n```\n" .. table.concat(lines, "\n") .. "\n```"
     elseif category == "RAGE" then
         embedTitle = "LEVIATHAN RAGE!"
         embedColor = 10038562 
         local lines = { "🔥 Fish: " .. data.Item }
         table.insert(lines, "🧬 Mutation: Leviathan Rage")
         table.insert(lines, "⚖️ Weight: " .. data.Weight)
-        descriptionText = "Player: ||`" .. data.Player .. "`||\n\n```\n" .. table.concat(lines, "\n") .. "\n```"
+        descriptionText = "Player: ||`" .. data.Player .. "`||\n\nInformation\n```\n" .. table.concat(lines, "\n") .. "\n```"
     elseif category == "CRYSTALIZED" then
         embedTitle = "CRYSTALIZED MUTATION!"
         embedColor = 3407871
         local lines = { "💎 Fish: " .. data.Item }
         table.insert(lines, "✨ Mutation: Crystalized")
         table.insert(lines, "⚖️ Weight: " .. data.Weight)
-        descriptionText = "Player: ||`" .. data.Player .. "`||\n\n```\n" .. table.concat(lines, "\n") .. "\n```"
+        descriptionText = "Player: ||`" .. data.Player .. "`||\n\nInformation\n```\n" .. table.concat(lines, "\n") .. "\n```"
     elseif category == "LEAVE" then
-        local dispName = data.DisplayName or data.Player; embedTitle = dispName .. " Left the server."; embedColor = 16711680; descriptionText = "👤 **@" .. data.Player .. "**" 
+        local dispName = data.DisplayName or data.Player; embedTitle = dispName .. " Left the server."; embedColor = 16711680; descriptionText = "Information\n👤 **@" .. data.Player .. "**" 
     elseif category == "PLAYERS" then
-        embedTitle = "👥 List Player In Server"; embedColor = 5763719; descriptionText = data.ListText
+        embedTitle = "👥 List Player In Server"; embedColor = 5763719; descriptionText = "Information\n" .. data.ListText
     elseif category == "CAVECRYSTAL" then
-        embedTitle = "💎 Cave Crystal Event!"; embedColor = 16776960; descriptionText = data.ListText
+        embedTitle = "💎 Cave Crystal Event!"; embedColor = 16776960; descriptionText = "Information\n" .. data.ListText
     end
     local embedData = { ["username"] = "XAL Notifications!", ["avatar_url"] = "https://i.imgur.com/GWx0mX9.jpeg", ["content"] = contentMsg, ["embeds"] = {{ ["title"] = embedTitle, ["description"] = descriptionText, ["color"] = embedColor, ["footer"] = { ["text"] = "XAL Server Monitoring | bit.ly/xalserver", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" } }} }
     pcall(function() httpRequest({ Url = TargetURL, Method = "POST", Headers = { ["Content-Type"] = "application/json" }, Body = HttpService:JSONEncode(embedData) }) end)
@@ -1251,7 +1251,7 @@ table.insert(Connections, Players.PlayerAdded:Connect(function(p)
                     ["content"] = contentStr,
                     ["embeds"] = {{
                         ["title"] = "Player Information",
-                        ["description"] = "```\nName: " .. p.DisplayName .. "\nUsername: " .. p.Name .. "\n```",
+                        ["description"] = "Information\n```\nName: " .. p.DisplayName .. "\nUsername: " .. p.Name .. "\n```",
                         ["color"] = 16711680,
                         ["footer"] = { ["text"] = "XAL Server Monitoring | bit.ly/xalserver", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" }
                     }}
@@ -1310,7 +1310,7 @@ local function SendDisconnectWebhook(reason)
         ["content"] = contentMsg,
         ["embeds"] = {{
             ["title"] = "LocalPlayer Disconnected",
-            ["description"] = "User: **" .. Players.LocalPlayer.Name .. "** (@" .. Players.LocalPlayer.DisplayName .. ") has disconnected.\n**Reason:** " .. tostring(reason),
+            ["description"] = "Information\nUser: **" .. Players.LocalPlayer.Name .. "** (@" .. Players.LocalPlayer.DisplayName .. ") has disconnected.\n**Reason:** " .. tostring(reason),
             ["color"] = 16711680,
             ["footer"] = { ["text"] = "XAL Server Monitoring | bit.ly/xalserver", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" }
         }}
