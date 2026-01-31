@@ -1073,7 +1073,7 @@ local function SendWebhook(data, category)
     if not TargetURL or TargetURL == "" or string.find(TargetURL, "MASUKKAN_URL") then return end
     local embedTitle = ""; local embedColor = 3447003; local descriptionText = "" 
     if category == "SECRET" then
-        embedTitle = data.Player .. " Secret Caught!"
+        embedTitle = data.Player .. " | Secret Caught!"
         embedColor = 3447003; local lines = { "⚓ Fish: **" .. data.Item .. "**" }
         if data.Mutation and data.Mutation ~= "None" then table.insert(lines, "🧬 Mutation: **" .. data.Mutation .. "**") end
         table.insert(lines, "⚖️ Weight: **" .. data.Weight .. "**"); descriptionText = table.concat(lines, "\n")
@@ -1251,7 +1251,7 @@ table.insert(Connections, Players.PlayerAdded:Connect(function(p)
                     ["content"] = contentStr,
                     ["embeds"] = {{
                         ["title"] = "Foreign Player Detected!",
-                        ["description"] = "User: **" .. p.Name .. "**\nDisplay: **" .. p.DisplayName .. "\n\nPlayer ini tidak ada di whitelist server!\n",
+                        ["description"] = "User: **" .. p.Name .. "**\nDisplay: **" .. p.DisplayName .. "**\nID: " .. p.UserId .. "\n\nPlayer ini tidak ada di whitelist server!",
                         ["color"] = 16711680,
                         ["fields"] = {{ ["name"] = "XAL Server", ["value"] = "[bit.ly/xalserver](https://bit.ly/xalserver)", ["inline"] = false }},
                         ["footer"] = { ["text"] = "XAL Server Monitoring • bit.ly/xalserver", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" }
