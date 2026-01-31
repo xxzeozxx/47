@@ -95,7 +95,7 @@ local SecretList = {
     "Ancient Lochness Monster", "Talon Serpent", "Hacker Shark", "ElRetro Gran Maja",
     "Strawberry Choc Megalodon", "Krampus Shark", "Emerald Winter Whale",
     "Winter Frost Shark", "Icebreaker Whale", "Leviathan", "Pirate Megalodon", "Viridis Lurker",
-    "Cursed Kraken",
+    "Cursed Kraken", "Glowspore Toad", "Sapphyra",
 }
 
 local StoneList = { "Ruby" }
@@ -110,7 +110,8 @@ local Settings = {
     LeaveEnabled = false, 
     PlayerNonPSAuto = false,
     ForeignDetection = false,
-    SpoilerName = true
+    SpoilerName = true,
+    PingMonitor = false
 }
 
 local TagList = {} 
@@ -947,9 +948,43 @@ SpacerAdmin.BackgroundTransparency = 1; SpacerAdmin.Size = UDim2.new(1,0,0,5)
 
 CreateToggle(Page_AdminBoost, "Deteksi Player Asing", Settings.ForeignDetection, function(v) Settings.ForeignDetection = v end, function() return Current_Webhook_Admin ~= "" end)
 CreateToggle(Page_AdminBoost, "Hide Player Name (Spoiler)", Settings.SpoilerName, function(v) Settings.SpoilerName = v end, nil)
+CreateToggle(Page_AdminBoost, "Lag Detector (Ping > 500ms)", Settings.PingMonitor, function(v) Settings.PingMonitor = v end, function() return Current_Webhook_Admin ~= "" end)
 
+
+
+
+local LastPingAlert = 0
+task.spawn(function()
+    while ScriptActive do
+        task.wait(5)
+        if Settings.PingMonitor and ScriptActive then
+             local success, ping = pcall(function() return game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue() end)
+             if success and ping > 500 then
+                 if tick() - LastPingAlert > 60 then
+                     LastPingAlert = tick()
+                     task.spawn(function()
+                         if Current_Webhook_Admin == "" then return end
+                         local embed = {
+                             ["username"] = "XAL Security",
+                             ["avatar_url"] = "https://i.imgur.com/GWx0mX9.jpeg",
+                             ["content"] = "⚠️ **HIGH PING DETECTED!**",
+                             ["embeds"] = {{
+                                 ["title"] = "Server Lag Alert",
+                                 ["description"] = "Information\n```\nCurrent Ping: " .. math.floor(ping) .. " ms\n```",
+                                 ["color"] = 16776960,
+                                 ["footer"] = { ["text"] = "XAL Server Monitoring | bit.ly/xalserver", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" }
+                             }}
+                         }
+                         pcall(function() httpRequest({ Url = Current_Webhook_Admin, Method = "POST", Headers = {["Content-Type"]="application/json"}, Body = HttpService:JSONEncode(embed) }) end)
+                     end)
+                 end
+             end
+        end
+    end
+end)
 
 task.spawn(function()
+
     while ScriptActive do
         task.wait(1800) 
         if Settings.PlayerNonPSAuto and ScriptActive then
