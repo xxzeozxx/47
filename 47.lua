@@ -1251,7 +1251,7 @@ table.insert(Connections, Players.PlayerAdded:Connect(function(p)
                     ["content"] = contentStr,
                     ["embeds"] = {{
                         ["title"] = "Foreign Player Detected!",
-                        ["description"] = "User: **" .. p.Name .. "**\nDisplay: **" .. p.DisplayName .. "**\n\nPlayer ini tidak ada di whitelist server!",
+                        ["description"] = "User: **" .. p.Name .. "**\nDisplay: **" .. p.DisplayName .. "**",
                         ["color"] = 16711680,
                         ["footer"] = { ["text"] = "XAL Server Monitoring • bit.ly/xalserver", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" }
                     }}
