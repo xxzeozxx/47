@@ -1073,7 +1073,7 @@ local function SendWebhook(data, category)
     if not TargetURL or TargetURL == "" or string.find(TargetURL, "MASUKKAN_URL") then return end
     local embedTitle = ""; local embedColor = 3447003; local descriptionText = "" 
     if category == "SECRET" then
-        embedTitle = data.Player .. " | Secret Caught!"
+        embedTitle = data.Player .. " Secret Caught!"
         embedColor = 3447003; local lines = { "⚓ Fish: **" .. data.Item .. "**" }
         if data.Mutation and data.Mutation ~= "None" then table.insert(lines, "🧬 Mutation: **" .. data.Mutation .. "**") end
         table.insert(lines, "⚖️ Weight: **" .. data.Weight .. "**"); descriptionText = table.concat(lines, "\n")
