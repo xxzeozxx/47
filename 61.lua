@@ -889,10 +889,10 @@ local function CheckAndSendNonPS(isManual)
     if #missingNames == 0 then txt = "All tagged players are in the server!" else for i, v in ipairs(missingNames) do txt = txt .. i .. ". " .. v .. "\n" end end
     
     local contentMsg = ""
-    if #missingTags > 0 then contentMsg = "⚠️ **Peringatan:** " .. table.concat(missingTags, " ") .. " belum masuk server!" end
+    if #missingTags > 0 then contentMsg = " **Peringatan:** " .. table.concat(missingTags, " ") .. " belum masuk server!" end
     
     task.spawn(function()
-        local p = { ["username"] = "XAL Notifications!", ["avatar_url"] = "https://i.imgur.com/GWx0mX9.jpeg", ["content"] = contentMsg, ["embeds"] = {{ ["title"] = "🚫 Player Not On Server", ["description"] = txt .. "\n\nWebhook by **[bit.ly/xalserver](https://bit.ly/xalserver)**", ["color"] = 16733440, ["footer"] = { ["text"] = " ", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" } }} }
+        local p = { ["username"] = "XAL Notifications!", ["avatar_url"] = "https://i.imgur.com/GWx0mX9.jpeg", ["content"] = contentMsg, ["embeds"] = {{ ["title"] = "Player Not On Server", ["description"] = txt, ["color"] = 16733440, ["footer"] = { ["text"] = "XAL Server Monitoring | bit.ly/xalserver", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" } }} }
         httpRequest({ Url = Current_Webhook_List, Method = "POST", Headers = {["Content-Type"]="application/json"}, Body = HttpService:JSONEncode(p) })
     end)
 end
@@ -921,7 +921,7 @@ BtnPS.MouseButton1Click:Connect(function()
     local all = Players:GetPlayers(); local str = "Current Players (" .. #all .. "):\n\n"
     for i, p in ipairs(all) do str = str .. "**" .. i .. ". " .. p.DisplayName .. " (@" .. p.Name .. ")**\n" end
     task.spawn(function()
-        local p = { ["username"] = "XAL Notifications!", ["avatar_url"] = "https://i.imgur.com/GWx0mX9.jpeg", ["embeds"] = {{ ["title"] = "👥 Manual Player List", ["description"] = str .. "\n\nWebhook by **[bit.ly/xalserver](https://bit.ly/xalserver)**", ["color"] = 5763719, ["footer"] = { ["text"] = " ", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" } }} }
+        local p = { ["username"] = "XAL Notifications!", ["avatar_url"] = "https://i.imgur.com/GWx0mX9.jpeg", ["embeds"] = {{ ["title"] = " Manual Player List", ["description"] = str, ["color"] = 5763719, ["footer"] = { ["text"] = "XAL Server Monitoring | bit.ly/xalserver", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" } }} }
         httpRequest({ Url = Current_Webhook_List, Method = "POST", Headers = {["Content-Type"]="application/json"}, Body = HttpService:JSONEncode(p) })
     end)
 end)
@@ -1073,29 +1073,29 @@ local function SendWebhook(data, category)
     if not TargetURL or TargetURL == "" or string.find(TargetURL, "MASUKKAN_URL") then return end
     local embedTitle = ""; local embedColor = 3447003; local descriptionText = "" 
     if category == "SECRET" then
-        embedTitle = data.Player .. " | Secret Caught!"
+        embedTitle = data.Player .. " Secret Caught!"
         embedColor = 3447003; local lines = { "⚓ Fish: **" .. data.Item .. "**" }
         if data.Mutation and data.Mutation ~= "None" then table.insert(lines, "🧬 Mutation: **" .. data.Mutation .. "**") end
         table.insert(lines, "⚖️ Weight: **" .. data.Weight .. "**"); descriptionText = table.concat(lines, "\n")
     elseif category == "STONE" then
-        embedTitle = data.Player .. " | Ruby Gemstone!"
+        embedTitle = data.Player .. " Ruby Gemstone!"
         embedColor = 16753920; local lines = { "💎 Stone: **" .. data.Item .. "**" }
         if data.Mutation and data.Mutation ~= "None" then table.insert(lines, "✨ Mutation: **" .. data.Mutation .. "**") end
         table.insert(lines, "⚖️ Weight: **" .. data.Weight .. "**"); descriptionText = table.concat(lines, "\n")
     elseif category == "EVOLVED" then
-        embedTitle = data.Player .. " | Evolved Stone!"
+        embedTitle = data.Player .. " Evolved Stone!"
         embedColor = 10181046 
         local lines = { "🔮 Item: **" .. data.Item .. "**" }
         descriptionText = table.concat(lines, "\n")
     elseif category == "RAGE" then
-        embedTitle = data.Player .. " | LEVIATHAN RAGE!"
+        embedTitle = data.Player .. " LEVIATHAN RAGE!"
         embedColor = 10038562 
         local lines = { "🔥 Fish: **" .. data.Item .. "**" }
         table.insert(lines, "🧬 Mutation: **Leviathan Rage**")
         table.insert(lines, "⚖️ Weight: **" .. data.Weight .. "**")
         descriptionText = table.concat(lines, "\n")
     elseif category == "CRYSTALIZED" then
-        embedTitle = data.Player .. " | CRYSTALIZED MUTATION!"
+        embedTitle = data.Player .. " CRYSTALIZED MUTATION!"
         embedColor = 3407871
         local lines = { "💎 Fish: **" .. data.Item .. "**" }
         table.insert(lines, "✨ Mutation: **Crystalized**")
@@ -1108,7 +1108,7 @@ local function SendWebhook(data, category)
     elseif category == "CAVECRYSTAL" then
         embedTitle = "💎 Cave Crystal Event!"; embedColor = 16776960; descriptionText = data.ListText
     end
-    local embedData = { ["username"] = "XAL Notifications!", ["avatar_url"] = "https://i.imgur.com/GWx0mX9.jpeg", ["content"] = contentMsg, ["embeds"] = {{ ["title"] = embedTitle, ["description"] = descriptionText .. "\n\nWebhook by **[bit.ly/xalserver](https://bit.ly/xalserver)**", ["color"] = embedColor, ["footer"] = { ["text"] = " ", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" } }} }
+    local embedData = { ["username"] = "XAL Notifications!", ["avatar_url"] = "https://i.imgur.com/GWx0mX9.jpeg", ["content"] = contentMsg, ["embeds"] = {{ ["title"] = embedTitle, ["description"] = descriptionText, ["color"] = embedColor, ["footer"] = { ["text"] = "XAL Server Monitoring | bit.ly/xalserver", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" } }} }
     pcall(function() httpRequest({ Url = TargetURL, Method = "POST", Headers = { ["Content-Type"] = "application/json" }, Body = HttpService:JSONEncode(embedData) }) end)
 end
 
@@ -1244,16 +1244,16 @@ table.insert(Connections, Players.PlayerAdded:Connect(function(p)
                  if id1 ~= "" then adminTags = adminTags .. "<@" .. id1 .. "> " end
                  if id2 ~= "" then adminTags = adminTags .. "<@" .. id2 .. "> " end
                  
-                 local contentStr = "⚠️ **WARNING:** " .. adminTags .. "New Player: **" .. p.Name .. "**"
+                 local contentStr = "Foreign Player Detected!" .. adminTags
                  local embed = {
                     ["username"] = "XAL Security",
                     ["avatar_url"] = "https://i.imgur.com/GWx0mX9.jpeg",
                     ["content"] = contentStr,
                     ["embeds"] = {{
-                        ["title"] = "🚨 Foreign Player Detected!",
-                        ["description"] = "User: **" .. p.Name .. "**\nDisplay: **" .. p.DisplayName .. "**\nID: " .. p.UserId .. "\n\nPlayer ini tidak ada di whitelist server!\n\nWebhook by **[bit.ly/xalserver](https://bit.ly/xalserver)**",
+                        ["title"] = "Information:",
+                        ["description"] = "User: **" .. p.Name .. "**\nDisplay: **" .. p.DisplayName .. "**",
                         ["color"] = 16711680,
-                        ["footer"] = { ["text"] = " ", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" }
+                        ["footer"] = { ["text"] = "XAL Server Monitoring | bit.ly/xalserver", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" }
                     }}
                  }
                  pcall(function() 
@@ -1301,7 +1301,7 @@ local function SendDisconnectWebhook(reason)
 
     local contentMsg = ""
     if adminTags ~= "" then 
-        contentMsg = "⚠️ **DISCONNECT ALERT:** " .. adminTags 
+        contentMsg = "**DISCONNECT ALERT:** " .. adminTags 
     end
     
     local embed = {
@@ -1309,10 +1309,10 @@ local function SendDisconnectWebhook(reason)
         ["avatar_url"] = "https://i.imgur.com/GWx0mX9.jpeg",
         ["content"] = contentMsg,
         ["embeds"] = {{
-            ["title"] = "🔌 LocalPlayer Disconnected",
-            ["description"] = "User: **" .. Players.LocalPlayer.Name .. "** (@" .. Players.LocalPlayer.DisplayName .. ") has disconnected.\n**Reason:** " .. tostring(reason) .. "\n\nWebhook by **[bit.ly/xalserver](https://bit.ly/xalserver)**",
+            ["title"] = "LocalPlayer Disconnected",
+            ["description"] = "User: **" .. Players.LocalPlayer.Name .. "** (@" .. Players.LocalPlayer.DisplayName .. ") has disconnected.\n**Reason:** " .. tostring(reason),
             ["color"] = 16711680,
-            ["footer"] = { ["text"] = " ", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" }
+            ["footer"] = { ["text"] = "XAL Server Monitoring | bit.ly/xalserver", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" }
         }}
     }
     
