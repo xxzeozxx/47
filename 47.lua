@@ -6,15 +6,12 @@ local TextChatService = game:GetService("TextChatService")
 local CoreGui = game:GetService("CoreGui")
 local TeleportService = game:GetService("TeleportService")
 local GuiService = game:GetService("GuiService")
-local TweenService = game:GetService("TweenService") 
-
+local TweenService = game:GetService("TweenService")
 local httpRequest = (syn and syn.request) or (http and http.request) or http_request or (fluxus and fluxus.request) or request
-
 local ScriptActive = true
 local Connections = {}
 local ScreenGui
 local VirtualUser = game:GetService("VirtualUser")
-
 local SafeName = "RobloxReplicatedService"
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (gethui and function(g) g.Parent = gethui() end) or function(g) g.Parent = CoreGui end
 
@@ -78,12 +75,9 @@ local Current_Webhook_Fish = ""
 local Current_Webhook_Leave = ""
 local Current_Webhook_List = ""
 local Current_Webhook_Admin = ""
-
 local LastDisconnectTime = 0
-
 local AdminID_1 = ""
 local AdminID_2 = ""
-
 local SecretList = {
     "Crystal Crab", "Orca", "Zombie Shark", "Zombie Megalodon", "Dead Zombie Shark",
     "Blob Shark", "Ghost Shark", "Skeleton Narwhal", "Ghost Worm Fish", "Worm Fish",
@@ -129,10 +123,7 @@ local SessionStats = {
     TotalSent = 0
 }
 local UI_StatsLabels = {}
-
-
 local ShowNotification 
-
 local function UpdateTagData()
     if #TagList == 0 then
         for i = 1, 20 do TagList[i] = {"", ""} end
@@ -447,7 +438,7 @@ local Page_Tag = CreatePage("TagDiscord")
 local Page_AdminBoost = CreatePage("AdminBoost")
 local Page_SessionStats = CreatePage("SessionStats")
 
-Page_Webhook.Visible = true
+Page_Webhook.Visible = false
 
 local function CreateTab(name, target, isDefault)
     local TabBtn = Instance.new("TextButton", MenuContainer) 
@@ -474,7 +465,6 @@ local function CreateTab(name, target, isDefault)
         Page_Webhook.Visible = false; Page_Config.Visible = false; Page_Tag.Visible = false; Page_Url.Visible = false; Page_Save.Visible = false; Page_AdminBoost.Visible = false; Page_SessionStats.Visible = false
         target.Visible = true
 
-        
         for _, child in pairs(MenuContainer:GetChildren()) do
             if child:IsA("TextButton") then 
                 child.TextColor3 = Theme.TextSecondary
@@ -579,10 +569,8 @@ local function CreateInput(parent, placeholder, default, callback, height)
     local Label = Instance.new("TextLabel", Frame)
     Label.BackgroundTransparency = 1; Label.Position = UDim2.new(0, 10, 0, 0); Label.Size = UDim2.new(0, 140, 1, 0)
     Label.Font = Enum.Font.GothamBold; Label.Text = placeholder; Label.TextColor3 = Theme.TextSecondary; Label.TextSize = 12; Label.TextXAlignment = "Left"
-    
     local inputX = (finalHeight > 34) and 160 or 150
     local inputWidth = (finalHeight > 34) and 170 or 160
-    
     local InputBg = Instance.new("Frame", Frame)
     InputBg.BackgroundColor3 = Theme.Input
     InputBg.Position = UDim2.new(0, inputX, 0.5, -10)
@@ -594,7 +582,6 @@ local function CreateInput(parent, placeholder, default, callback, height)
     local Input = Instance.new("TextBox", InputBg)
     Input.BackgroundTransparency = 1; Input.Position = UDim2.new(0, 5, 0, 0); Input.Size = UDim2.new(1, -10, 1, 0)
     Input.Font = Enum.Font.GothamMedium; Input.Text = default; Input.PlaceholderText = "Paste here..."; Input.TextColor3 = Theme.TextPrimary; Input.TextSize = 11; Input.TextXAlignment = "Left"; Input.ClearTextOnFocus = false
-    
     Input.Focused:Connect(function() AddStroke(InputBg, Theme.Accent, 1) end)
     Input.FocusLost:Connect(function() AddStroke(InputBg, Theme.Border, 1) callback(Input.Text, Input) end)
     return Input
