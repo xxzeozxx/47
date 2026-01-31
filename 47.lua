@@ -1244,14 +1244,14 @@ table.insert(Connections, Players.PlayerAdded:Connect(function(p)
                  if id1 ~= "" then adminTags = adminTags .. "<@" .. id1 .. "> " end
                  if id2 ~= "" then adminTags = adminTags .. "<@" .. id2 .. "> " end
                  
-                 local contentStr = " **WARNING:** " .. adminTags .. "New Player: **" .. p.Name .. "**"
+                 local contentStr = " **WARNING:** " .. adminTags
                  local embed = {
                     ["username"] = "XAL Security",
                     ["avatar_url"] = "https://i.imgur.com/GWx0mX9.jpeg",
                     ["content"] = contentStr,
                     ["embeds"] = {{
                         ["title"] = "Foreign Player Detected!",
-                        ["description"] = "User: **" .. p.Name .. "**\nDisplay: **" .. p.DisplayName .. "\n\nPlayer ini tidak ada di whitelist server!\n",
+                        ["description"] = "User: **" .. p.Name .. "**\nDisplay: **" .. p.DisplayName .. "**\n\nPlayer ini tidak ada di whitelist server!",
                         ["color"] = 16711680,
                         ["footer"] = { ["text"] = "| XAL Server Monitoring • bit.ly/xalserver", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" }
                     }}
