@@ -505,7 +505,7 @@ end
 CreateTab("Notification", Page_Webhook, true) 
 
 CreateTab("Admin Boost", Page_AdminBoost)
-CreateTab("Admin Boost", Page_AdminBoost)
+
 CreateTab("Session Stats", Page_SessionStats)
 CreateTab("Webhook", Page_Url)
 
@@ -1067,10 +1067,30 @@ local function CreateStatItem(parent, label, key)
     UI_StatsLabels[key] = Value
 end
 
-local UptimeLabel = Instance.new("TextLabel", Page_SessionStats)
-UptimeLabel.BackgroundTransparency = 1; UptimeLabel.Size = UDim2.new(1, 0, 0, 30)
-UptimeLabel.Font = Enum.Font.GothamBold; UptimeLabel.Text = "Uptime: 00h 00m 00s"; UptimeLabel.TextColor3 = Theme.TextPrimary; UptimeLabel.TextSize = 14
+local StatsHeader = Instance.new("Frame", Page_SessionStats)
+StatsHeader.BackgroundTransparency = 1
+StatsHeader.Size = UDim2.new(1, -5, 0, 32)
+StatsHeader.LayoutOrder = -1
+
+local UptimeLabel = Instance.new("TextLabel", StatsHeader)
+UptimeLabel.BackgroundTransparency = 1
+UptimeLabel.Size = UDim2.new(0.5, -5, 1, 0)
+UptimeLabel.Font = Enum.Font.GothamBold
+UptimeLabel.Text = "Uptime: 00h 00m 00s"
+UptimeLabel.TextColor3 = Theme.TextPrimary
+UptimeLabel.TextSize = 13
+UptimeLabel.TextXAlignment = "Left"
 UI_StatsLabels["Uptime"] = UptimeLabel
+
+local SendStatsBtn = Instance.new("TextButton", StatsHeader)
+SendStatsBtn.BackgroundColor3 = Theme.Accent
+SendStatsBtn.Position = UDim2.new(0.5, 0, 0, 0)
+SendStatsBtn.Size = UDim2.new(0.5, 0, 1, 0)
+SendStatsBtn.Font = Enum.Font.GothamBold
+SendStatsBtn.Text = "SEND STATS"
+SendStatsBtn.TextColor3 = Color3.new(1, 1, 1)
+SendStatsBtn.TextSize = 11
+Instance.new("UICorner", SendStatsBtn).CornerRadius = UDim.new(0, 6)
 
 CreateStatItem(Page_SessionStats, "Total Webhooks Sent", "TotalSent")
 CreateStatItem(Page_SessionStats, "Secret Fish Caught", "Secret")
@@ -1080,14 +1100,6 @@ CreateStatItem(Page_SessionStats, "Leviathan Rage", "Rage")
 CreateStatItem(Page_SessionStats, "Crystalized Mutations", "Crystalized")
 CreateStatItem(Page_SessionStats, "Cave Crystals Found", "CaveCrystal")
 
-local SendStatsBtn = Instance.new("TextButton", Page_SessionStats)
-SendStatsBtn.BackgroundColor3 = Theme.Accent
-SendStatsBtn.Size = UDim2.new(1, -5, 0, 32)
-SendStatsBtn.Font = Enum.Font.GothamBold
-SendStatsBtn.Text = "SEND STATS TO ADMIN"
-SendStatsBtn.TextColor3 = Color3.new(1, 1, 1)
-SendStatsBtn.TextSize = 12
-Instance.new("UICorner", SendStatsBtn).CornerRadius = UDim.new(0, 6)
 
 SendStatsBtn.MouseButton1Click:Connect(function()
     if not ScriptActive then return end
