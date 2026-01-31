@@ -109,7 +109,8 @@ local Settings = {
     CaveCrystalEnabled = false,
     LeaveEnabled = false, 
     PlayerNonPSAuto = false,
-    ForeignDetection = false
+    ForeignDetection = false,
+    SpoilerName = true
 }
 
 local TagList = {} 
@@ -861,6 +862,8 @@ CreateToggle(Page_Webhook, "Player Leave Server", Settings.LeaveEnabled, functio
 CreateToggle(Page_Webhook, "Player Not On Server (Auto)", Settings.PlayerNonPSAuto, function(v) Settings.PlayerNonPSAuto = v end, function() return Current_Webhook_List ~= "" end)
 
 
+
+
 local function CheckAndSendNonPS(isManual)
     if not ScriptActive then return end
     if Current_Webhook_List == "" then 
@@ -943,6 +946,8 @@ local SpacerAdmin = Instance.new("Frame", Page_AdminBoost)
 SpacerAdmin.BackgroundTransparency = 1; SpacerAdmin.Size = UDim2.new(1,0,0,5)
 
 CreateToggle(Page_AdminBoost, "Deteksi Player Asing", Settings.ForeignDetection, function(v) Settings.ForeignDetection = v end, function() return Current_Webhook_Admin ~= "" end)
+CreateToggle(Page_AdminBoost, "Hide Player Name (Spoiler)", Settings.SpoilerName, function(v) Settings.SpoilerName = v end, nil)
+
 
 task.spawn(function()
     while ScriptActive do
@@ -1072,35 +1077,36 @@ local function SendWebhook(data, category)
     if category == "LEAVE" then TargetURL = Current_Webhook_Leave elseif category == "PLAYERS" then TargetURL = Current_Webhook_List else TargetURL = Current_Webhook_Fish end
     if not TargetURL or TargetURL == "" or string.find(TargetURL, "MASUKKAN_URL") then return end
     local embedTitle = ""; local embedColor = 3447003; local descriptionText = "" 
+    local pName = Settings.SpoilerName and ("||`" .. data.Player .. "`||") or ("`" .. data.Player .. "`") 
     if category == "SECRET" then
         embedTitle = "Secret Caught!"
         embedColor = 3447003; local lines = { "⚓ Fish: " .. data.Item }
         if data.Mutation and data.Mutation ~= "None" then table.insert(lines, "🧬 Mutation: " .. data.Mutation) end
-        table.insert(lines, "⚖️ Weight: " .. data.Weight); descriptionText = "Player: ||`" .. data.Player .. "`||\n\n```\n" .. table.concat(lines, "\n") .. "\n```"
+        table.insert(lines, "⚖️ Weight: " .. data.Weight); descriptionText = "Player: " .. pName .. "\n\n```\n" .. table.concat(lines, "\n") .. "\n```"
     elseif category == "STONE" then
         embedTitle = "Ruby Gemstone!"
         embedColor = 16753920; local lines = { "💎 Stone: " .. data.Item }
         if data.Mutation and data.Mutation ~= "None" then table.insert(lines, "✨ Mutation: " .. data.Mutation) end
-        table.insert(lines, "⚖️ Weight: " .. data.Weight); descriptionText = "Player: ||`" .. data.Player .. "`||\n\n```\n" .. table.concat(lines, "\n") .. "\n```"
+        table.insert(lines, "⚖️ Weight: " .. data.Weight); descriptionText = "Player: " .. pName .. "\n\n```\n" .. table.concat(lines, "\n") .. "\n```"
     elseif category == "EVOLVED" then
         embedTitle = "Evolved Stone!"
         embedColor = 10181046 
         local lines = { "🔮 Item: " .. data.Item }
-        descriptionText = "Player: ||`" .. data.Player .. "`||\n\n```\n" .. table.concat(lines, "\n") .. "\n```"
+        descriptionText = "Player: " .. pName .. "\n\n```\n" .. table.concat(lines, "\n") .. "\n```"
     elseif category == "RAGE" then
         embedTitle = "LEVIATHAN RAGE!"
         embedColor = 10038562 
         local lines = { "🔥 Fish: " .. data.Item }
         table.insert(lines, "🧬 Mutation: Leviathan Rage")
         table.insert(lines, "⚖️ Weight: " .. data.Weight)
-        descriptionText = "Player: ||`" .. data.Player .. "`||\n\n```\n" .. table.concat(lines, "\n") .. "\n```"
+        descriptionText = "Player: " .. pName .. "\n\n```\n" .. table.concat(lines, "\n") .. "\n```"
     elseif category == "CRYSTALIZED" then
         embedTitle = "CRYSTALIZED MUTATION!"
         embedColor = 3407871
         local lines = { "💎 Fish: " .. data.Item }
         table.insert(lines, "✨ Mutation: Crystalized")
         table.insert(lines, "⚖️ Weight: " .. data.Weight)
-        descriptionText = "Player: ||`" .. data.Player .. "`||\n\n```\n" .. table.concat(lines, "\n") .. "\n```"
+        descriptionText = "Player: " .. pName .. "\n\n```\n" .. table.concat(lines, "\n") .. "\n```"
     elseif category == "LEAVE" then
         local dispName = data.DisplayName or data.Player; embedTitle = dispName .. " Left the server."; embedColor = 16711680; descriptionText = "Information\n👤 **@" .. data.Player .. "**" 
     elseif category == "PLAYERS" then
