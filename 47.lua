@@ -1073,34 +1073,34 @@ local function SendWebhook(data, category)
     if not TargetURL or TargetURL == "" or string.find(TargetURL, "MASUKKAN_URL") then return end
     local embedTitle = ""; local embedColor = 3447003; local descriptionText = "" 
     if category == "SECRET" then
-        embedTitle = data.Player .. " Secret Caught!"
+        embedTitle = "Secret Caught!"
         embedColor = 3447003; local lines = { "⚓ Fish: " .. data.Item }
         if data.Mutation and data.Mutation ~= "None" then table.insert(lines, "🧬 Mutation: " .. data.Mutation) end
-        table.insert(lines, "⚖️ Weight: " .. data.Weight); descriptionText = "```\n" .. table.concat(lines, "\n") .. "\n```"
+        table.insert(lines, "⚖️ Weight: " .. data.Weight); descriptionText = "👤 Player: ||" .. data.Player .. "||\n```\n" .. table.concat(lines, "\n") .. "\n```"
     elseif category == "STONE" then
-        embedTitle = data.Player .. " Ruby Gemstone!"
+        embedTitle = "Ruby Gemstone!"
         embedColor = 16753920; local lines = { "💎 Stone: " .. data.Item }
         if data.Mutation and data.Mutation ~= "None" then table.insert(lines, "✨ Mutation: " .. data.Mutation) end
-        table.insert(lines, "⚖️ Weight: " .. data.Weight); descriptionText = "```\n" .. table.concat(lines, "\n") .. "\n```"
+        table.insert(lines, "⚖️ Weight: " .. data.Weight); descriptionText = "👤 Player: ||" .. data.Player .. "||\n```\n" .. table.concat(lines, "\n") .. "\n```"
     elseif category == "EVOLVED" then
-        embedTitle = data.Player .. " Evolved Stone!"
+        embedTitle = "Evolved Stone!"
         embedColor = 10181046 
         local lines = { "🔮 Item: " .. data.Item }
-        descriptionText = "```\n" .. table.concat(lines, "\n") .. "\n```"
+        descriptionText = "👤 Player: ||" .. data.Player .. "||\n```\n" .. table.concat(lines, "\n") .. "\n```"
     elseif category == "RAGE" then
-        embedTitle = data.Player .. " LEVIATHAN RAGE!"
+        embedTitle = "LEVIATHAN RAGE!"
         embedColor = 10038562 
         local lines = { "🔥 Fish: " .. data.Item }
         table.insert(lines, "🧬 Mutation: Leviathan Rage")
         table.insert(lines, "⚖️ Weight: " .. data.Weight)
-        descriptionText = "```\n" .. table.concat(lines, "\n") .. "\n```"
+        descriptionText = "👤 Player: ||" .. data.Player .. "||\n```\n" .. table.concat(lines, "\n") .. "\n```"
     elseif category == "CRYSTALIZED" then
-        embedTitle = data.Player .. " CRYSTALIZED MUTATION!"
+        embedTitle = "CRYSTALIZED MUTATION!"
         embedColor = 3407871
         local lines = { "💎 Fish: " .. data.Item }
         table.insert(lines, "✨ Mutation: Crystalized")
         table.insert(lines, "⚖️ Weight: " .. data.Weight)
-        descriptionText = "```\n" .. table.concat(lines, "\n") .. "\n```"
+        descriptionText = "👤 Player: ||" .. data.Player .. "||\n```\n" .. table.concat(lines, "\n") .. "\n```"
     elseif category == "LEAVE" then
         local dispName = data.DisplayName or data.Player; embedTitle = dispName .. " Left the server."; embedColor = 16711680; descriptionText = "👤 **@" .. data.Player .. "**" 
     elseif category == "PLAYERS" then
