@@ -118,6 +118,19 @@ local TagList = {}
 local TagUIElements = {} 
 local UI_FishInput, UI_LeaveInput, UI_ListInput, UI_AdminInput
 
+local SessionStart = tick()
+local SessionStats = {
+    Secret = 0,
+    Ruby = 0,
+    Evolved = 0,
+    Rage = 0,
+    Crystalized = 0,
+    CaveCrystal = 0,
+    TotalSent = 0
+}
+local UI_StatsLabels = {}
+
+
 local ShowNotification 
 
 local function UpdateTagData()
@@ -432,6 +445,8 @@ local Page_Save = CreatePage("SaveConfig")
 local Page_Url = CreatePage("UrlWebhook") 
 local Page_Tag = CreatePage("TagDiscord")
 local Page_AdminBoost = CreatePage("AdminBoost")
+local Page_SessionStats = CreatePage("SessionStats")
+
 Page_Webhook.Visible = true
 
 local function CreateTab(name, target, isDefault)
@@ -456,8 +471,9 @@ local function CreateTab(name, target, isDefault)
     Instance.new("UICorner", Indicator).CornerRadius = UDim.new(1, 0)
 
     TabBtn.MouseButton1Click:Connect(function()
-        Page_Webhook.Visible = false; Page_Config.Visible = false; Page_Tag.Visible = false; Page_Url.Visible = false; Page_Save.Visible = false; Page_AdminBoost.Visible = false
+        Page_Webhook.Visible = false; Page_Config.Visible = false; Page_Tag.Visible = false; Page_Url.Visible = false; Page_Save.Visible = false; Page_AdminBoost.Visible = false; Page_SessionStats.Visible = false
         target.Visible = true
+
         
         for _, child in pairs(MenuContainer:GetChildren()) do
             if child:IsA("TextButton") then 
@@ -489,7 +505,10 @@ end
 CreateTab("Notification", Page_Webhook, true) 
 
 CreateTab("Admin Boost", Page_AdminBoost)
+CreateTab("Admin Boost", Page_AdminBoost)
+CreateTab("Session Stats", Page_SessionStats)
 CreateTab("Webhook", Page_Url)
+
 CreateTab("List Player", Page_Tag)
 CreateTab("Import List", Page_Config) 
 CreateTab("Save Config", Page_Save) 
@@ -1028,8 +1047,94 @@ Instance.new("UICorner", OpenBtn).CornerRadius = UDim.new(0, 8)
 AddStroke(OpenBtn, Theme.Border, 1)
 
 OpenBtn.MouseButton1Click:Connect(function()
-    MainFrame.Visible = not MainFrame.Visible
+     MainFrame.Visible = not MainFrame.Visible
 end)
+
+-- Session Stats UI Helper
+local function CreateStatItem(parent, label, key)
+    local Frame = Instance.new("Frame", parent)
+    Frame.BackgroundColor3 = Theme.Content; Frame.Size = UDim2.new(1, -5, 0, 24); Frame.BorderSizePixel = 0
+    Instance.new("UICorner", Frame).CornerRadius = UDim.new(0, 4)
+    
+    local Title = Instance.new("TextLabel", Frame)
+    Title.BackgroundTransparency = 1; Title.Position = UDim2.new(0, 8, 0, 0); Title.Size = UDim2.new(0.7, 0, 1, 0)
+    Title.Font = Enum.Font.GothamMedium; Title.Text = label; Title.TextColor3 = Theme.TextSecondary; Title.TextSize = 11; Title.TextXAlignment = "Left"
+    
+    local Value = Instance.new("TextLabel", Frame)
+    Value.BackgroundTransparency = 1; Value.Position = UDim2.new(0.7, 0, 0, 0); Value.Size = UDim2.new(0.3, -8, 1, 0)
+    Value.Font = Enum.Font.GothamBold; Value.Text = "0"; Value.TextColor3 = Theme.Accent; Value.TextSize = 11; Value.TextXAlignment = "Right"
+    
+    UI_StatsLabels[key] = Value
+end
+
+local UptimeLabel = Instance.new("TextLabel", Page_SessionStats)
+UptimeLabel.BackgroundTransparency = 1; UptimeLabel.Size = UDim2.new(1, 0, 0, 30)
+UptimeLabel.Font = Enum.Font.GothamBold; UptimeLabel.Text = "Uptime: 00h 00m 00s"; UptimeLabel.TextColor3 = Theme.TextPrimary; UptimeLabel.TextSize = 14
+UI_StatsLabels["Uptime"] = UptimeLabel
+
+CreateStatItem(Page_SessionStats, "Total Webhooks Sent", "TotalSent")
+CreateStatItem(Page_SessionStats, "Secret Fish Caught", "Secret")
+CreateStatItem(Page_SessionStats, "Ruby Gemstones", "Ruby")
+CreateStatItem(Page_SessionStats, "Evolved Stones", "Evolved")
+CreateStatItem(Page_SessionStats, "Leviathan Rage", "Rage")
+CreateStatItem(Page_SessionStats, "Crystalized Mutations", "Crystalized")
+CreateStatItem(Page_SessionStats, "Cave Crystals Found", "CaveCrystal")
+
+local SendStatsBtn = Instance.new("TextButton", Page_SessionStats)
+SendStatsBtn.BackgroundColor3 = Theme.Accent
+SendStatsBtn.Size = UDim2.new(1, -5, 0, 32)
+SendStatsBtn.Font = Enum.Font.GothamBold
+SendStatsBtn.Text = "SEND STATS TO ADMIN"
+SendStatsBtn.TextColor3 = Color3.new(1, 1, 1)
+SendStatsBtn.TextSize = 12
+Instance.new("UICorner", SendStatsBtn).CornerRadius = UDim.new(0, 6)
+
+SendStatsBtn.MouseButton1Click:Connect(function()
+    if not ScriptActive then return end
+    if Current_Webhook_Admin == "" then ShowNotification("Admin Webhook Empty!", true) return end
+    
+    ShowNotification("Sending Stats...", false)
+    
+    local diff = tick() - SessionStart
+    local h = math.floor(diff / 3600); local m = math.floor((diff % 3600) / 60); local s = math.floor(diff % 60)
+    local timeStr = string.format("%02dh %02dm %02ds", h, m, s)
+    
+    local contentStr = "**📊 SESSION STATISTICS**\n"
+    contentStr = contentStr .. "⏱️ Uptime: " .. timeStr .. "\n"
+    contentStr = contentStr .. "📡 Total Webhooks: " .. SessionStats.TotalSent .. "\n\n"
+    contentStr = contentStr .. "⚓ Secrets: " .. SessionStats.Secret .. "\n"
+    contentStr = contentStr .. "💎 Rubies: " .. SessionStats.Ruby .. "\n"
+    contentStr = contentStr .. "🔮 Evolved: " .. SessionStats.Evolved .. "\n"
+    contentStr = contentStr .. "🔥 Rage: " .. SessionStats.Rage .. "\n"
+    contentStr = contentStr .. "✨ Crystalized: " .. SessionStats.Crystalized .. "\n"
+    contentStr = contentStr .. "⛏️ Cave Crystals: " .. SessionStats.CaveCrystal
+    
+    task.spawn(function()
+         local embed = {
+             ["username"] = "XAL Stats",
+             ["avatar_url"] = "https://i.imgur.com/GWx0mX9.jpeg",
+             ["embeds"] = {{
+                 ["title"] = "Session Report",
+                 ["description"] = "Information\n```\n" .. contentStr .. "\n```",
+                 ["color"] = 5763719,
+                 ["footer"] = { ["text"] = "XAL Server Monitoring | bit.ly/xalserver", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" }
+             }}
+         }
+         httpRequest({ Url = Current_Webhook_Admin, Method = "POST", Headers = {["Content-Type"]="application/json"}, Body = HttpService:JSONEncode(embed) })
+    end)
+end)
+
+task.spawn(function()
+    while ScriptActive do
+        if UI_StatsLabels["Uptime"] then
+            local diff = tick() - SessionStart
+            local h = math.floor(diff / 3600); local m = math.floor((diff % 3600) / 60); local s = math.floor(diff % 60)
+            UI_StatsLabels["Uptime"].Text = string.format("Uptime: %02dh %02dm %02ds", h, m, s)
+        end
+        task.wait(1)
+    end
+end)
+
 
 CloseBtn.MouseButton1Click:Connect(function() ModalFrame.Visible = true end)
 BtnNo.MouseButton1Click:Connect(function() ModalFrame.Visible = false end)
@@ -1114,21 +1219,25 @@ local function SendWebhook(data, category)
     local embedTitle = ""; local embedColor = 3447003; local descriptionText = "" 
     local pName = Settings.SpoilerName and ("||`" .. data.Player .. "`||") or ("`" .. data.Player .. "`") 
     if category == "SECRET" then
+        SessionStats.Secret = SessionStats.Secret + 1
         embedTitle = "Secret Caught!"
         embedColor = 3447003; local lines = { "⚓ Fish: " .. data.Item }
         if data.Mutation and data.Mutation ~= "None" then table.insert(lines, "🧬 Mutation: " .. data.Mutation) end
         table.insert(lines, "⚖️ Weight: " .. data.Weight); descriptionText = "Player: " .. pName .. "\n\n```\n" .. table.concat(lines, "\n") .. "\n```"
     elseif category == "STONE" then
+        SessionStats.Ruby = SessionStats.Ruby + 1
         embedTitle = "Ruby Gemstone!"
         embedColor = 16753920; local lines = { "💎 Stone: " .. data.Item }
         if data.Mutation and data.Mutation ~= "None" then table.insert(lines, "✨ Mutation: " .. data.Mutation) end
         table.insert(lines, "⚖️ Weight: " .. data.Weight); descriptionText = "Player: " .. pName .. "\n\n```\n" .. table.concat(lines, "\n") .. "\n```"
     elseif category == "EVOLVED" then
+        SessionStats.Evolved = SessionStats.Evolved + 1
         embedTitle = "Evolved Stone!"
         embedColor = 10181046 
         local lines = { "🔮 Item: " .. data.Item }
         descriptionText = "Player: " .. pName .. "\n\n```\n" .. table.concat(lines, "\n") .. "\n```"
     elseif category == "RAGE" then
+        SessionStats.Rage = SessionStats.Rage + 1
         embedTitle = "LEVIATHAN RAGE!"
         embedColor = 10038562 
         local lines = { "🔥 Fish: " .. data.Item }
@@ -1136,6 +1245,7 @@ local function SendWebhook(data, category)
         table.insert(lines, "⚖️ Weight: " .. data.Weight)
         descriptionText = "Player: " .. pName .. "\n\n```\n" .. table.concat(lines, "\n") .. "\n```"
     elseif category == "CRYSTALIZED" then
+        SessionStats.Crystalized = SessionStats.Crystalized + 1
         embedTitle = "CRYSTALIZED MUTATION!"
         embedColor = 3407871
         local lines = { "💎 Fish: " .. data.Item }
@@ -1147,11 +1257,23 @@ local function SendWebhook(data, category)
     elseif category == "PLAYERS" then
         embedTitle = "👥 List Player In Server"; embedColor = 5763719; descriptionText = "Information\n" .. data.ListText
     elseif category == "CAVECRYSTAL" then
+        SessionStats.CaveCrystal = SessionStats.CaveCrystal + 1
         embedTitle = "💎 Cave Crystal Event!"; embedColor = 16776960; descriptionText = "Information\n" .. data.ListText
     end
+    
+    SessionStats.TotalSent = SessionStats.TotalSent + 1
+    if UI_StatsLabels["TotalSent"] then UI_StatsLabels["TotalSent"].Text = tostring(SessionStats.TotalSent) end
+    if UI_StatsLabels["Secret"] then UI_StatsLabels["Secret"].Text = tostring(SessionStats.Secret) end
+    if UI_StatsLabels["Ruby"] then UI_StatsLabels["Ruby"].Text = tostring(SessionStats.Ruby) end
+    if UI_StatsLabels["Evolved"] then UI_StatsLabels["Evolved"].Text = tostring(SessionStats.Evolved) end
+    if UI_StatsLabels["Rage"] then UI_StatsLabels["Rage"].Text = tostring(SessionStats.Rage) end
+    if UI_StatsLabels["Crystalized"] then UI_StatsLabels["Crystalized"].Text = tostring(SessionStats.Crystalized) end
+    if UI_StatsLabels["CaveCrystal"] then UI_StatsLabels["CaveCrystal"].Text = tostring(SessionStats.CaveCrystal) end
+    
     local embedData = { ["username"] = "XAL Notifications!", ["avatar_url"] = "https://i.imgur.com/GWx0mX9.jpeg", ["content"] = contentMsg, ["embeds"] = {{ ["title"] = embedTitle, ["description"] = descriptionText, ["color"] = embedColor, ["footer"] = { ["text"] = "XAL Server Monitoring | bit.ly/xalserver", ["icon_url"] = "https://i.imgur.com/GWx0mX9.jpeg" } }} }
     pcall(function() httpRequest({ Url = TargetURL, Method = "POST", Headers = { ["Content-Type"] = "application/json" }, Body = HttpService:JSONEncode(embedData) }) end)
 end
+
 
 local function CheckAndSend(msg)
     if not ScriptActive then return end
