@@ -89,7 +89,7 @@ local SecretList = {
     "Ancient Lochness Monster", "Talon Serpent", "Hacker Shark", "ElRetro Gran Maja",
     "Strawberry Choc Megalodon", "Krampus Shark", "Emerald Winter Whale",
     "Winter Frost Shark", "Icebreaker Whale", "Leviathan", "Pirate Megalodon", "Viridis Lurker",
-    "Cursed Kraken", "Glowspore Toad", "Sapphyra",
+    "Cursed Kraken", "Ancient Magma Whale",
 }
 
 local StoneList = { "Ruby" }
@@ -861,7 +861,7 @@ CreateToggle(Page_Webhook, "Ruby Gemstone", Settings.RubyEnabled, function(v) Se
 CreateToggle(Page_Webhook, "Notif Cave Crystal", Settings.CaveCrystalEnabled, function(v) Settings.CaveCrystalEnabled = v end, function() return Current_Webhook_Fish ~= "" end)
 CreateToggle(Page_Webhook, "Evolved Enchant Stone", Settings.EvolvedEnabled, function(v) Settings.EvolvedEnabled = v end, function() return Current_Webhook_Fish ~= "" end)
 CreateToggle(Page_Webhook, "Mutation Leviathan Rage", Settings.LeviathanRageEnabled, function(v) Settings.LeviathanRageEnabled = v end, function() return Current_Webhook_Fish ~= "" end)
-CreateToggle(Page_Webhook, "Mutation Crystalized (Mythic)", Settings.MutationCrystalized, function(v) Settings.MutationCrystalized = v end, function() return Current_Webhook_Fish ~= "" end)
+CreateToggle(Page_Webhook, "Mutation Crystalized (Legendary)", Settings.MutationCrystalized, function(v) Settings.MutationCrystalized = v end, function() return Current_Webhook_Fish ~= "" end)
 
 local function CheckAndSendNonPS(isManual)
     if not ScriptActive then return end
@@ -1315,7 +1315,11 @@ local function CheckAndSend(msg)
              end
 
              local check = string.lower(finalItem)
-             if string.find(check, "bioluminescent manta ray") or string.find(check, "abyr squid") then
+             local allowed = {"bioluminescent octopus", "blossom jelly", "cute dumbo", "star snail", "blue sea dragon"}
+             local isAllowed = false
+             for _, v in ipairs(allowed) do if string.find(check, v) then isAllowed = true; break end end
+
+             if isAllowed then
                  local data = { Player = p, Item = finalItem, Mutation = "Crystalized", Weight = w }
                  SendWebhook(data, "CRYSTALIZED")
                  return
