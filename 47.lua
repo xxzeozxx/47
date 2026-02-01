@@ -89,7 +89,7 @@ local SecretList = {
     "Ancient Lochness Monster", "Talon Serpent", "Hacker Shark", "ElRetro Gran Maja",
     "Strawberry Choc Megalodon", "Krampus Shark", "Emerald Winter Whale",
     "Winter Frost Shark", "Icebreaker Whale", "Leviathan", "Pirate Megalodon", "Viridis Lurker",
-    "Cursed Kraken", "Ancient Magma Whale",
+    "Cursed Kraken", "Ancient Magma Whale", "Firecoal Damsel",
 }
 
 local StoneList = { "Ruby" }
