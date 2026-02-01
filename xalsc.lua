@@ -137,7 +137,7 @@ function Library:CreateWindow(Config)
 
     local Title = Instance.new("TextLabel")
     Title.Text = Name
-    Title.Size = UDim2.new(1, -20, 1, 0)
+    Title.Size = UDim2.new(1, -60, 1, 0)
     Title.Position = UDim2.new(0, 10, 0, 0)
     Title.BackgroundTransparency = 1
     Title.TextColor3 = UISetting.TextColor
@@ -145,6 +145,69 @@ function Library:CreateWindow(Config)
     Title.TextSize = 14
     Title.TextXAlignment = Enum.TextXAlignment.Left
     Title.Parent = Header
+
+    -- Restore Button (The Floating Icon)
+    local RestoreBtn = Instance.new("TextButton")
+    RestoreBtn.Name = "RestoreBtn"
+    RestoreBtn.Size = UDim2.new(0, 40, 0, 40)
+    RestoreBtn.Position = UDim2.new(0.1, 0, 0.1, 0)
+    RestoreBtn.BackgroundColor3 = UISetting.MainColor
+    RestoreBtn.Text = "XAL"
+    RestoreBtn.TextColor3 = UISetting.AccentColor
+    RestoreBtn.Font = UISetting.Font
+    RestoreBtn.TextSize = 12
+    RestoreBtn.Visible = false
+    RestoreBtn.Parent = ScreenGui
+    
+    local RestoreCorner = Instance.new("UICorner")
+    RestoreCorner.CornerRadius = UDim.new(0, 8) 
+    RestoreCorner.Parent = RestoreBtn
+    
+    local RestoreStroke = Instance.new("UIStroke")
+    RestoreStroke.Color = UISetting.AccentColor
+    RestoreStroke.Thickness = 2
+    RestoreStroke.Parent = RestoreBtn
+
+    -- Make Restore Button Draggable
+    local RDragInput, RDragStart, RStartPos
+    RestoreBtn.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            RDragStart = input.Position
+            RStartPos = RestoreBtn.Position
+            
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    RDragStart = nil
+                end
+            end)
+        end
+    end)
+    RestoreBtn.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement and RDragStart then
+            local Delta = input.Position - RDragStart
+            RestoreBtn.Position = UDim2.new(RStartPos.X.Scale, RStartPos.X.Offset + Delta.X, RStartPos.Y.Scale, RStartPos.Y.Offset + Delta.Y)
+        end
+    end)
+
+    RestoreBtn.MouseButton1Click:Connect(function()
+        MainFrame.Visible = true
+        RestoreBtn.Visible = false
+    end)
+
+    -- Minimize Button
+    local MinBtn = Instance.new("TextButton")
+    MinBtn.Text = "-"
+    MinBtn.Size = UDim2.new(0, 30, 0, 30)
+    MinBtn.Position = UDim2.new(1, -60, 0, 0)
+    MinBtn.BackgroundTransparency = 1
+    MinBtn.TextColor3 = UISetting.TextColor
+    MinBtn.Font = UISetting.Font
+    MinBtn.TextSize = 20
+    MinBtn.Parent = Header
+    MinBtn.MouseButton1Click:Connect(function()
+        MainFrame.Visible = false
+        RestoreBtn.Visible = true
+    end)
 
     -- Close Button
     local CloseBtn = Instance.new("TextButton")
