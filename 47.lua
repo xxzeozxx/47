@@ -787,6 +787,72 @@ end)
 
 RefreshConfigList() 
 
+local function ShowAlert(title, msg)
+    local AlertFrame = Instance.new("Frame", ScreenGui)
+    AlertFrame.Name = "AlertFrame"
+    AlertFrame.BackgroundColor3 = Theme.Header
+    AlertFrame.Size = UDim2.new(0, 300, 0, 200)
+    AlertFrame.Position = UDim2.new(0.5, -150, 0.5, -100)
+    AlertFrame.BorderSizePixel = 0
+    AlertFrame.ZIndex = 300
+    AlertFrame.Visible = true
+    Instance.new("UICorner", AlertFrame).CornerRadius = UDim.new(0, 8)
+    AddStroke(AlertFrame, Theme.Border, 1)
+
+    local AlertShadow = Instance.new("ImageLabel", AlertFrame)
+    AlertShadow.Image = "rbxassetid://6014261993"
+    AlertShadow.ImageColor3 = Color3.new(0,0,0)
+    AlertShadow.ImageTransparency = 0.5
+    AlertShadow.BackgroundTransparency = 1
+    AlertShadow.Position = UDim2.new(0.5,0,0.5,0)
+    AlertShadow.AnchorPoint = Vector2.new(0.5,0.5)
+    AlertShadow.Size = UDim2.new(1,50,1,50)
+    AlertShadow.SliceCenter = Rect.new(49,49,450,450)
+    AlertShadow.ScaleType = Enum.ScaleType.Slice
+    AlertShadow.ZIndex = 299
+
+    local AlertTitle = Instance.new("TextLabel", AlertFrame)
+    AlertTitle.BackgroundTransparency = 1
+    AlertTitle.Position = UDim2.new(0, 10, 0, 10)
+    AlertTitle.Size = UDim2.new(1, -20, 0, 20)
+    AlertTitle.Font = Enum.Font.GothamBold
+    AlertTitle.Text = title
+    AlertTitle.TextColor3 = Theme.TextPrimary
+    AlertTitle.TextSize = 14
+    AlertTitle.ZIndex = 302
+
+    local AlertMsg = Instance.new("TextBox", AlertFrame)
+    AlertMsg.BackgroundTransparency = 1
+    AlertMsg.Position = UDim2.new(0, 10, 0, 40)
+    AlertMsg.Size = UDim2.new(1, -20, 1, -80)
+    AlertMsg.Font = Enum.Font.GothamMedium
+    AlertMsg.Text = msg
+    AlertMsg.TextColor3 = Theme.TextSecondary
+    AlertMsg.TextSize = 11
+    AlertMsg.TextXAlignment = "Left"
+    AlertMsg.TextYAlignment = "Top"
+    AlertMsg.MultiLine = true
+    AlertMsg.TextWrapped = true
+    AlertMsg.ClearTextOnFocus = false
+    AlertMsg.Editable = false
+    AlertMsg.ZIndex = 302
+
+    local OkBtn = Instance.new("TextButton", AlertFrame)
+    OkBtn.BackgroundColor3 = Theme.Accent
+    OkBtn.Position = UDim2.new(0.5, -40, 1, -35)
+    OkBtn.Size = UDim2.new(0, 80, 0, 25)
+    OkBtn.Font = Enum.Font.GothamBold
+    OkBtn.Text = "OK"
+    OkBtn.TextColor3 = Color3.new(1,1,1)
+    OkBtn.TextSize = 12
+    OkBtn.ZIndex = 302
+    Instance.new("UICorner", OkBtn).CornerRadius = UDim.new(0, 6)
+    
+    OkBtn.MouseButton1Click:Connect(function()
+        AlertFrame:Destroy()
+    end)
+end
+
 local function TestWebhook(url, name)
     if not ScriptActive then return end
     if url == "" then ShowNotification("URL Empty!", true) return end
@@ -798,14 +864,17 @@ local function TestWebhook(url, name)
         end)
         
         if success and response then
-            print("❌ XAL DEBUG ["..name.."]: Status " .. tostring(response.StatusCode) .. " | Body: " .. tostring(response.Body))
-            if response.StatusCode and (response.StatusCode < 200 or response.StatusCode >= 300) then
-                ShowNotification("Failed: " .. tostring(response.StatusCode), true)
+            local status = response.StatusCode or "Unknown"
+            local body = response.Body or "No Body"
+            
+            if status and (status < 200 or status >= 300) then
+                ShowAlert("Webhook Failed: " .. status, "Response Body:\n" .. string.sub(tostring(body), 1, 500))
+                ShowNotification("Failed: " .. status, true)
             else
-                ShowNotification("Success: " .. tostring(response.StatusCode or "OK"), false)
+                ShowNotification("Success: " .. status, false)
             end
         else
-            warn("❌ XAL DEBUG ["..name.."]: Request Failed - " .. tostring(response))
+            ShowAlert("Request Error", "Error: " .. tostring(response))
             ShowNotification("Request Error!", true)
         end
     end)
