@@ -793,7 +793,21 @@ local function TestWebhook(url, name)
     ShowNotification("Sending Test...", false)
     task.spawn(function()
         local p = { content = "✅ **TEST:** " .. name .. " Connected!", username = "XAL Notifications!", avatar_url = "https://i.imgur.com/GWx0mX9.jpeg" }
-        httpRequest({ Url = url, Method = "POST", Headers = {["Content-Type"]="application/json"}, Body = HttpService:JSONEncode(p) })
+        local success, response = pcall(function()
+            return httpRequest({ Url = url, Method = "POST", Headers = {["Content-Type"]="application/json"}, Body = HttpService:JSONEncode(p) })
+        end)
+        
+        if success and response then
+            print("❌ XAL DEBUG ["..name.."]: Status " .. tostring(response.StatusCode) .. " | Body: " .. tostring(response.Body))
+            if response.StatusCode and (response.StatusCode < 200 or response.StatusCode >= 300) then
+                ShowNotification("Failed: " .. tostring(response.StatusCode), true)
+            else
+                ShowNotification("Success: " .. tostring(response.StatusCode or "OK"), false)
+            end
+        else
+            warn("❌ XAL DEBUG ["..name.."]: Request Failed - " .. tostring(response))
+            ShowNotification("Request Error!", true)
+        end
     end)
 end
 
