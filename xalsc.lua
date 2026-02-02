@@ -23,6 +23,7 @@ local Packages = ReplicatedStorage:WaitForChild("Packages")
 local Net = Packages._Index["sleitnick_net@0.2.0"].net
 local FishingController = require(ReplicatedStorage.Controllers.FishingController)
 local ItemUtility = require(ReplicatedStorage.Shared.ItemUtility)
+local request = (syn and syn.request) or (http and http.request) or http_request or (fluxus and fluxus.request) or request
 
 local Events = {
     REEquip = Net["RE/EquipToolFromHotbar"],
@@ -55,7 +56,11 @@ local State = {
     stuckThreshold = 15,
     fishingTimer = 0,
     lastBagCount = 0,
-    waterConnection = nil
+    waterConnection = nil,
+    webhookEnabled = false,
+    webhookURL = "",
+    webhookRarities = {},
+    fishDatabase = {}
 }
 
 -- // UI LIBRARY //
@@ -531,6 +536,10 @@ function Library:CreateWindow(Config)
             local Callback = DropdownConfig.Callback or function() end
             
             local DropdownOpen = false
+            local SelectedItems = {}
+            if Multi and type(Default) == "table" then
+                for _, v in pairs(Default) do table.insert(SelectedItems, v) end
+            end
             
             local DropdownFrame = Instance.new("Frame")
             DropdownFrame.Size = UDim2.new(1, -6, 0, 30)
@@ -611,18 +620,24 @@ function Library:CreateWindow(Config)
                     OptBtn.TextSize = 12
                     OptBtn.Parent = OptionsFrame
                     
+                    if Multi then
+                         if table.find(SelectedItems, opt) then
+                             OptBtn.TextColor3 = UISetting.AccentColor
+                         end
+                    end
+                    
                     OptBtn.MouseButton1Click:Connect(function()
                         if Multi then
                              -- Toggle Logic for Multi
-                             local idx = table.find(State.selectedEvents, opt)
+                             local idx = table.find(SelectedItems, opt)
                              if idx then
-                                 table.remove(State.selectedEvents, idx)
+                                 table.remove(SelectedItems, idx)
                                  OptBtn.TextColor3 = UISetting.TextColor
                              else
-                                 table.insert(State.selectedEvents, opt)
+                                 table.insert(SelectedItems, opt)
                                  OptBtn.TextColor3 = UISetting.AccentColor
                              end
-                             Callback(State.selectedEvents)
+                             Callback(SelectedItems)
                         else
                              -- Single Select
                              SelectedLabel.Text = opt
@@ -645,6 +660,59 @@ function Library:CreateWindow(Config)
             end)
         end
         
+        function TabObj:AddInput(InputConfig)
+             local InputName = InputConfig.Name
+             local Placeholder = InputConfig.Placeholder or "Input..."
+             local Default = InputConfig.Default or ""
+             local Callback = InputConfig.Callback or function() end
+             
+             local InputFrame = Instance.new("Frame")
+             InputFrame.Size = UDim2.new(1, -6, 0, 50)
+             InputFrame.BackgroundColor3 = UISetting.ItemColor
+             InputFrame.Parent = Page
+             
+             local InputCorner = Instance.new("UICorner")
+             InputCorner.CornerRadius = UDim.new(0, 4)
+             InputCorner.Parent = InputFrame
+             
+             local NameLabel = Instance.new("TextLabel")
+             NameLabel.Text = InputName
+             NameLabel.Size = UDim2.new(1, -10, 0, 20)
+             NameLabel.Position = UDim2.new(0, 10, 0, 5)
+             NameLabel.BackgroundTransparency = 1
+             NameLabel.TextColor3 = UISetting.TextColor
+             NameLabel.Font = UISetting.Font
+             NameLabel.TextSize = 13
+             NameLabel.TextXAlignment = Enum.TextXAlignment.Left
+             NameLabel.Parent = InputFrame
+             
+             local TextBox = Instance.new("TextBox")
+             TextBox.Size = UDim2.new(1, -20, 0, 20)
+             TextBox.Position = UDim2.new(0, 10, 0, 25)
+             TextBox.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+             TextBox.BackgroundTransparency = 0
+             TextBox.TextColor3 = UISetting.TextColor
+             TextBox.Font = UISetting.Font
+             TextBox.TextSize = 13
+             TextBox.Text = Default
+             TextBox.PlaceholderText = Placeholder
+             TextBox.TextXAlignment = Enum.TextXAlignment.Left
+             TextBox.ClearTextOnFocus = false
+             TextBox.Parent = InputFrame
+
+             local TBCorner = Instance.new("UICorner")
+             TBCorner.CornerRadius = UDim.new(0, 4)
+             TBCorner.Parent = TextBox
+             
+             local Padding = Instance.new("UIPadding")
+             Padding.PaddingLeft = UDim.new(0, 5)
+             Padding.Parent = TextBox
+
+             TextBox.FocusLost:Connect(function(enterPressed)
+                 Callback(TextBox.Text)
+             end)
+        end
+        
         return TabObj
     end
     
@@ -652,7 +720,7 @@ function Library:CreateWindow(Config)
 end
 
 -- // APP INITIALIZATION //
-local Window = Library:CreateWindow({Name = "XAL HUB | Fish It (No Orion)"})
+local Window = Library:CreateWindow({Name = "XALSC | Fish It (Beta)"})
 
 -- // HELPERS //
 local function getFishCount()
@@ -689,11 +757,122 @@ local function toggleWalkOnWater(enable)
     end
 end
 
+local function getThumbnailURL(assetId)
+    if not assetId then return nil end
+    local id = assetId:match("rbxassetid://(%d+)")
+    if not id then return nil end
+    
+    local url = string.format("https://thumbnails.roblox.com/v1/assets?assetIds=%s&type=Asset&size=420x420&format=Png", id)
+    local success, response = pcall(function()
+        return InitHttp:JSONDecode(game:HttpGet(url))
+    end)
+    
+    if success and response and response.data and response.data[1] then
+        return response.data[1].imageUrl
+    end
+    return nil
+end
+
+local function buildFishDatabase()
+    for _, folder in pairs(ReplicatedStorage.Items:GetChildren()) do
+        if folder.Name == "Fish" then
+            for _, item in pairs(folder:GetChildren()) do
+                local success, config = pcall(function() return require(item) end)
+                if success and config then
+                   State.fishDatabase[config.Id] = {
+                       Name = config.Name,
+                       Tier = config.Tier,
+                       Icon = config.Icon,
+                       SellPrice = config.Price
+                   }
+                end
+            end
+        end
+    end
+end
+
+local function sendNewFishWebhook(fishData)
+    if not State.webhookEnabled or State.webhookURL == "" then return end
+    
+    local fishInfo = State.fishDatabase[fishData.Id]
+    if not fishInfo then return end
+    
+    -- Rarity Filter
+    local rarity = fishInfo.Tier or "Unknown"
+    local allowed = false
+    if #State.webhookRarities > 0 then
+        for _, r in pairs(State.webhookRarities) do
+            if r == rarity then allowed = true break end
+        end
+    else
+        allowed = true -- No filter means all
+    end
+    
+    if not allowed then return end
+    
+    local weight = fishData.Metadata and fishData.Metadata.Weight and string.format("%.2f Kg", fishData.Metadata.Weight) or "N/A"
+    local mutation = fishData.Metadata and fishData.Metadata.VariantId and tostring(fishData.Metadata.VariantId) or "None"
+    local price = fishInfo.SellPrice and ("$" .. tostring(fishInfo.SellPrice)) or "N/A"
+    
+    local embed = {
+        title = "XAL HUB | Fish Caught",
+        description = string.format("Congratulations! **%s** caught a **%s** fish!", LocalPlayer.Name, rarity),
+        color = 52221,
+        fields = {
+            {name = "Fish Name", value = "```" .. fishInfo.Name .. "```", inline = true},
+            {name = "Tier", value = "```" .. rarity .. "```", inline = true},
+            {name = "Weight", value = "```" .. weight .. "```", inline = true},
+            {name = "Mutation", value = "```" .. mutation .. "```", inline = true},
+            {name = "Price", value = "```" .. price .. "```", inline = true}
+        },
+        footer = { text = "XAL HUB Webhook" },
+        timestamp = os.date("!%Y-%m-%dT%H:%M:%S.000Z")
+    }
+    
+    local thumb = getThumbnailURL(fishInfo.Icon)
+    if thumb then
+        embed.thumbnail = { url = thumb }
+    end
+    
+    local payload = {
+        username = "XAL HUB Notification",
+        embeds = {embed}
+    }
+    
+    if request then
+        request({
+            Url = State.webhookURL,
+            Method = "POST",
+            Headers = {["Content-Type"] = "application/json"},
+            Body = InitHttp:JSONEncode(payload)
+        })
+    end
+end
+
+local function testCustomWebhook()
+    if State.webhookURL == "" then return end
+    
+    local payload = {
+        content = "Webhook Connected Successfully!",
+        username = "XAL HUB Test"
+    }
+    
+    if request then
+        request({
+            Url = State.webhookURL,
+            Method = "POST",
+            Headers = {["Content-Type"] = "application/json"},
+            Body = InitHttp:JSONEncode(payload)
+        })
+    end
+end
+
 -- // TABS //
 local HomeTab = Window:MakeTab({Name = "Home"})
 local TeleportTab = Window:MakeTab({Name = "Teleport"})
 local FishingTab = Window:MakeTab({Name = "Fishing"})
 local AutoTab = Window:MakeTab({Name = "Automatically"})
+local WebhookTab = Window:MakeTab({Name = "Webhook"})
 local MiscTab = Window:MakeTab({Name = "Misc"})
 
 -- // HOME //
@@ -851,70 +1030,19 @@ FishingTab:AddSlider({
     end    
 })
 
-FishingTab:AddToggle({
-    Name = "No Fishing Animation",
-    Default = false,
-    Callback = function(Value)
-        State.frozen = Value
-        if Value then
-             task.spawn(function()
-                while State.frozen do
-                     local char = LocalPlayer.Character
-                     if char then
-                        for _, v in pairs(char:GetDescendants()) do
-                            if v:IsA("BasePart") then
-                                v.Anchored = true
-                            end
-                        end
-                     end
-                     task.wait(1)
-                end
-                 local char = LocalPlayer.Character
-                 if char then
-                    for _, v in pairs(char:GetDescendants()) do
-                        if v:IsA("BasePart") then
-                            v.Anchored = false
-                        end
-                    end
-                 end
-             end)
-        end
-    end
-})
 
-FishingTab:AddToggle({
-    Name = "Walk on Water",
-    Default = false,
-    Callback = function(Value)
-        toggleWalkOnWater(Value)
-    end
-})
 
 -- // AUTOMATICALLY //
-AutoTab:AddSection({Name = "Weather"})
-local WeatherList = {"Cloudy", "Wind", "Snow", "Storm", "Radiant", "Shark Hunt"}
-
-AutoTab:AddDropdown({
-    Name = "Select Weather (Multi)",
-    Options = WeatherList,
-    Multi = true,
-    Callback = function(Value)
-         -- Value is expected to be maintained in State.selectedEvents by the Logic inside Dropdown
-         -- but our generic callback just receives it.
-         -- The internal logic updates State.selectedEvents if custom logic is used there.
-         -- Here we ensure state is sync if needed, but the library implementation above directly modifies State.selectedEvents for Multi.
-    end
-})
-
 AutoTab:AddToggle({
-    Name = "Auto Buy Weather",
+    Name = "Auto Buy Weather (Wind, Cloudy, Storm)",
     Default = false,
     Callback = function(Value)
         State.autoBuyWeather = Value
         if Value then
             task.spawn(function()
                 while State.autoBuyWeather do
-                     for _, weather in pairs(State.selectedEvents) do
+                     local targetWeathers = {"Wind", "Cloudy", "Storm"}
+                     for _, weather in pairs(targetWeathers) do
                          if not State.autoBuyWeather then break end
                          pcall(function()
                              Functions.BuyWeather:InvokeServer(weather)
@@ -957,6 +1085,44 @@ AutoTab:AddToggle({
                 end
              end)
         end
+    end
+})
+
+-- // WEBHOOK //
+WebhookTab:AddSection({Name = "Configuration"})
+
+WebhookTab:AddLabel("Status: " .. (request and "Http Supported" or "Http Not Supported (Executor Issue)"))
+
+WebhookTab:AddToggle({
+    Name = "Enable Webhook",
+    Default = false,
+    Callback = function(Value)
+        State.webhookEnabled = Value
+    end
+})
+
+WebhookTab:AddInput({
+    Name = "Webhook URL",
+    Placeholder = "https://discord.com/api/webhooks/...",
+    Callback = function(Text)
+        State.webhookURL = Text
+    end
+})
+
+WebhookTab:AddDropdown({
+    Name = "Rarity Filter (Multi)",
+    Options = {"Mythic", "Secret", "Exotic", "Event", "Legendary", "Epic", "Rare", "Uncommon", "Common"},
+    Multi = true,
+    Default = {"Mythic", "Secret", "Exotic", "Event"}, 
+    Callback = function(Value)
+        State.webhookRarities = Value
+    end
+})
+
+WebhookTab:AddButton({
+    Name = "Test Webhook",
+    Callback = function()
+        testCustomWebhook()
     end
 })
 
@@ -1011,10 +1177,55 @@ MiscTab:AddToggle({
     end
 })
 
-MiscTab:AddButton({
-    Name = "Unload UI",
-    Callback = function()
-         local gui = CoreGui:FindFirstChild("XALHub_UI") or PlayerGui:FindFirstChild("XALHub_UI")
-         if gui then gui:Destroy() end
+MiscTab:AddToggle({
+    Name = "No Fishing Animation",
+    Default = false,
+    Callback = function(Value)
+        State.frozen = Value
+        if Value then
+             task.spawn(function()
+                while State.frozen do
+                     local char = LocalPlayer.Character
+                     if char then
+                        for _, v in pairs(char:GetDescendants()) do
+                            if v:IsA("BasePart") then
+                                v.Anchored = true
+                            end
+                        end
+                     end
+                     task.wait(1)
+                end
+                 local char = LocalPlayer.Character
+                 if char then
+                    for _, v in pairs(char:GetDescendants()) do
+                        if v:IsA("BasePart") then
+                            v.Anchored = false
+                        end
+                    end
+                 end
+             end)
+        end
     end
 })
+
+MiscTab:AddToggle({
+    Name = "Walk on Water",
+    Default = false,
+    Callback = function(Value)
+        toggleWalkOnWater(Value)
+    end
+})
+
+-- End of Misc Tab
+
+-- // INITIALIZATION //
+task.spawn(function()
+    buildFishDatabase()
+end)
+
+-- // EVENTS //
+if Events.REObtainedNewFishNotification then
+    Events.REObtainedNewFishNotification.OnClientEvent:Connect(function(fishData)
+        sendNewFishWebhook(fishData)
+    end)
+end
