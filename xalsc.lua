@@ -430,6 +430,7 @@ local Page_Tag = CreatePage("TagDiscord")
 local Page_AdminBoost = CreatePage("AdminBoost")
 local Page_SessionStats = CreatePage("SessionStats")
 local Page_Fhising = CreatePage("Fhising")
+local Page_Setting -- Forward declaration for Setting Tab
 
 Page_Webhook.Visible = false
 
@@ -456,6 +457,7 @@ local function CreateTab(name, target, isDefault)
 
     TabBtn.MouseButton1Click:Connect(function()
         Page_Webhook.Visible = false; Page_Config.Visible = false; Page_Tag.Visible = false; Page_Url.Visible = false; Page_Save.Visible = false; Page_AdminBoost.Visible = false; Page_SessionStats.Visible = false; Page_Fhising.Visible = false
+        if Page_Setting then Page_Setting.Visible = false end
         target.Visible = true
 
         for _, child in pairs(MenuContainer:GetChildren()) do
@@ -493,7 +495,7 @@ CreateTab("Webhook", Page_Url)
 CreateTab("List Player", Page_Tag)
 CreateTab("Import List", Page_Config) 
 -- SETTING TAB
-local Page_Setting = Instance.new("ScrollingFrame", ContentContainer)
+Page_Setting = Instance.new("ScrollingFrame", ContentContainer)
 Page_Setting.Name = "Page_Setting"; Page_Setting.Size = UDim2.new(1, 0, 1, 0); Page_Setting.BackgroundTransparency = 1; Page_Setting.Visible = false; Page_Setting.ScrollBarThickness = 2
 Instance.new("UIListLayout", Page_Setting).Padding = UDim.new(0, 5)
 CreateTab("Setting", Page_Setting)
@@ -702,7 +704,7 @@ CreateToggle(Page_Fhising, "Enable Auto Sell (Count 600)", false, function(state
         
         task.spawn(function()
             while AutoSellEnabled and ScriptActive do
-                pcall(function() RF_Sell:InvokeServer() end)
+                -- pcall(function() RF_Sell:InvokeServer() end)
                 task.wait(2) 
                 
                 local Replion = require(game:GetService("ReplicatedStorage").Packages.Replion).Client:WaitReplion("Data", 1)
@@ -812,6 +814,10 @@ CreateToggle(Page_Fhising, "Walk On Water", false, function(state)
         
         if WalkConnection then WalkConnection:Disconnect() end
         WalkConnection = RunService.RenderStepped:Connect(function()
+             if not ScriptActive then 
+                 if WalkConnection then WalkConnection:Disconnect() end 
+                 return 
+             end
              local char = Players.LocalPlayer.Character
              if not WalkOnWaterEnabled or not char then return end
              local hrp = char:FindFirstChild("HumanoidRootPart")
@@ -875,6 +881,10 @@ CreateToggle(Page_Setting, "Remove Fish Notification Pop-up", false, function(st
     if state then
         if SmallNotification then
              DisableNotificationConnection = RunService.RenderStepped:Connect(function()
+                 if not ScriptActive then
+                     if DisableNotificationConnection then DisableNotificationConnection:Disconnect() end
+                     return
+                 end
                  SmallNotification.Enabled = false
              end)
              ShowNotification("Pop-up Diblokir", false)
@@ -927,12 +937,12 @@ local function EnableAnimations()
     end
 end
 
-Players.LocalPlayer.CharacterAdded:Connect(function(newChar)
+table.insert(Connections, Players.LocalPlayer.CharacterAdded:Connect(function(newChar)
     if isNoAnimationActive then
         task.wait(0.2)
         DisableAnimations()
     end
-end)
+end))
 
 CreateToggle(Page_Setting, "No Animation", false, function(state)
     isNoAnimationActive = state
