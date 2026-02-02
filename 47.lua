@@ -430,6 +430,7 @@ local Page_Tag = CreatePage("TagDiscord")
 local Page_AdminBoost = CreatePage("AdminBoost")
 local Page_SessionStats = CreatePage("SessionStats")
 local Page_Fhising = CreatePage("Fhising")
+local Page_Setting -- Forward declaration for Setting Tab
 
 Page_Webhook.Visible = false
 
@@ -456,6 +457,7 @@ local function CreateTab(name, target, isDefault)
 
     TabBtn.MouseButton1Click:Connect(function()
         Page_Webhook.Visible = false; Page_Config.Visible = false; Page_Tag.Visible = false; Page_Url.Visible = false; Page_Save.Visible = false; Page_AdminBoost.Visible = false; Page_SessionStats.Visible = false; Page_Fhising.Visible = false
+        if Page_Setting then Page_Setting.Visible = false end
         target.Visible = true
 
         for _, child in pairs(MenuContainer:GetChildren()) do
@@ -493,7 +495,7 @@ CreateTab("Webhook", Page_Url)
 CreateTab("List Player", Page_Tag)
 CreateTab("Import List", Page_Config) 
 -- SETTING TAB
-local Page_Setting = Instance.new("ScrollingFrame", ContentContainer)
+Page_Setting = Instance.new("ScrollingFrame", ContentContainer)
 Page_Setting.Name = "Page_Setting"; Page_Setting.Size = UDim2.new(1, 0, 1, 0); Page_Setting.BackgroundTransparency = 1; Page_Setting.Visible = false; Page_Setting.ScrollBarThickness = 2
 Instance.new("UIListLayout", Page_Setting).Padding = UDim.new(0, 5)
 CreateTab("Setting", Page_Setting)
