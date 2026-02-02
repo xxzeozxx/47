@@ -592,8 +592,92 @@ local function CreateInput(parent, placeholder, default, callback, height)
     return Input
 end
 
+local function CreateDropdown(parent, labelText, options, default, callback)
+    local Frame = Instance.new("Frame", parent)
+    Frame.BackgroundColor3 = Theme.Content
+    Frame.Size = UDim2.new(1, -5, 0, 36)
+    Frame.BorderSizePixel = 0
+    Instance.new("UICorner", Frame).CornerRadius = UDim.new(0, 6)
+    AddStroke(Frame, Theme.Border, 1)
+
+    local Label = Instance.new("TextLabel", Frame)
+    Label.BackgroundTransparency = 1; Label.Position = UDim2.new(0, 10, 0, 0); Label.Size = UDim2.new(0, 140, 1, 0)
+    Label.Font = Enum.Font.GothamBold; Label.Text = labelText; Label.TextColor3 = Theme.TextPrimary; Label.TextSize = 12; Label.TextXAlignment = "Left"
+
+    local currentVal = default or (options and options[1]) or "None"
+    
+    local DropBtn = Instance.new("TextButton", Frame)
+    DropBtn.BackgroundColor3 = Theme.Input
+    DropBtn.Position = UDim2.new(0, 160, 0.5, -10)
+    DropBtn.Size = UDim2.new(1, -170, 0, 20)
+    DropBtn.Font = Enum.Font.GothamMedium
+    DropBtn.Text = currentVal .. " v"
+    DropBtn.TextColor3 = Theme.TextPrimary
+    DropBtn.TextSize = 11
+    Instance.new("UICorner", DropBtn).CornerRadius = UDim.new(0, 4)
+    AddStroke(DropBtn, Theme.Border, 1)
+    
+    DropBtn.MouseButton1Click:Connect(function()
+        if MainFrame:FindFirstChild("DropdownList_" .. labelText) then 
+            MainFrame:FindFirstChild("DropdownList_" .. labelText):Destroy() 
+            return 
+        end
+        
+        local Float = Instance.new("ScrollingFrame", MainFrame)
+        Float.Name = "DropdownList_" .. labelText
+        Float.BackgroundColor3 = Theme.Content
+        Float.Size = UDim2.new(0, 200, 0, math.min(#options * 25 + 5, 200))
+        Float.Position = UDim2.new(0.5, -100, 0.5, -75)
+        Float.ZIndex = 200
+        Float.ScrollBarThickness = 4
+        Instance.new("UICorner", Float).CornerRadius = UDim.new(0, 6)
+        AddStroke(Float, Theme.Accent, 1)
+        
+        local ListLayout = Instance.new("UIListLayout", Float)
+        ListLayout.Padding = UDim.new(0, 2)
+        
+        for _, opt in ipairs(options) do
+            local OBtn = Instance.new("TextButton", Float)
+            OBtn.Size = UDim2.new(1,0,0,25)
+            OBtn.BackgroundColor3 = Theme.Input
+            OBtn.BackgroundTransparency = 0.5
+            OBtn.Text = opt
+            OBtn.TextColor3 = Theme.TextPrimary
+            OBtn.Font = Enum.Font.GothamMedium
+            OBtn.TextSize = 11
+            
+            OBtn.MouseButton1Click:Connect(function()
+                currentVal = opt
+                DropBtn.Text = currentVal .. " v"
+                callback(opt)
+                Float:Destroy()
+            end)
+        end
+        
+        local Close = Instance.new("TextButton", Float)
+        Close.Size = UDim2.new(1,0,0,20)
+        Close.BackgroundColor3 = Theme.Error
+        Close.Text = "CLOSE"
+        Close.TextColor3 = Color3.new(1,1,1)
+        Close.TextSize = 10
+        Close.MouseButton1Click:Connect(function() Float:Destroy() end)
+    end)
+end
+
+-- Feature Helpers
+local RPath = {"Packages", "_Index", "sleitnick_net@0.2.0", "net"}
+local function GetRemote(name)
+    local curr = ReplicatedStorage
+    for _, child in ipairs(RPath) do
+        curr = curr:WaitForChild(child, 1)
+        if not curr then return nil end
+    end
+    return curr:FindFirstChild(name)
+end
+
+
 local AutoShakeEnabled = false
-CreateToggle(Page_Fhising, "Auto Shake", false, function(val)
+CreateToggle(Page_Fhising, "Auto Click Fishing", false, function(val)
     AutoShakeEnabled = val
     local clickEffect = Players.LocalPlayer.PlayerGui:FindFirstChild("!!! Click Effect")
     if AutoShakeEnabled then
@@ -606,6 +690,168 @@ CreateToggle(Page_Fhising, "Auto Shake", false, function(val)
         end)
     elseif clickEffect then
         clickEffect.Enabled = true
+    end
+end)
+
+-- BLATANT MODE
+local _G_BlatantActive = false
+local BlatantInterval = 1.715
+CreateInput(Page_Fhising, "Blatant Interval (s)", tostring(BlatantInterval), function(v) 
+    BlatantInterval = tonumber(v) or 1.715 
+end)
+
+CreateToggle(Page_Fhising, "Instant Fishing (Blatant)", false, function(state)
+    _G_BlatantActive = state
+    
+    if not getgenv().HooksInstalled then
+        getgenv().HooksInstalled = true
+        local S1, FC = pcall(function() return require(game:GetService("ReplicatedStorage").Controllers.FishingController) end)
+        if S1 and FC then
+            local Old_Charge = FC.RequestChargeFishingRod
+            local Old_Cast = FC.SendFishingRequestToServer
+            
+            FC.RequestChargeFishingRod = function(...)
+                if _G_BlatantActive then return end 
+                return Old_Charge(...)
+            end
+            FC.SendFishingRequestToServer = function(...)
+                if _G_BlatantActive then return false, "Blocked by XAL" end
+                return Old_Cast(...)
+            end
+        end
+        
+        local mt = getrawmetatable(game)
+        local old_namecall = mt.__namecall
+        setreadonly(mt, false)
+        mt.__namecall = newcclosure(function(self, ...)
+            local method = getnamecallmethod()
+            if _G_BlatantActive and not checkcaller() then
+                if method == "InvokeServer" and (self.Name == "RequestFishingMinigameStarted" or self.Name == "ChargeFishingRod" or self.Name == "UpdateAutoFishingState") then
+                    return nil 
+                end
+                if method == "FireServer" and self.Name == "FishingCompleted" then
+                    return nil
+                end
+            end
+            return old_namecall(self, ...)
+        end)
+        setreadonly(mt, true)
+    end
+    
+    if state then
+        ShowNotification("Blatant Mode ON", false)
+        local RE_Equip = GetRemote("RE/EquipToolFromHotbar")
+        local RF_Charge = GetRemote("RF/ChargeFishingRod")
+        local RF_Start = GetRemote("RF/RequestFishingMinigameStarted")
+        local RE_Complete = GetRemote("RE/FishingCompleted")
+        local RF_Cancel = GetRemote("RF/CancelFishingInputs")
+        
+        task.spawn(function()
+            while _G_BlatantActive and ScriptActive do
+                pcall(function() RE_Equip:FireServer(1) end)
+                local ts = os.time() + os.clock()
+                pcall(function() RF_Charge:InvokeServer(ts) end)
+                pcall(function() RF_Start:InvokeServer(-139.6, 0.99) end)
+                task.wait(BlatantInterval) 
+                pcall(function() RE_Complete:FireServer() end)
+                pcall(function() RF_Cancel:InvokeServer() end)
+            end
+        end)
+    else
+        ShowNotification("Blatant Mode OFF", false)
+    end
+end)
+
+-- AUTO SELL FISH
+local AutoSellEnabled = false
+local SellMethod = "Delay" 
+local SellValue = 50 
+
+CreateDropdown(Page_Fhising, "Sell Method", {"Delay", "Count"}, "Delay", function(v) SellMethod = v end)
+CreateInput(Page_Fhising, "Sell Value (Sec/Count)", tostring(SellValue), function(v) SellValue = tonumber(v) or 50 end)
+
+CreateToggle(Page_Fhising, "Enable Auto Sell", false, function(state)
+    AutoSellEnabled = state
+    if state then
+        local RF_Sell = GetRemote("RF/SellAllItems")
+        if not RF_Sell then ShowNotification("Remote Sell Missing!", true) AutoSellEnabled = false return end
+        
+        task.spawn(function()
+            while AutoSellEnabled and ScriptActive do
+                if SellMethod == "Delay" then
+                    pcall(function() RF_Sell:InvokeServer() end)
+                    task.wait(math.max(SellValue, 1))
+                else
+                    pcall(function() RF_Sell:InvokeServer() end)
+                    task.wait(2)
+                end
+            end
+        end)
+    end
+end)
+
+-- AUTO BUY WEATHER
+local WeatherList = { "Storm", "Cloudy", "Snow", "Wind", "Radiant", "Shark Hunt" }
+local SelectedWeather = "Storm"
+local SimpleWeatherEnabled = false
+
+CreateDropdown(Page_Fhising, "Select Weather", WeatherList, "Storm", function(v) SelectedWeather = v end)
+CreateToggle(Page_Fhising, "Enable Auto Buy Weather", false, function(state)
+    SimpleWeatherEnabled = state
+    if state then
+        local RF_BuyWeather = GetRemote("RF/PurchaseWeatherEvent")
+        if not RF_BuyWeather then ShowNotification("Remote Weather Missing!", true) SimpleWeatherEnabled = false return end
+        
+        task.spawn(function()
+            while SimpleWeatherEnabled and ScriptActive do
+                pcall(function() RF_BuyWeather:InvokeServer(SelectedWeather) end)
+                task.wait(5)
+            end
+        end)
+    end
+end)
+
+-- AUTO SPAWN TOTEM
+local TotemList = {"Luck Totem", "Mutation Totem", "Shiny Totem"}
+local SelectedTotem = "Luck Totem"
+local TotemMap = {["Luck Totem"]=1, ["Mutation Totem"]=2, ["Shiny Totem"]=3}
+local AutoTotemEnabled = false
+
+CreateDropdown(Page_Fhising, "Select Totem", TotemList, "Luck Totem", function(v) SelectedTotem = v end)
+CreateToggle(Page_Fhising, "Enable Auto Spawn Totem", false, function(state)
+    AutoTotemEnabled = state
+    if state then
+        local RE_Spawn = GetRemote("RE/SpawnTotem")
+        local RE_Equip = GetRemote("RE/EquipToolFromHotbar")
+        if not RE_Spawn then ShowNotification("Remote Totem Missing!", true) AutoTotemEnabled = false return end
+        
+        task.spawn(function()
+            while AutoTotemEnabled and ScriptActive do
+                local Replion = require(game:GetService("ReplicatedStorage").Packages.Replion).Client:WaitReplion("Data", 2)
+                local uuid = nil
+                if Replion then
+                    local s, d = pcall(function() return Replion:GetExpect("Inventory") end)
+                    if s and d and d.Totems then
+                         for _, i in ipairs(d.Totems) do
+                            if tonumber(i.Id) == TotemMap[SelectedTotem] and (i.Count or 1) >= 1 then
+                                uuid = i.UUID
+                                break
+                            end
+                         end
+                    end
+                end
+                
+                if uuid then
+                    pcall(function() RE_Spawn:FireServer(uuid) end)
+                    task.wait(1)
+                    pcall(function() RE_Equip:FireServer(1) end) 
+                    task.wait(60) 
+                else
+                    ShowNotification("Totem UUID Not Found!", true)
+                    task.wait(5)
+                end
+            end
+        end)
     end
 end)
 
