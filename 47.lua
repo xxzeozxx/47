@@ -799,7 +799,7 @@ local WalkOnWaterEnabled = false
 local WaterPlatform = nil
 local WalkConnection = nil
 
-CreateToggle(Page_Fhising, "Walk On Water", false, function(state)
+CreateToggle(Page_Setting, "Walk On Water", false, function(state)
     WalkOnWaterEnabled = state
     if state then
         if not WaterPlatform then
