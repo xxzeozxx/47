@@ -337,18 +337,6 @@ SideLayout.Padding = UDim.new(0, 2)
 SideLayout.HorizontalAlignment = "Center"
 Instance.new("UIPadding", MenuContainer).PaddingTop = UDim.new(0, 8)
 
-local Watermark = Instance.new("TextLabel", Sidebar)
-Watermark.Name = "Watermark"
-Watermark.BackgroundColor3 = Theme.Background 
-Watermark.BackgroundTransparency = 1 
-Watermark.BorderSizePixel = 0
-Watermark.Position = UDim2.new(0, 0, 1, -25) 
-Watermark.Size = UDim2.new(1, 0, 0, 20) 
-Watermark.Font = Enum.Font.GothamBold
-Watermark.Text = "ALgiFH"
-Watermark.TextColor3 = Theme.Accent 
-Watermark.TextSize = 11 
-Watermark.ZIndex = 5
 
 local ContentContainer = Instance.new("Frame", MainFrame)
 ContentContainer.BackgroundTransparency = 1
@@ -504,6 +492,11 @@ CreateTab("Admin Boost", Page_AdminBoost)
 CreateTab("Webhook", Page_Url)
 CreateTab("List Player", Page_Tag)
 CreateTab("Import List", Page_Config) 
+-- SETTING TAB
+local Page_Setting = Instance.new("ScrollingFrame", ContentContainer)
+Page_Setting.Name = "Page_Setting"; Page_Setting.Size = UDim2.new(1, 0, 1, 0); Page_Setting.BackgroundTransparency = 1; Page_Setting.Visible = false; Page_Setting.ScrollBarThickness = 2
+Instance.new("UIListLayout", Page_Setting).Padding = UDim.new(0, 5)
+CreateTab("Setting", Page_Setting)
 CreateTab("Save Config", Page_Save) 
 
 
@@ -789,7 +782,7 @@ CreateToggle(Page_Fhising, "Enable Auto Spawn Totem", false, function(state)
                     pcall(function() RE_Spawn:FireServer(uuid) end)
                     task.wait(1)
                     pcall(function() RE_Equip:FireServer(1) end) 
-                    task.wait(60) 
+                    task.wait(3600) 
                 else
                     ShowNotification("Totem UUID Not Found!", true)
                     task.wait(5)
@@ -866,6 +859,113 @@ end)
 local BulkLabel = Instance.new("TextLabel", Page_Config)
 BulkLabel.BackgroundTransparency = 1; BulkLabel.Size = UDim2.new(1, 0, 0, 20)
 BulkLabel.Font = Enum.Font.GothamBold; BulkLabel.Text = "Bulk Input (Format: User:DiscordID)"; BulkLabel.TextColor3 = Theme.TextSecondary; BulkLabel.TextSize = 11; BulkLabel.TextXAlignment = "Left"
+
+
+-- SETTING FEATURES
+-- 1. Remove Fish Notification Pop-up
+local DisableNotificationConnection = nil
+CreateToggle(Page_Setting, "Remove Fish Notification Pop-up", false, function(state)
+    local PlayerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
+    local SmallNotification = PlayerGui:FindFirstChild("Small Notification")
+    
+    if not SmallNotification then
+        SmallNotification = PlayerGui:WaitForChild("Small Notification", 5)
+    end
+
+    if state then
+        if SmallNotification then
+             DisableNotificationConnection = RunService.RenderStepped:Connect(function()
+                 SmallNotification.Enabled = false
+             end)
+             ShowNotification("Pop-up Diblokir", false)
+        end
+    else
+        if DisableNotificationConnection then
+            DisableNotificationConnection:Disconnect()
+            DisableNotificationConnection = nil
+        end
+        if SmallNotification then SmallNotification.Enabled = true end
+        ShowNotification("Pop-up Diaktifkan", false)
+    end
+end)
+
+-- 2. No Animation
+local isNoAnimationActive = false
+local originalAnimator = nil
+local originalAnimateScript = nil
+
+local function DisableAnimations()
+    local character = Players.LocalPlayer.Character or Players.LocalPlayer.CharacterAdded:Wait()
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
+    if not humanoid then return end
+
+    local animateScript = character:FindFirstChild("Animate")
+    if animateScript and animateScript:IsA("LocalScript") and animateScript.Enabled then
+        originalAnimateScript = animateScript.Enabled
+        animateScript.Enabled = false
+    end
+    
+    local animator = humanoid:FindFirstChildOfClass("Animator")
+    if animator then
+        originalAnimator = animator
+        animator:Destroy()
+    end
+end
+
+local function EnableAnimations()
+    local character = Players.LocalPlayer.Character
+    local animateScript = character and character:FindFirstChild("Animate")
+    if animateScript and originalAnimateScript ~= nil then
+        animateScript.Enabled = originalAnimateScript
+    end
+    
+    local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+    if humanoid then
+        if not humanoid:FindFirstChildOfClass("Animator") then
+             if originalAnimator then originalAnimator.Parent = humanoid else Instance.new("Animator", humanoid) end
+        end
+    end
+end
+
+Players.LocalPlayer.CharacterAdded:Connect(function(newChar)
+    if isNoAnimationActive then
+        task.wait(0.2)
+        DisableAnimations()
+    end
+end)
+
+CreateToggle(Page_Setting, "No Animation", false, function(state)
+    isNoAnimationActive = state
+    if state then
+        DisableAnimations()
+        ShowNotification("No Animation ON", false)
+    else
+        EnableAnimations()
+        ShowNotification("No Animation OFF", false)
+    end
+end)
+
+-- 3. Remove Skin Effect
+local VFXControllerModule = require(ReplicatedStorage.Controllers.VFXController)
+local originalVFXHandle = VFXControllerModule.Handle
+local isVFXDisabled = false
+
+CreateToggle(Page_Setting, "Remove Skin Effect", false, function(state)
+    isVFXDisabled = state
+    if state then
+        VFXControllerModule.Handle = function(...) end
+        VFXControllerModule.RenderAtPoint = function(...) end
+        VFXControllerModule.RenderInstance = function(...) end
+        
+        local cosmeticFolder = workspace:FindFirstChild("CosmeticFolder")
+        if cosmeticFolder then pcall(function() cosmeticFolder:ClearAllChildren() end) end
+        ShowNotification("No Skin Effect ON", false)
+    else
+        VFXControllerModule.Handle = originalVFXHandle
+        ShowNotification("Skin Effect Restored (Rejoin to fully fix)", false)
+    end
+end)
+
 
 local BulkContainer = Instance.new("Frame", Page_Config)
 BulkContainer.BackgroundColor3 = Theme.Content; BulkContainer.Size = UDim2.new(1, -5, 0, 100); BulkContainer.BorderSizePixel = 0
