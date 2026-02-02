@@ -8,6 +8,8 @@ local CoreGui = game:GetService("CoreGui")
 local TeleportService = game:GetService("TeleportService")
 local GuiService = game:GetService("GuiService")
 local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
 local httpRequest = (syn and syn.request) or (http and http.request) or http_request or (fluxus and fluxus.request) or request
 local ScriptActive = true
 local Connections = {}
@@ -794,6 +796,70 @@ CreateToggle(Page_Fhising, "Enable Auto Spawn Totem", false, function(state)
                 end
             end
         end)
+    end
+end)
+
+-- WALK ON WATER
+local WalkOnWaterEnabled = false
+local WaterPlatform = nil
+local WalkConnection = nil
+
+CreateToggle(Page_Fhising, "Walk On Water", false, function(state)
+    WalkOnWaterEnabled = state
+    if state then
+        if not WaterPlatform then
+             WaterPlatform = Instance.new("Part")
+             WaterPlatform.Name = "WaterPlatform"
+             WaterPlatform.Anchored = true
+             WaterPlatform.CanCollide = true
+             WaterPlatform.Transparency = 1
+             WaterPlatform.Size = Vector3.new(15, 1, 15)
+             WaterPlatform.Parent = workspace
+        end
+        
+        if WalkConnection then WalkConnection:Disconnect() end
+        WalkConnection = RunService.RenderStepped:Connect(function()
+             local char = Players.LocalPlayer.Character
+             if not WalkOnWaterEnabled or not char then return end
+             local hrp = char:FindFirstChild("HumanoidRootPart")
+             if not hrp then return end
+             
+             if not WaterPlatform or not WaterPlatform.Parent then
+                 WaterPlatform = Instance.new("Part")
+                 WaterPlatform.Name = "WaterPlatform"
+                 WaterPlatform.Anchored = true
+                 WaterPlatform.CanCollide = true
+                 WaterPlatform.Transparency = 1
+                 WaterPlatform.Size = Vector3.new(15, 1, 15)
+                 WaterPlatform.Parent = workspace
+             end
+             
+             local params = RaycastParams.new()
+             params.FilterDescendantsInstances = {workspace.Terrain}
+             params.FilterType = Enum.RaycastFilterType.Include
+             params.IgnoreWater = false
+             
+             local origin = hrp.Position + Vector3.new(0, 5, 0)
+             local dir = Vector3.new(0, -500, 0)
+             local res = workspace:Raycast(origin, dir, params)
+             
+             if res and res.Material == Enum.Material.Water then
+                 local waterHeight = res.Position.Y
+                 WaterPlatform.Position = Vector3.new(hrp.Position.X, waterHeight, hrp.Position.Z)
+                 
+                 if hrp.Position.Y < (waterHeight + 2) and hrp.Position.Y > (waterHeight - 5) then
+                     if not UserInputService:IsKeyDown(Enum.KeyCode.Space) then
+                         hrp.CFrame = CFrame.new(hrp.Position.X, waterHeight + 3.2, hrp.Position.Z)
+                     end
+                 end
+             else
+                 WaterPlatform.Position = Vector3.new(hrp.Position.X, -500, hrp.Position.Z)
+             end
+        end)
+    else
+        WalkOnWaterEnabled = false
+        if WalkConnection then WalkConnection:Disconnect() WalkConnection = nil end
+        if WaterPlatform then WaterPlatform:Destroy() WaterPlatform = nil end
     end
 end)
 
