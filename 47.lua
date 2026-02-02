@@ -427,10 +427,10 @@ local Page_Config = nil -- Deprecated
 local Page_Save = CreatePage("SaveConfig") 
 local Page_Url = CreatePage("UrlWebhook") 
 local Page_Tag = CreatePage("TagDiscord")
+local Page_AdminBoost = CreatePage("AdminBoost")
 local Page_SessionStats = CreatePage("SessionStats")
 local Page_Fhising = CreatePage("Fhising")
 local Page_Setting -- Forward declaration for Setting Tab
-local Page_Tag = CreatePage("TagDiscord")
 
 
 Page_Webhook.Visible = false
