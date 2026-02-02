@@ -696,30 +696,30 @@ local AutoSellEnabled = false
 local SellMethod = "Count" 
 local SellValue = 600 
 
-CreateToggle(Page_Fhising, "Enable Auto Sell (Count 600)", false, function(state)
+CreateToggle(Page_Fhising, "Auto Sell (10m / 600 Items)", false, function(state)
     AutoSellEnabled = state
     if state then
         local RF_Sell = GetRemote("RF/SellAllItems")
         if not RF_Sell then ShowNotification("Remote Sell Missing!", true) AutoSellEnabled = false return end
         
         task.spawn(function()
+            local LastSellTime = tick()
             while AutoSellEnabled and ScriptActive do
-                -- pcall(function() RF_Sell:InvokeServer() end)
-                task.wait(2) 
-                
+                if (tick() - LastSellTime) >= 600 then
+                    pcall(function() RF_Sell:InvokeServer() end)
+                    LastSellTime = tick()
+                end
+
                 local Replion = require(game:GetService("ReplicatedStorage").Packages.Replion).Client:WaitReplion("Data", 1)
                 if Replion then
                      local s, d = pcall(function() return Replion:GetExpect("Inventory") end)
                      if s and d and d.Items then
                         if #d.Items >= SellValue then
                             pcall(function() RF_Sell:InvokeServer() end)
-                            task.wait(2)
+                            LastSellTime = tick()
+                            task.wait(1)
                         end
-                     else
-                        task.wait(1)
                      end
-                else
-                    task.wait(1)
                 end
                 task.wait(1)
             end
