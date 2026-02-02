@@ -412,7 +412,7 @@ local function CreatePage(name)
     Page.ScrollBarImageColor3 = Theme.Accent
     Page.Visible = false
     Page.CanvasSize = UDim2.new(0, 0, 0, 0)
-    Page.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    Page.AutomaticCanvasSize = "Y"
     Page.ZIndex = 4
     
     local layout = Instance.new("UIListLayout", Page)
@@ -422,7 +422,6 @@ local function CreatePage(name)
     return Page
 end
 
-
 local Page_Webhook = CreatePage("Webhook")
 local Page_Config = CreatePage("Config") 
 local Page_Save = CreatePage("SaveConfig") 
@@ -431,7 +430,6 @@ local Page_Tag = CreatePage("TagDiscord")
 local Page_AdminBoost = CreatePage("AdminBoost")
 local Page_SessionStats = CreatePage("SessionStats")
 local Page_Fhising = CreatePage("Fhising")
-local Page_Setting = CreatePage("Setting")
 
 Page_Webhook.Visible = false
 
@@ -457,7 +455,7 @@ local function CreateTab(name, target, isDefault)
     Instance.new("UICorner", Indicator).CornerRadius = UDim.new(1, 0)
 
     TabBtn.MouseButton1Click:Connect(function()
-        Page_Webhook.Visible = false; Page_Config.Visible = false; Page_Tag.Visible = false; Page_Url.Visible = false; Page_Save.Visible = false; Page_AdminBoost.Visible = false; Page_SessionStats.Visible = false; Page_Fhising.Visible = false; Page_Setting.Visible = false
+        Page_Webhook.Visible = false; Page_Config.Visible = false; Page_Tag.Visible = false; Page_Url.Visible = false; Page_Save.Visible = false; Page_AdminBoost.Visible = false; Page_SessionStats.Visible = false; Page_Fhising.Visible = false
         target.Visible = true
 
         for _, child in pairs(MenuContainer:GetChildren()) do
@@ -495,78 +493,10 @@ CreateTab("Webhook", Page_Url)
 CreateTab("List Player", Page_Tag)
 CreateTab("Import List", Page_Config) 
 -- SETTING TAB
--- Page_Setting already defined at top
--- Manual setup for specific settings if needed, but CreatePage handles most
+local Page_Setting = Instance.new("ScrollingFrame", ContentContainer)
+Page_Setting.Name = "Page_Setting"; Page_Setting.Size = UDim2.new(1, 0, 1, 0); Page_Setting.BackgroundTransparency = 1; Page_Setting.Visible = false; Page_Setting.ScrollBarThickness = 2
+Instance.new("UIListLayout", Page_Setting).Padding = UDim.new(0, 5)
 CreateTab("Setting", Page_Setting)
-
--- WALK ON WATER (Moved to Setting)
-local WalkOnWaterEnabled = false
-local WaterPlatform = nil
-local WalkConnection = nil
-
-CreateToggle(Page_Setting, "Walk On Water", false, function(state)
-    WalkOnWaterEnabled = state
-    if state then
-        if not WaterPlatform then
-             WaterPlatform = Instance.new("Part")
-             WaterPlatform.Name = "WaterPlatform"
-             WaterPlatform.Anchored = true
-             WaterPlatform.CanCollide = true
-             WaterPlatform.Transparency = 1
-             WaterPlatform.Size = Vector3.new(15, 1, 15)
-             WaterPlatform.Parent = workspace
-        end
-        
-        if WalkConnection then WalkConnection:Disconnect() end
-        WalkConnection = RunService.RenderStepped:Connect(function()
-             if not ScriptActive then 
-                 if WalkConnection then WalkConnection:Disconnect() end 
-                 return 
-             end
-             local char = Players.LocalPlayer.Character
-             if not WalkOnWaterEnabled or not char then return end
-             local hrp = char:FindFirstChild("HumanoidRootPart")
-             if not hrp then return end
-             
-             if not WaterPlatform or not WaterPlatform.Parent then
-                 WaterPlatform = Instance.new("Part")
-                 WaterPlatform.Name = "WaterPlatform"
-                 WaterPlatform.Anchored = true
-                 WaterPlatform.CanCollide = true
-                 WaterPlatform.Transparency = 1
-                 WaterPlatform.Size = Vector3.new(15, 1, 15)
-                 WaterPlatform.Parent = workspace
-             end
-             
-             local params = RaycastParams.new()
-             params.FilterDescendantsInstances = {workspace.Terrain}
-             params.FilterType = Enum.RaycastFilterType.Include
-             params.IgnoreWater = false
-             
-             local origin = hrp.Position + Vector3.new(0, 5, 0)
-             local dir = Vector3.new(0, -500, 0)
-             local res = workspace:Raycast(origin, dir, params)
-             
-             if res and res.Material == Enum.Material.Water then
-                 local waterHeight = res.Position.Y
-                 WaterPlatform.Position = Vector3.new(hrp.Position.X, waterHeight, hrp.Position.Z)
-                 
-                 if hrp.Position.Y < (waterHeight + 2) and hrp.Position.Y > (waterHeight - 5) then
-                     if not UserInputService:IsKeyDown(Enum.KeyCode.Space) then
-                         hrp.CFrame = CFrame.new(hrp.Position.X, waterHeight + 3.2, hrp.Position.Z)
-                     end
-                 end
-             else
-                 WaterPlatform.Position = Vector3.new(hrp.Position.X, -500, hrp.Position.Z)
-             end
-        end)
-    else
-        WalkOnWaterEnabled = false
-        if WalkConnection then WalkConnection:Disconnect() WalkConnection = nil end
-        if WaterPlatform then WaterPlatform:Destroy() WaterPlatform = nil end
-    end
-end)
-
 CreateTab("Save Config", Page_Save) 
 
 
@@ -772,7 +702,7 @@ CreateToggle(Page_Fhising, "Enable Auto Sell (Count 600)", false, function(state
         
         task.spawn(function()
             while AutoSellEnabled and ScriptActive do
-                -- pcall(function() RF_Sell:InvokeServer() end) -- Removed unconditional sell
+                pcall(function() RF_Sell:InvokeServer() end)
                 task.wait(2) 
                 
                 local Replion = require(game:GetService("ReplicatedStorage").Packages.Replion).Client:WaitReplion("Data", 1)
@@ -862,13 +792,73 @@ CreateToggle(Page_Fhising, "Enable Auto Spawn Totem", false, function(state)
     end
 end)
 
---[[ 
--- DISABLED TEMPORARILY: DETECTOR STUCK
--- Reason: Causing UI Issues
-local DetectorStuckEnabled = false
--- ... (Code temporarily hidden)
-]]
+-- WALK ON WATER
+local WalkOnWaterEnabled = false
+local WaterPlatform = nil
+local WalkConnection = nil
 
+CreateToggle(Page_Fhising, "Walk On Water", false, function(state)
+    WalkOnWaterEnabled = state
+    if state then
+        if not WaterPlatform then
+             WaterPlatform = Instance.new("Part")
+             WaterPlatform.Name = "WaterPlatform"
+             WaterPlatform.Anchored = true
+             WaterPlatform.CanCollide = true
+             WaterPlatform.Transparency = 1
+             WaterPlatform.Size = Vector3.new(15, 1, 15)
+             WaterPlatform.Parent = workspace
+        end
+        
+        if WalkConnection then WalkConnection:Disconnect() end
+        WalkConnection = RunService.RenderStepped:Connect(function()
+             if not ScriptActive then 
+                 if WalkConnection then WalkConnection:Disconnect() end 
+                 return 
+             end
+             local char = Players.LocalPlayer.Character
+             if not WalkOnWaterEnabled or not char then return end
+             local hrp = char:FindFirstChild("HumanoidRootPart")
+             if not hrp then return end
+             
+             if not WaterPlatform or not WaterPlatform.Parent then
+                 WaterPlatform = Instance.new("Part")
+                 WaterPlatform.Name = "WaterPlatform"
+                 WaterPlatform.Anchored = true
+                 WaterPlatform.CanCollide = true
+                 WaterPlatform.Transparency = 1
+                 WaterPlatform.Size = Vector3.new(15, 1, 15)
+                 WaterPlatform.Parent = workspace
+             end
+             
+             local params = RaycastParams.new()
+             params.FilterDescendantsInstances = {workspace.Terrain}
+             params.FilterType = Enum.RaycastFilterType.Include
+             params.IgnoreWater = false
+             
+             local origin = hrp.Position + Vector3.new(0, 5, 0)
+             local dir = Vector3.new(0, -500, 0)
+             local res = workspace:Raycast(origin, dir, params)
+             
+             if res and res.Material == Enum.Material.Water then
+                 local waterHeight = res.Position.Y
+                 WaterPlatform.Position = Vector3.new(hrp.Position.X, waterHeight, hrp.Position.Z)
+                 
+                 if hrp.Position.Y < (waterHeight + 2) and hrp.Position.Y > (waterHeight - 5) then
+                     if not UserInputService:IsKeyDown(Enum.KeyCode.Space) then
+                         hrp.CFrame = CFrame.new(hrp.Position.X, waterHeight + 3.2, hrp.Position.Z)
+                     end
+                 end
+             else
+                 WaterPlatform.Position = Vector3.new(hrp.Position.X, -500, hrp.Position.Z)
+             end
+        end)
+    else
+        WalkOnWaterEnabled = false
+        if WalkConnection then WalkConnection:Disconnect() WalkConnection = nil end
+        if WaterPlatform then WaterPlatform:Destroy() WaterPlatform = nil end
+    end
+end)
 
 local BulkLabel = Instance.new("TextLabel", Page_Config)
 BulkLabel.BackgroundTransparency = 1; BulkLabel.Size = UDim2.new(1, 0, 0, 20)
