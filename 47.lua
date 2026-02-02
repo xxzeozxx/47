@@ -799,6 +799,31 @@ local WalkOnWaterEnabled = false
 local WaterPlatform = nil
 local WalkConnection = nil
 
+-- ANTI AFK
+local AntiAFKEnabled = false
+local AntiAFKConnection = nil
+
+CreateToggle(Page_Setting, "Anti AFK", false, function(state)
+    AntiAFKEnabled = state
+    if state then
+        if AntiAFKConnection then AntiAFKConnection:Disconnect() end
+        
+        AntiAFKConnection = Players.LocalPlayer.Idled:Connect(function()
+            if AntiAFKEnabled then
+                VirtualUser:CaptureController()
+                VirtualUser:ClickButton2(Vector2.new())
+            end
+        end)
+        
+        -- Also try the method from r.lua loop clearing
+        for i, v in pairs(getconnections(Players.LocalPlayer.Idled)) do
+            if v.Disable then v:Disable() end
+        end
+    else
+        if AntiAFKConnection then AntiAFKConnection:Disconnect() end
+    end
+end)
+
 CreateToggle(Page_Setting, "Walk On Water", false, function(state)
     WalkOnWaterEnabled = state
     if state then
