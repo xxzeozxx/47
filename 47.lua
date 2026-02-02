@@ -331,6 +331,7 @@ local MenuContainer = Instance.new("Frame", Sidebar)
 MenuContainer.BackgroundTransparency = 1
 MenuContainer.Size = UDim2.new(1, 0, 1, -25) 
 MenuContainer.Position = UDim2.new(0, 0, 0, 5)
+MenuContainer.ZIndex = 5 -- Boost ZIndex
 
 local SideLayout = Instance.new("UIListLayout", MenuContainer)
 SideLayout.Padding = UDim.new(0, 2) 
@@ -340,7 +341,7 @@ Instance.new("UIPadding", MenuContainer).PaddingTop = UDim.new(0, 8)
 
 local ContentContainer = Instance.new("Frame", MainFrame)
 ContentContainer.BackgroundTransparency = 1
-ContentContainer.Position = UDim2.new(0, 115, 0, 42) 
+ContentContainer.Position = UDim2.new(0, 120, 0, 42) -- Increased offset
 ContentContainer.Size = UDim2.new(1, -120, 1, -48) 
 ContentContainer.ZIndex = 3
 
@@ -352,7 +353,7 @@ ModalFrame.Position = UDim2.new(0.5, -120, 0.5, -55)
 ModalFrame.BorderSizePixel = 0
 ModalFrame.ZIndex = 100 
 ModalFrame.Visible = false
-ModalFrame.Active = true 
+ModalFrame.Active = false  -- Changed to false to prevent blocking input
 Instance.new("UICorner", ModalFrame).CornerRadius = UDim.new(0, 8)
 AddStroke(ModalFrame, Theme.Border, 1)
 
