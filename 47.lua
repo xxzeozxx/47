@@ -455,7 +455,7 @@ local function CreateTab(name, target, isDefault)
     Instance.new("UICorner", Indicator).CornerRadius = UDim.new(1, 0)
 
     TabBtn.MouseButton1Click:Connect(function()
-        Page_Webhook.Visible = false; Page_Config.Visible = false; Page_Tag.Visible = false; Page_Url.Visible = false; Page_Save.Visible = false; Page_AdminBoost.Visible = false; Page_SessionStats.Visible = false; Page_Fhising.Visible = false
+        Page_Webhook.Visible = false; Page_Config.Visible = false; Page_Tag.Visible = false; Page_Url.Visible = false; Page_Save.Visible = false; Page_AdminBoost.Visible = false; Page_SessionStats.Visible = false; Page_Fhising.Visible = false; Page_Setting.Visible = false
         target.Visible = true
 
         for _, child in pairs(MenuContainer:GetChildren()) do
@@ -497,6 +497,75 @@ local Page_Setting = Instance.new("ScrollingFrame", ContentContainer)
 Page_Setting.Name = "Page_Setting"; Page_Setting.Size = UDim2.new(1, 0, 1, 0); Page_Setting.BackgroundTransparency = 1; Page_Setting.Visible = false; Page_Setting.ScrollBarThickness = 2
 Instance.new("UIListLayout", Page_Setting).Padding = UDim.new(0, 5)
 CreateTab("Setting", Page_Setting)
+
+-- WALK ON WATER (Moved to Setting)
+local WalkOnWaterEnabled = false
+local WaterPlatform = nil
+local WalkConnection = nil
+
+CreateToggle(Page_Setting, "Walk On Water", false, function(state)
+    WalkOnWaterEnabled = state
+    if state then
+        if not WaterPlatform then
+             WaterPlatform = Instance.new("Part")
+             WaterPlatform.Name = "WaterPlatform"
+             WaterPlatform.Anchored = true
+             WaterPlatform.CanCollide = true
+             WaterPlatform.Transparency = 1
+             WaterPlatform.Size = Vector3.new(15, 1, 15)
+             WaterPlatform.Parent = workspace
+        end
+        
+        if WalkConnection then WalkConnection:Disconnect() end
+        WalkConnection = RunService.RenderStepped:Connect(function()
+             if not ScriptActive then 
+                 if WalkConnection then WalkConnection:Disconnect() end 
+                 return 
+             end
+             local char = Players.LocalPlayer.Character
+             if not WalkOnWaterEnabled or not char then return end
+             local hrp = char:FindFirstChild("HumanoidRootPart")
+             if not hrp then return end
+             
+             if not WaterPlatform or not WaterPlatform.Parent then
+                 WaterPlatform = Instance.new("Part")
+                 WaterPlatform.Name = "WaterPlatform"
+                 WaterPlatform.Anchored = true
+                 WaterPlatform.CanCollide = true
+                 WaterPlatform.Transparency = 1
+                 WaterPlatform.Size = Vector3.new(15, 1, 15)
+                 WaterPlatform.Parent = workspace
+             end
+             
+             local params = RaycastParams.new()
+             params.FilterDescendantsInstances = {workspace.Terrain}
+             params.FilterType = Enum.RaycastFilterType.Include
+             params.IgnoreWater = false
+             
+             local origin = hrp.Position + Vector3.new(0, 5, 0)
+             local dir = Vector3.new(0, -500, 0)
+             local res = workspace:Raycast(origin, dir, params)
+             
+             if res and res.Material == Enum.Material.Water then
+                 local waterHeight = res.Position.Y
+                 WaterPlatform.Position = Vector3.new(hrp.Position.X, waterHeight, hrp.Position.Z)
+                 
+                 if hrp.Position.Y < (waterHeight + 2) and hrp.Position.Y > (waterHeight - 5) then
+                     if not UserInputService:IsKeyDown(Enum.KeyCode.Space) then
+                         hrp.CFrame = CFrame.new(hrp.Position.X, waterHeight + 3.2, hrp.Position.Z)
+                     end
+                 end
+             else
+                 WaterPlatform.Position = Vector3.new(hrp.Position.X, -500, hrp.Position.Z)
+             end
+        end)
+    else
+        WalkOnWaterEnabled = false
+        if WalkConnection then WalkConnection:Disconnect() WalkConnection = nil end
+        if WaterPlatform then WaterPlatform:Destroy() WaterPlatform = nil end
+    end
+end)
+
 CreateTab("Save Config", Page_Save) 
 
 
@@ -702,7 +771,7 @@ CreateToggle(Page_Fhising, "Enable Auto Sell (Count 600)", false, function(state
         
         task.spawn(function()
             while AutoSellEnabled and ScriptActive do
-                pcall(function() RF_Sell:InvokeServer() end)
+                -- pcall(function() RF_Sell:InvokeServer() end) -- Removed unconditional sell
                 task.wait(2) 
                 
                 local Replion = require(game:GetService("ReplicatedStorage").Packages.Replion).Client:WaitReplion("Data", 1)
@@ -792,73 +861,94 @@ CreateToggle(Page_Fhising, "Enable Auto Spawn Totem", false, function(state)
     end
 end)
 
--- WALK ON WATER
-local WalkOnWaterEnabled = false
-local WaterPlatform = nil
-local WalkConnection = nil
+-- DETECTOR STUCK
+local DetectorStuckEnabled = false
+local DetectorThreshold = 30
+local DetectorTimer = 0
+local LastFishCount = 0
 
-CreateToggle(Page_Fhising, "Walk On Water", false, function(state)
-    WalkOnWaterEnabled = state
+local function GetFishCountGui()
+    local playerGui = Players.LocalPlayer:FindFirstChild("PlayerGui")
+    if not playerGui then return 0 end
+    local inv = playerGui:FindFirstChild("Inventory")
+    if not inv then return 0 end
+    local main = inv:FindFirstChild("Main")
+    if not main then return 0 end
+    local top = main:FindFirstChild("Top")
+    if not top then return 0 end
+    local options = top:FindFirstChild("Options")
+    if not options then return 0 end
+    local fish = options:FindFirstChild("Fish")
+    if not fish then return 0 end
+    local label = fish:FindFirstChild("Label")
+    if not label then return 0 end
+    local bagSize = label:FindFirstChild("BagSize")
+    if not bagSize or not bagSize.Text then return 0 end
+    
+    -- Format typical: "123/500"
+    local countStr = bagSize.Text:match("^(%d+)/")
+    return tonumber(countStr) or 0
+end
+
+CreateToggle(Page_Fhising, "Detector Stuck (30s)", false, function(state)
+    DetectorStuckEnabled = state
     if state then
-        if not WaterPlatform then
-             WaterPlatform = Instance.new("Part")
-             WaterPlatform.Name = "WaterPlatform"
-             WaterPlatform.Anchored = true
-             WaterPlatform.CanCollide = true
-             WaterPlatform.Transparency = 1
-             WaterPlatform.Size = Vector3.new(15, 1, 15)
-             WaterPlatform.Parent = workspace
-        end
+        LastFishCount = GetFishCountGui()
+        DetectorTimer = 0
         
-        if WalkConnection then WalkConnection:Disconnect() end
-        WalkConnection = RunService.RenderStepped:Connect(function()
-             if not ScriptActive then 
-                 if WalkConnection then WalkConnection:Disconnect() end 
-                 return 
-             end
-             local char = Players.LocalPlayer.Character
-             if not WalkOnWaterEnabled or not char then return end
-             local hrp = char:FindFirstChild("HumanoidRootPart")
-             if not hrp then return end
-             
-             if not WaterPlatform or not WaterPlatform.Parent then
-                 WaterPlatform = Instance.new("Part")
-                 WaterPlatform.Name = "WaterPlatform"
-                 WaterPlatform.Anchored = true
-                 WaterPlatform.CanCollide = true
-                 WaterPlatform.Transparency = 1
-                 WaterPlatform.Size = Vector3.new(15, 1, 15)
-                 WaterPlatform.Parent = workspace
-             end
-             
-             local params = RaycastParams.new()
-             params.FilterDescendantsInstances = {workspace.Terrain}
-             params.FilterType = Enum.RaycastFilterType.Include
-             params.IgnoreWater = false
-             
-             local origin = hrp.Position + Vector3.new(0, 5, 0)
-             local dir = Vector3.new(0, -500, 0)
-             local res = workspace:Raycast(origin, dir, params)
-             
-             if res and res.Material == Enum.Material.Water then
-                 local waterHeight = res.Position.Y
-                 WaterPlatform.Position = Vector3.new(hrp.Position.X, waterHeight, hrp.Position.Z)
-                 
-                 if hrp.Position.Y < (waterHeight + 2) and hrp.Position.Y > (waterHeight - 5) then
-                     if not UserInputService:IsKeyDown(Enum.KeyCode.Space) then
-                         hrp.CFrame = CFrame.new(hrp.Position.X, waterHeight + 3.2, hrp.Position.Z)
-                     end
-                 end
-             else
-                 WaterPlatform.Position = Vector3.new(hrp.Position.X, -500, hrp.Position.Z)
-             end
+        task.spawn(function()
+            while DetectorStuckEnabled and ScriptActive do
+                task.wait(1)
+                if not DetectorStuckEnabled then break end
+                
+                local currentCount = GetFishCountGui()
+                
+                -- If count increased, reset timer
+                if currentCount > LastFishCount then
+                    LastFishCount = currentCount
+                    DetectorTimer = 0
+                else
+                    -- If count same or lower, increase timer
+                     DetectorTimer = DetectorTimer + 1
+                end
+                
+                -- Threshold reached
+                if DetectorTimer >= DetectorThreshold then
+                    ShowNotification("Stuck Detected! Resetting...", true)
+                    
+                    local char = Players.LocalPlayer.Character
+                    if char then
+                        local hrp = char:FindFirstChild("HumanoidRootPart")
+                        local savedCFrame = hrp and hrp.CFrame
+                        
+                        char:BreakJoints()
+                        
+                        -- Wait for respawn
+                        local newChar = Players.LocalPlayer.CharacterAdded:Wait()
+                        local newHrp = newChar:WaitForChild("HumanoidRootPart", 10)
+                        
+                        if newHrp and savedCFrame then
+                             task.wait(0.5)
+                             newHrp.CFrame = savedCFrame
+                        end
+                        
+                        -- Re-equip Tool 1
+                        task.wait(1)
+                        local RE_Equip = GetRemote("RE/EquipToolFromHotbar")
+                        if RE_Equip then
+                            pcall(function() RE_Equip:FireServer(1) end)
+                        end
+                        
+                        DetectorTimer = 0
+                        LastFishCount = GetFishCountGui()
+                        ShowNotification("Reset Complete. Resuming...", false)
+                    end
+                end
+            end
         end)
-    else
-        WalkOnWaterEnabled = false
-        if WalkConnection then WalkConnection:Disconnect() WalkConnection = nil end
-        if WaterPlatform then WaterPlatform:Destroy() WaterPlatform = nil end
     end
 end)
+
 
 local BulkLabel = Instance.new("TextLabel", Page_Config)
 BulkLabel.BackgroundTransparency = 1; BulkLabel.Size = UDim2.new(1, 0, 0, 20)
