@@ -673,6 +673,70 @@ local function GetRemote(name)
     return curr:FindFirstChild(name)
 end
 
+-- Helper for Detector Stuck
+local function getFishCount()
+    local playerGui = Players.LocalPlayer:WaitForChild("PlayerGui", 5)
+    if not playerGui then return 0 end
+    local inv = playerGui:FindFirstChild("Inventory")
+    if inv then
+        local label = inv:FindFirstChild("Main") and inv.Main:FindFirstChild("Top") and inv.Main.Top:FindFirstChild("Options") and inv.Main.Top.Options:FindFirstChild("Fish") and inv.Main.Top.Options.Fish:FindFirstChild("Label") and inv.Main.Top.Options.Fish.Label:FindFirstChild("BagSize")
+        if label then
+            return tonumber((label.Text or "0/???"):match("(%d+)/")) or 0
+        end
+    end
+    return 0
+end
+
+local DetectorStuckEnabled = false
+local StuckThreshold = 15
+local LastFishCount = 0
+local StuckTimer = 0
+local SavedCFrame = nil
+
+CreateToggle(Page_Fhising, "Detector Stuck (15s)", false, function(state)
+    DetectorStuckEnabled = state
+    if state then
+        LastFishCount = getFishCount()
+        StuckTimer = 0
+        local char = Players.LocalPlayer.Character or Players.LocalPlayer.CharacterAdded:Wait()
+        SavedCFrame = char:WaitForChild("HumanoidRootPart").CFrame
+        
+        task.spawn(function()
+            while DetectorStuckEnabled and ScriptActive do
+                task.wait(1)
+                local currentFish = getFishCount()
+                if currentFish == LastFishCount then
+                    StuckTimer = StuckTimer + 1
+                    if StuckTimer >= StuckThreshold then
+                         ShowNotification("Stuck Detected! Resetting...", true)
+                         
+                         local char = Players.LocalPlayer.Character
+                         if char and char:FindFirstChild("HumanoidRootPart") then
+                            SavedCFrame = char.HumanoidRootPart.CFrame
+                         end
+                         
+                         if char then char:BreakJoints() end
+                         
+                         local newChar = Players.LocalPlayer.CharacterAdded:Wait()
+                         local hrp = newChar:WaitForChild("HumanoidRootPart")
+                         task.wait(0.5)
+                         hrp.CFrame = SavedCFrame
+                         
+                         StuckTimer = 0
+                         LastFishCount = getFishCount()
+                         
+                         -- Re-Equip Rod (Assuming slot 1)
+                         local RE_Equip = GetRemote("RE/EquipToolFromHotbar")
+                         if RE_Equip then pcall(function() RE_Equip:FireServer(1) end) end
+                    end
+                else
+                    LastFishCount = currentFish
+                    StuckTimer = 0
+                end
+            end
+        end)
+    end
+end)
 
 local AutoShakeEnabled = false
 CreateToggle(Page_Fhising, "Auto Click Fishing", false, function(val)
