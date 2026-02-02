@@ -412,7 +412,7 @@ local function CreatePage(name)
     Page.ScrollBarImageColor3 = Theme.Accent
     Page.Visible = false
     Page.CanvasSize = UDim2.new(0, 0, 0, 0)
-    Page.AutomaticCanvasSize = "Y"
+    Page.AutomaticCanvasSize = Enum.AutomaticSize.Y
     Page.ZIndex = 4
     
     local layout = Instance.new("UIListLayout", Page)
@@ -496,7 +496,6 @@ CreateTab("Import List", Page_Config)
 -- SETTING TAB
 -- Page_Setting already defined at top
 -- Manual setup for specific settings if needed, but CreatePage handles most
-Instance.new("UIListLayout", Page_Setting).Padding = UDim.new(0, 5)
 CreateTab("Setting", Page_Setting)
 
 -- WALK ON WATER (Moved to Setting)
