@@ -942,7 +942,115 @@ CreateToggle(Page_Setting, "Walk On Water", false, function(state)
     end
 end)
 
-local BulkLabel = nil -- Moved to Page_Tag Sub-Menu
+-- SETTING FEATURES
+-- 1. Remove Fish Notification Pop-up
+local DisableNotificationConnection = nil
+CreateToggle(Page_Setting, "Remove Fish Notification Pop-up", false, function(state)
+    local PlayerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
+    local SmallNotification = PlayerGui:FindFirstChild("Small Notification")
+    
+    if not SmallNotification then
+        SmallNotification = PlayerGui:WaitForChild("Small Notification", 5)
+    end
+
+    if state then
+        if SmallNotification then
+             DisableNotificationConnection = RunService.RenderStepped:Connect(function()
+                 if not ScriptActive then
+                     if DisableNotificationConnection then DisableNotificationConnection:Disconnect() end
+                     return
+                 end
+                 SmallNotification.Enabled = false
+             end)
+             ShowNotification("Pop-up Diblokir", false)
+        end
+    else
+        if DisableNotificationConnection then
+            DisableNotificationConnection:Disconnect()
+            DisableNotificationConnection = nil
+        end
+        if SmallNotification then SmallNotification.Enabled = true end
+        ShowNotification("Pop-up Diaktifkan", false)
+    end
+end)
+
+-- 2. No Animation
+local isNoAnimationActive = false
+local originalAnimator = nil
+local originalAnimateScript = nil
+
+local function DisableAnimations()
+    local character = Players.LocalPlayer.Character or Players.LocalPlayer.CharacterAdded:Wait()
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
+    if not humanoid then return end
+
+    local animateScript = character:FindFirstChild("Animate")
+    if animateScript and animateScript:IsA("LocalScript") and animateScript.Enabled then
+        originalAnimateScript = animateScript.Enabled
+        animateScript.Enabled = false
+    end
+    
+    local animator = humanoid:FindFirstChildOfClass("Animator")
+    if animator then
+        originalAnimator = animator
+        animator:Destroy()
+    end
+end
+
+local function EnableAnimations()
+    local character = Players.LocalPlayer.Character
+    local animateScript = character and character:FindFirstChild("Animate")
+    if animateScript and originalAnimateScript ~= nil then
+        animateScript.Enabled = originalAnimateScript
+    end
+    
+    local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+    if humanoid then
+        if not humanoid:FindFirstChildOfClass("Animator") then
+             if originalAnimator then originalAnimator.Parent = humanoid else Instance.new("Animator", humanoid) end
+        end
+    end
+end
+
+table.insert(Connections, Players.LocalPlayer.CharacterAdded:Connect(function(newChar)
+    if isNoAnimationActive then
+        task.wait(0.2)
+        DisableAnimations()
+    end
+end))
+
+CreateToggle(Page_Setting, "No Animation", false, function(state)
+    isNoAnimationActive = state
+    if state then
+        DisableAnimations()
+        ShowNotification("No Animation ON", false)
+    else
+        EnableAnimations()
+        ShowNotification("No Animation OFF", false)
+    end
+end)
+
+-- 3. Remove Skin Effect
+local VFXControllerModule = require(ReplicatedStorage.Controllers.VFXController)
+local originalVFXHandle = VFXControllerModule.Handle
+local isVFXDisabled = false
+
+CreateToggle(Page_Setting, "Remove Skin Effect", false, function(state)
+    isVFXDisabled = state
+    if state then
+        VFXControllerModule.Handle = function(...) end
+        VFXControllerModule.RenderAtPoint = function(...) end
+        VFXControllerModule.RenderInstance = function(...) end
+        
+        local cosmeticFolder = workspace:FindFirstChild("CosmeticFolder")
+        if cosmeticFolder then pcall(function() cosmeticFolder:ClearAllChildren() end) end
+        ShowNotification("No Skin Effect ON", false)
+    else
+        VFXControllerModule.Handle = originalVFXHandle
+        ShowNotification("Skin Effect Restored (Rejoin to fully fix)", false)
+    end
+end)
+
 local BulkContainer = nil
 local BulkInput = nil
 local ImportBtnWrapper = nil
