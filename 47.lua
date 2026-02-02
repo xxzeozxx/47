@@ -704,7 +704,7 @@ CreateToggle(Page_Fhising, "Enable Auto Sell (Count 600)", false, function(state
         
         task.spawn(function()
             while AutoSellEnabled and ScriptActive do
-                pcall(function() RF_Sell:InvokeServer() end)
+                -- pcall(function() RF_Sell:InvokeServer() end)
                 task.wait(2) 
                 
                 local Replion = require(game:GetService("ReplicatedStorage").Packages.Replion).Client:WaitReplion("Data", 1)
