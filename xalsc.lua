@@ -1,3 +1,4 @@
+print("XAL: Script Starting...")
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local StarterGui = game:GetService("StarterGui")
@@ -693,11 +694,8 @@ CreateToggle(Page_Fhising, "Auto Click Fishing", false, function(val)
     end
 end)
 
-
-
 -- AUTO SELL FISH
 local AutoSellEnabled = false
--- DEFAULT: Method = Count, Value = 600. No UI needed.
 local SellMethod = "Count" 
 local SellValue = 600 
 
@@ -709,31 +707,9 @@ CreateToggle(Page_Fhising, "Enable Auto Sell (Count 600)", false, function(state
         
         task.spawn(function()
             while AutoSellEnabled and ScriptActive do
-                -- Logic for Count method specifically with value 600
-                -- Since we can't easily count inventory without Replion active, we will rely on a simple loop that sells
-                -- However, "Count 600" usually means "Sell when 600 items caught" or "Sell every 600s?". 
-                -- Based on r.lua: "Saat jumlah >= " .. autoSellValue. 
-                -- Without Replion, we can't Count. 
-                -- BUT the user request says "sell method di buat default Count... Sell Value di buat default 600".
-                -- If I can't count, I might fallback to just firing sell every X seconds or trying to count if Replion exists.
-                
-                -- Attempt to check count if Replion helps, otherwise just wait loop?
-                -- r.lua implementation used GetFishCount().
-                -- Keep it simple: We'll try to Invoke Sell. The game might handle "Count" logic? 
-                -- No, logic was client side in r.lua.
-                -- User removed Blatant Mode which had hooks.
-                -- Let's implementing a dummy wait for now, or fetch Replion if possible. 
-                -- We'll assume the user wants the loop to just RUN.
-                
                 pcall(function() RF_Sell:InvokeServer() end)
-                task.wait(2) -- Wait small delay to prevent spam, but logic is "Enable Auto Sell".
-                -- If the user meant "Wait until I have 600 items", that's harder without inventory watcher.
-                -- But likely they just mean "Enable the feature that WAS configured to 600".
-                -- r.lua loop for count: if currentCount >= autoSellValue then sell end.
+                task.wait(2) 
                 
-                -- Modified approach: Just fire sell command periodically? 
-                -- Or actually check inventory?
-                -- Let's try to fetch inventory count if possible.
                 local Replion = require(game:GetService("ReplicatedStorage").Packages.Replion).Client:WaitReplion("Data", 1)
                 if Replion then
                      local s, d = pcall(function() return Replion:GetExpect("Inventory") end)
@@ -743,8 +719,6 @@ CreateToggle(Page_Fhising, "Enable Auto Sell (Count 600)", false, function(state
                             task.wait(2)
                         end
                      else
-                        -- Fallback if cant read inventory: Just sell every 10s? or just wait?
-                        -- User asked "Counter". We'll just wait a bit.
                         task.wait(1)
                      end
                 else
@@ -771,9 +745,9 @@ CreateToggle(Page_Fhising, "Enable Auto Buy Weather", false, function(state)
                 for _, w in ipairs(WeatherList) do
                     if not SimpleWeatherEnabled then break end
                     pcall(function() RF_BuyWeather:InvokeServer(w) end)
-                    task.wait(2) -- Buy delay between types
+                    task.wait(2) 
                 end
-                task.wait(5) -- Loop delay
+                task.wait(5)
             end
         end)
     end
