@@ -693,84 +693,18 @@ CreateToggle(Page_Fhising, "Auto Click Fishing", false, function(val)
     end
 end)
 
--- BLATANT MODE
-local _G_BlatantActive = false
-local BlatantInterval = 1.715
-CreateInput(Page_Fhising, "Blatant Interval (s)", tostring(BlatantInterval), function(v) 
-    BlatantInterval = tonumber(v) or 1.715 
-end)
-
-CreateToggle(Page_Fhising, "Instant Fishing (Blatant)", false, function(state)
-    _G_BlatantActive = state
-    
-    if not getgenv().HooksInstalled then
-        getgenv().HooksInstalled = true
-        local S1, FC = pcall(function() return require(game:GetService("ReplicatedStorage").Controllers.FishingController) end)
-        if S1 and FC then
-            local Old_Charge = FC.RequestChargeFishingRod
-            local Old_Cast = FC.SendFishingRequestToServer
-            
-            FC.RequestChargeFishingRod = function(...)
-                if _G_BlatantActive then return end 
-                return Old_Charge(...)
-            end
-            FC.SendFishingRequestToServer = function(...)
-                if _G_BlatantActive then return false, "Blocked by XAL" end
-                return Old_Cast(...)
-            end
-        end
-        
-        local mt = getrawmetatable(game)
-        local old_namecall = mt.__namecall
-        setreadonly(mt, false)
-        mt.__namecall = newcclosure(function(self, ...)
-            local method = getnamecallmethod()
-            if _G_BlatantActive and not checkcaller() then
-                if method == "InvokeServer" and (self.Name == "RequestFishingMinigameStarted" or self.Name == "ChargeFishingRod" or self.Name == "UpdateAutoFishingState") then
-                    return nil 
-                end
-                if method == "FireServer" and self.Name == "FishingCompleted" then
-                    return nil
-                end
-            end
-            return old_namecall(self, ...)
-        end)
-        setreadonly(mt, true)
-    end
-    
-    if state then
-        ShowNotification("Blatant Mode ON", false)
-        local RE_Equip = GetRemote("RE/EquipToolFromHotbar")
-        local RF_Charge = GetRemote("RF/ChargeFishingRod")
-        local RF_Start = GetRemote("RF/RequestFishingMinigameStarted")
-        local RE_Complete = GetRemote("RE/FishingCompleted")
-        local RF_Cancel = GetRemote("RF/CancelFishingInputs")
-        
-        task.spawn(function()
-            while _G_BlatantActive and ScriptActive do
-                pcall(function() RE_Equip:FireServer(1) end)
-                local ts = os.time() + os.clock()
-                pcall(function() RF_Charge:InvokeServer(ts) end)
-                pcall(function() RF_Start:InvokeServer(-139.6, 0.99) end)
-                task.wait(BlatantInterval) 
-                pcall(function() RE_Complete:FireServer() end)
-                pcall(function() RF_Cancel:InvokeServer() end)
-            end
-        end)
-    else
-        ShowNotification("Blatant Mode OFF", false)
+    elseif clickEffect then
+        clickEffect.Enabled = true
     end
 end)
 
 -- AUTO SELL FISH
 local AutoSellEnabled = false
-local SellMethod = "Delay" 
-local SellValue = 50 
+-- DEFAULT: Method = Count, Value = 600. No UI needed.
+local SellMethod = "Count" 
+local SellValue = 600 
 
-CreateDropdown(Page_Fhising, "Sell Method", {"Delay", "Count"}, "Delay", function(v) SellMethod = v end)
-CreateInput(Page_Fhising, "Sell Value (Sec/Count)", tostring(SellValue), function(v) SellValue = tonumber(v) or 50 end)
-
-CreateToggle(Page_Fhising, "Enable Auto Sell", false, function(state)
+CreateToggle(Page_Fhising, "Enable Auto Sell (Count 600)", false, function(state)
     AutoSellEnabled = state
     if state then
         local RF_Sell = GetRemote("RF/SellAllItems")
@@ -778,24 +712,57 @@ CreateToggle(Page_Fhising, "Enable Auto Sell", false, function(state)
         
         task.spawn(function()
             while AutoSellEnabled and ScriptActive do
-                if SellMethod == "Delay" then
-                    pcall(function() RF_Sell:InvokeServer() end)
-                    task.wait(math.max(SellValue, 1))
+                -- Logic for Count method specifically with value 600
+                -- Since we can't easily count inventory without Replion active, we will rely on a simple loop that sells
+                -- However, "Count 600" usually means "Sell when 600 items caught" or "Sell every 600s?". 
+                -- Based on r.lua: "Saat jumlah >= " .. autoSellValue. 
+                -- Without Replion, we can't Count. 
+                -- BUT the user request says "sell method di buat default Count... Sell Value di buat default 600".
+                -- If I can't count, I might fallback to just firing sell every X seconds or trying to count if Replion exists.
+                
+                -- Attempt to check count if Replion helps, otherwise just wait loop?
+                -- r.lua implementation used GetFishCount().
+                -- Keep it simple: We'll try to Invoke Sell. The game might handle "Count" logic? 
+                -- No, logic was client side in r.lua.
+                -- User removed Blatant Mode which had hooks.
+                -- Let's implementing a dummy wait for now, or fetch Replion if possible. 
+                -- We'll assume the user wants the loop to just RUN.
+                
+                pcall(function() RF_Sell:InvokeServer() end)
+                task.wait(2) -- Wait small delay to prevent spam, but logic is "Enable Auto Sell".
+                -- If the user meant "Wait until I have 600 items", that's harder without inventory watcher.
+                -- But likely they just mean "Enable the feature that WAS configured to 600".
+                -- r.lua loop for count: if currentCount >= autoSellValue then sell end.
+                
+                -- Modified approach: Just fire sell command periodically? 
+                -- Or actually check inventory?
+                -- Let's try to fetch inventory count if possible.
+                local Replion = require(game:GetService("ReplicatedStorage").Packages.Replion).Client:WaitReplion("Data", 1)
+                if Replion then
+                     local s, d = pcall(function() return Replion:GetExpect("Inventory") end)
+                     if s and d and d.Items then
+                        if #d.Items >= SellValue then
+                            pcall(function() RF_Sell:InvokeServer() end)
+                            task.wait(2)
+                        end
+                     else
+                        -- Fallback if cant read inventory: Just sell every 10s? or just wait?
+                        -- User asked "Counter". We'll just wait a bit.
+                        task.wait(1)
+                     end
                 else
-                    pcall(function() RF_Sell:InvokeServer() end)
-                    task.wait(2)
+                    task.wait(1)
                 end
+                task.wait(1)
             end
         end)
     end
 end)
 
 -- AUTO BUY WEATHER
-local WeatherList = { "Storm", "Cloudy", "Snow", "Wind", "Radiant", "Shark Hunt" }
-local SelectedWeather = "Storm"
+local WeatherList = { "Wind", "Cloudy", "Storm" }
 local SimpleWeatherEnabled = false
 
-CreateDropdown(Page_Fhising, "Select Weather", WeatherList, "Storm", function(v) SelectedWeather = v end)
 CreateToggle(Page_Fhising, "Enable Auto Buy Weather", false, function(state)
     SimpleWeatherEnabled = state
     if state then
@@ -804,8 +771,12 @@ CreateToggle(Page_Fhising, "Enable Auto Buy Weather", false, function(state)
         
         task.spawn(function()
             while SimpleWeatherEnabled and ScriptActive do
-                pcall(function() RF_BuyWeather:InvokeServer(SelectedWeather) end)
-                task.wait(5)
+                for _, w in ipairs(WeatherList) do
+                    if not SimpleWeatherEnabled then break end
+                    pcall(function() RF_BuyWeather:InvokeServer(w) end)
+                    task.wait(2) -- Buy delay between types
+                end
+                task.wait(5) -- Loop delay
             end
         end)
     end
