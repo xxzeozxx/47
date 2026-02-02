@@ -430,6 +430,7 @@ local Page_Tag = CreatePage("TagDiscord")
 local Page_AdminBoost = CreatePage("AdminBoost")
 local Page_SessionStats = CreatePage("SessionStats")
 local Page_Fhising = CreatePage("Fhising")
+local Page_Setting = CreatePage("Setting")
 
 Page_Webhook.Visible = false
 
@@ -493,8 +494,8 @@ CreateTab("Webhook", Page_Url)
 CreateTab("List Player", Page_Tag)
 CreateTab("Import List", Page_Config) 
 -- SETTING TAB
-local Page_Setting = Instance.new("ScrollingFrame", ContentContainer)
-Page_Setting.Name = "Page_Setting"; Page_Setting.Size = UDim2.new(1, 0, 1, 0); Page_Setting.BackgroundTransparency = 1; Page_Setting.Visible = false; Page_Setting.ScrollBarThickness = 2
+-- Page_Setting already defined at top
+-- Manual setup for specific settings if needed, but CreatePage handles most
 Instance.new("UIListLayout", Page_Setting).Padding = UDim.new(0, 5)
 CreateTab("Setting", Page_Setting)
 
