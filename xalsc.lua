@@ -693,10 +693,7 @@ CreateToggle(Page_Fhising, "Auto Click Fishing", false, function(val)
     end
 end)
 
-    elseif clickEffect then
-        clickEffect.Enabled = true
-    end
-end)
+
 
 -- AUTO SELL FISH
 local AutoSellEnabled = false
