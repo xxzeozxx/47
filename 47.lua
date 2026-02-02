@@ -412,15 +412,12 @@ local function CreatePage(name)
     Page.ScrollBarImageColor3 = Theme.Accent
     Page.Visible = false
     Page.CanvasSize = UDim2.new(0, 0, 0, 0)
+    Page.AutomaticCanvasSize = Enum.AutomaticSize.Y
     Page.ZIndex = 4
     
     local layout = Instance.new("UIListLayout", Page)
     layout.Padding = UDim.new(0, 6) 
     layout.SortOrder = Enum.SortOrder.LayoutOrder 
-    
-    layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        Page.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 10)
-    end)
     
     return Page
 end
@@ -865,93 +862,12 @@ CreateToggle(Page_Fhising, "Enable Auto Spawn Totem", false, function(state)
     end
 end)
 
--- DETECTOR STUCK
+--[[ 
+-- DISABLED TEMPORARILY: DETECTOR STUCK
+-- Reason: Causing UI Issues
 local DetectorStuckEnabled = false
-local DetectorThreshold = 30
-local DetectorTimer = 0
-local LastFishCount = 0
-
-local function GetFishCountGui()
-    local playerGui = Players.LocalPlayer:FindFirstChild("PlayerGui")
-    if not playerGui then return 0 end
-    local inv = playerGui:FindFirstChild("Inventory")
-    if not inv then return 0 end
-    local main = inv:FindFirstChild("Main")
-    if not main then return 0 end
-    local top = main:FindFirstChild("Top")
-    if not top then return 0 end
-    local options = top:FindFirstChild("Options")
-    if not options then return 0 end
-    local fish = options:FindFirstChild("Fish")
-    if not fish then return 0 end
-    local label = fish:FindFirstChild("Label")
-    if not label then return 0 end
-    local bagSize = label:FindFirstChild("BagSize")
-    if not bagSize or not bagSize.Text then return 0 end
-    
-    -- Format typical: "123/500"
-    local countStr = bagSize.Text:match("^(%d+)/")
-    return tonumber(countStr) or 0
-end
-
-CreateToggle(Page_Fhising, "Detector Stuck (30s)", false, function(state)
-    DetectorStuckEnabled = state
-    if state then
-        LastFishCount = GetFishCountGui()
-        DetectorTimer = 0
-        
-        task.spawn(function()
-            while DetectorStuckEnabled and ScriptActive do
-                task.wait(1)
-                if not DetectorStuckEnabled then break end
-                
-                local currentCount = GetFishCountGui()
-                
-                -- If count increased, reset timer
-                if currentCount > LastFishCount then
-                    LastFishCount = currentCount
-                    DetectorTimer = 0
-                else
-                    -- If count same or lower, increase timer
-                     DetectorTimer = DetectorTimer + 1
-                end
-                
-                -- Threshold reached
-                if DetectorTimer >= DetectorThreshold then
-                    ShowNotification("Stuck Detected! Resetting...", true)
-                    
-                    local char = Players.LocalPlayer.Character
-                    if char then
-                        local hrp = char:FindFirstChild("HumanoidRootPart")
-                        local savedCFrame = hrp and hrp.CFrame
-                        
-                        char:BreakJoints()
-                        
-                        -- Wait for respawn
-                        local newChar = Players.LocalPlayer.CharacterAdded:Wait()
-                        local newHrp = newChar:WaitForChild("HumanoidRootPart", 10)
-                        
-                        if newHrp and savedCFrame then
-                             task.wait(0.5)
-                             newHrp.CFrame = savedCFrame
-                        end
-                        
-                        -- Re-equip Tool 1
-                        task.wait(1)
-                        local RE_Equip = GetRemote("RE/EquipToolFromHotbar")
-                        if RE_Equip then
-                            pcall(function() RE_Equip:FireServer(1) end)
-                        end
-                        
-                        DetectorTimer = 0
-                        LastFishCount = GetFishCountGui()
-                        ShowNotification("Reset Complete. Resuming...", false)
-                    end
-                end
-            end
-        end)
-    end
-end)
+-- ... (Code temporarily hidden)
+]]
 
 
 local BulkLabel = Instance.new("TextLabel", Page_Config)
