@@ -1,9 +1,9 @@
 local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
 local Window = WindUI:CreateWindow({
-    Title = "RockHub - Fish It",
+    Title = "XALSC - Fish It",
     Icon = "rbxassetid://116236936447443",
     Author = "Premium Version",
-    Folder = "RockHub",
+    Folder = "XALSC",
     Size = UDim2.fromOffset(600, 360),
     MinSize = Vector2.new(560, 250),
     MaxSize = Vector2.new(950, 760),
@@ -16,19 +16,19 @@ local Window = WindUI:CreateWindow({
     ScrollBarEnabled = true,
 })
 
-local RockHubConfig = Window.ConfigManager:CreateConfig("rockhub")
+local XALSCConfig = Window.ConfigManager:CreateConfig("XALSC")
 
 local ElementRegistry = {} 
 
 local function Reg(id, element)
-    RockHubConfig:Register(id, element)
+    XALSCConfig:Register(id, element)
     
     ElementRegistry[id] = element 
     return element
 end
 
 local HttpService = game:GetService("HttpService")
-local BaseFolder = "WindUI/" .. (Window.Folder or "RockHub") .. "/config/"
+local BaseFolder = "WindUI/" .. (Window.Folder or "XALSC") .. "/config/"
 
 local function SmartLoadConfig(configName)
     local path = BaseFolder .. configName .. ".json"
@@ -168,7 +168,7 @@ pcall(function()
     for i, v in pairs(getconnections(player.Idled)) do
         if v.Disable then
             v:Disable() 
-            print("[RockHub Anti-AFK] ON")
+            print("[XALSC Anti-AFK] ON")
         end
     end
 end)
@@ -275,13 +275,13 @@ do
         Promise = require(RepStorage:WaitForChild("Packages").Promise)
     end)
     
-    _G.RockHub_AutoAcceptTradeEnabled = false 
+    _G.XALSC_AutoAcceptTradeEnabled = false 
 
     if PromptController and PromptController.FirePrompt and Promise then
         local oldFirePrompt = PromptController.FirePrompt
         PromptController.FirePrompt = function(self, promptText, ...)
             
-            if _G.RockHub_AutoAcceptTradeEnabled and type(promptText) == "string" and promptText:find("Accept") and promptText:find("from:") then
+            if _G.XALSC_AutoAcceptTradeEnabled and type(promptText) == "string" and promptText:find("Accept") and promptText:find("from:") then
                 
                 local initiatorName = string.match(promptText, "from: ([^\n]+)") or "Seseorang"
                 
@@ -295,7 +295,7 @@ do
             return oldFirePrompt(self, promptText, ...)
         end
     else
-        warn("[RockHub] Gagal memuat PromptController/Promise untuk Auto Accept Trade.")
+        warn("[XALSC] Gagal memuat PromptController/Promise untuk Auto Accept Trade.")
     end
 end
 
@@ -325,7 +325,7 @@ local selectedRodUUID = nil
 local selectedEnchantNames = {}
 
 local ENCHANT_STONE_ID = 10
-_G.RockHub_EnchantStoneUUIDs = {}
+_G.XALSC_EnchantStoneUUIDs = {}
 
 local function GetEnchantNameFromId(id)
     id = tonumber(id)
@@ -715,17 +715,13 @@ local FishingAreas = {
         ["Iron Cavern"] = {Pos = Vector3.new(-8792.546, -588.000, 230.642), Look = Vector3.new(0.718, 0.000, 0.696)},
         ["Classic Island"] = {Pos = Vector3.new(1440.843, 46.062, 2777.175), Look = Vector3.new(0.940, -0.000, 0.342)},
         ["Ancient Jungle"] = {Pos = Vector3.new(1535.639, 3.159, -193.352), Look = Vector3.new(0.505, -0.000, 0.863)},
-        ["Arrow Lever"] = {Pos = Vector3.new(898.296, 8.449, -361.856), Look = Vector3.new(0.023, -0.000, 1.000)},
         ["Coral Reef"] = {Pos = Vector3.new(-3207.538, 6.087, 2011.079), Look = Vector3.new(0.973, 0.000, 0.229)},
         ["Crater Island"] = {Pos = Vector3.new(1058.976, 2.330, 5032.878), Look = Vector3.new(-0.789, 0.000, 0.615)},
-        ["Cresent Lever"] = {Pos = Vector3.new(1419.750, 31.199, 78.570), Look = Vector3.new(0.000, -0.000, -1.000)},
         ["Crystalline Passage"] = {Pos = Vector3.new(6051.567, -538.900, 4370.979), Look = Vector3.new(0.109, 0.000, 0.994)},
         ["Ancient Ruin"] = {Pos = Vector3.new(6031.981, -585.924, 4713.157), Look = Vector3.new(0.316, -0.000, -0.949)},
-        ["Diamond Lever"] = {Pos = Vector3.new(1818.930, 8.449, -284.110), Look = Vector3.new(0.000, 0.000, -1.000)},
         ["Enchant Room"] = {Pos = Vector3.new(3255.670, -1301.530, 1371.790), Look = Vector3.new(-0.000, -0.000, -1.000)},
         ["Esoteric Island"] = {Pos = Vector3.new(2164.470, 3.220, 1242.390), Look = Vector3.new(-0.000, -0.000, -1.000)},
         ["Fisherman Island"] = {Pos = Vector3.new(74.030, 9.530, 2705.230), Look = Vector3.new(-0.000, -0.000, -1.000)},
-        ["Hourglass Diamond Lever"] = {Pos = Vector3.new(1484.610, 8.450, -861.010), Look = Vector3.new(-0.000, -0.000, -1.000)},
         ["Kohana"] = {Pos = Vector3.new(-668.732, 3.000, 681.580), Look = Vector3.new(0.889, -0.000, 0.458)},
         ["Lost Isle"] = {Pos = Vector3.new(-3804.105, 2.344, -904.653), Look = Vector3.new(-0.901, -0.000, 0.433)},
         ["Sacred Temple"] = {Pos = Vector3.new(1461.815, -22.125, -670.234), Look = Vector3.new(-0.990, -0.000, 0.143)},
@@ -735,7 +731,6 @@ local FishingAreas = {
         ["Tropical Island"] = {Pos = Vector3.new(-2162.920, 2.825, 3638.445), Look = Vector3.new(0.381, -0.000, 0.925)},
         ["Underground Cellar"] = {Pos = Vector3.new(2118.417, -91.448, -733.800), Look = Vector3.new(0.854, 0.000, 0.521)},
         ["Volcano"] = {Pos = Vector3.new(-605.121, 19.516, 160.010), Look = Vector3.new(0.854, 0.000, 0.520)},
-        ["Weather Machine"] = {Pos = Vector3.new(-1518.550, 2.875, 1916.148), Look = Vector3.new(0.042, 0.000, 0.999)},
     }
     local AreaNames = {}
     for name, _ in pairs(FishingAreas) do
@@ -1073,266 +1068,7 @@ do
     }))
 
     
-    local other = player:Section({
-        Title = "Other",
-        TextSize = 20,
-    })
 
-    local isHideActive = false
-    local hideConnection = nil
-    
-    local customName = ".gg/RockHub"
-    local customLevel = "Lvl. 969" 
-
-    local custname = Reg("cfakennme",other:Input({
-        Title = "Custom Fake Name",
-        Desc = "Nama samaran yang akan muncul di atas kepala player.",
-        Value = customName,
-        Placeholder = "Hidden User",
-        Icon = "user-x",
-        Callback = function(text)
-            customName = text
-        end
-    }))
-
-   local custlvl = Reg("cfkelvl",other:Input({
-        Title = "Custom Fake Level",
-        Desc = "Level samaran (misal: 'Lvl. 100' atau 'Max').",
-        Value = customLevel,
-        Placeholder = "Lvl. 999",
-        Icon = "bar-chart-2",
-        Callback = function(text)
-            customLevel = text
-        end
-    }))
-
-    local hideusn = Reg("hideallusr",other:Toggle({
-        Title = "Hide All Usernames (Streamer Mode)",
-        Value = false,
-        Callback = function(state)
-            isHideActive = state
-            
-            
-            pcall(function()
-                game:GetService("StarterGui"):SetCoreGuiEnabled(Enum.CoreGuiType.PlayerList, not state)
-            end)
-
-            if state then
-                WindUI:Notify({ Title = "Hide Name ON", Content = "Nama & Level disamarkan.", Duration = 3, Icon = "eye-off" })
-                
-                
-                if hideConnection then hideConnection:Disconnect() end
-                hideConnection = game:GetService("RunService").RenderStepped:Connect(function()
-                    for _, plr in ipairs(game.Players:GetPlayers()) do
-                        if plr.Character then
-                            
-                            local hum = plr.Character:FindFirstChild("Humanoid")
-                            if hum and hum.DisplayName ~= customName then 
-                                hum.DisplayName = customName 
-                            end
-
-                            
-                            for _, obj in ipairs(plr.Character:GetDescendants()) do
-                                if obj:IsA("BillboardGui") then
-                                    for _, lbl in ipairs(obj:GetDescendants()) do
-                                        if lbl:IsA("TextLabel") or lbl:IsA("TextButton") then
-                                            if lbl.Visible then
-                                                local txt = lbl.Text
-                                                
-                                                
-                                                
-                                                if txt:find(plr.Name) or txt:find(plr.DisplayName) then
-                                                    if txt ~= customName then
-                                                        lbl.Text = customName
-                                                    end
-                                                
-                                                
-                                                
-                                                elseif txt:match("%d+") or txt:lower():find("lvl") or txt:lower():find("level") then
-                                                    
-                                                    
-                                                    if #txt < 15 and txt ~= customLevel then 
-                                                        lbl.Text = customLevel
-                                                    end
-                                                end
-                                            end
-                                        end
-                                    end
-                                end
-                            end
-                        end
-                    end
-                end)
-            else
-                WindUI:Notify({ Title = "Hide Name OFF", Content = "Tampilan dikembalikan.", Duration = 3, Icon = "eye" })
-                
-                if hideConnection then 
-                    hideConnection:Disconnect() 
-                    hideConnection = nil 
-                end
-                
-                
-                for _, plr in ipairs(game.Players:GetPlayers()) do
-                    if plr.Character then
-                        local hum = plr.Character:FindFirstChild("Humanoid")
-                        if hum then hum.DisplayName = plr.DisplayName end
-                    end
-                end
-            end
-        end
-    }))
-
-    
-    local runService = game:GetService("RunService")
-    local players = game:GetService("Players")
-    local STUD_TO_M = 0.28
-    local espEnabled = false
-    local espConnections = {}
-
-    local function removeESP(targetPlayer)
-        if not targetPlayer then return end
-        local data = espConnections[targetPlayer]
-        if data then
-            if data.distanceConn then pcall(function() data.distanceConn:Disconnect() end) end
-            if data.charAddedConn then pcall(function() data.charAddedConn:Disconnect() end) end
-            if data.billboard and data.billboard.Parent then pcall(function() data.billboard:Destroy() end) end
-            espConnections[targetPlayer] = nil
-        else
-            if targetPlayer.Character then
-                for _, v in ipairs(targetPlayer.Character:GetChildren()) do
-                    if v.Name == "RockHubESP" and v:IsA("BillboardGui") then pcall(function() v:Destroy() end) end
-                end
-            end
-        end
-    end
-
-    local function createESP(targetPlayer)
-        if not targetPlayer or not targetPlayer.Character or targetPlayer == LocalPlayer then return end
-
-        removeESP(targetPlayer)
-        local char = targetPlayer.Character
-        local hrp = char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso")
-        if not hrp then return end
-
-        local BillboardGui = Instance.new("BillboardGui")
-        BillboardGui.Name = "RockHubESP"
-        BillboardGui.Adornee = hrp
-        BillboardGui.Size = UDim2.new(0, 140, 0, 40)
-        BillboardGui.AlwaysOnTop = true
-        BillboardGui.StudsOffset = Vector3.new(0, 2.6, 0)
-        BillboardGui.Parent = char
-
-        local Frame = Instance.new("Frame")
-        Frame.Size = UDim2.new(1, 0, 1, 0)
-        Frame.BackgroundTransparency = 1
-        Frame.BorderSizePixel = 0
-        Frame.Parent = BillboardGui
-
-        local NameLabel = Instance.new("TextLabel")
-        NameLabel.Parent = Frame
-        NameLabel.Size = UDim2.new(1, 0, 0.6, 0)
-        NameLabel.Position = UDim2.new(0, 0, 0, 0)
-        NameLabel.BackgroundTransparency = 1
-        NameLabel.Text = tostring(targetPlayer.DisplayName or targetPlayer.Name)
-        NameLabel.TextColor3 = Color3.fromRGB(255, 230, 230)
-        NameLabel.TextStrokeTransparency = 0.7
-        NameLabel.Font = Enum.Font.GothamBold
-        NameLabel.TextScaled = true
-
-        local DistanceLabel = Instance.new("TextLabel")
-        DistanceLabel.Parent = Frame
-        DistanceLabel.Size = UDim2.new(1, 0, 0.4, 0)
-        DistanceLabel.Position = UDim2.new(0, 0, 0.6, 0)
-        DistanceLabel.BackgroundTransparency = 1
-        DistanceLabel.Text = "0.0 m"
-        DistanceLabel.TextColor3 = Color3.fromRGB(210, 210, 210)
-        NameLabel.TextStrokeTransparency = 0.85
-        DistanceLabel.Font = Enum.Font.GothamSemibold
-        DistanceLabel.TextScaled = true
-
-        espConnections[targetPlayer] = { billboard = BillboardGui }
-
-        local distanceConn = runService.RenderStepped:Connect(function()
-            if not espEnabled or not hrp or not hrp.Parent then removeESP(targetPlayer) return end
-            local localChar = LocalPlayer.Character
-            local localHRP = localChar and localChar:FindFirstChild("HumanoidRootPart")
-            if localHRP then
-                local distStuds = (localHRP.Position - hrp.Position).Magnitude
-                local distMeters = distStuds * STUD_TO_M
-                DistanceLabel.Text = string.format("%.1f m", distMeters)
-            end
-        end)
-        espConnections[targetPlayer].distanceConn = distanceConn
-
-        local charAddedConn = targetPlayer.CharacterAdded:Connect(function()
-            task.wait(0.8)
-            if espEnabled then createESP(targetPlayer) end
-        end)
-        espConnections[targetPlayer].charAddedConn = charAddedConn
-    end
-
-    local espplay = Reg("esp",other:Toggle({
-        Title = "Player ESP",
-        Value = false,
-        Callback = function(state)
-            espEnabled = state
-            if state then
-                WindUI:Notify({ Title = "ESP Aktif", Duration = 3, Icon = "eye", })
-                for _, plr in ipairs(players:GetPlayers()) do
-                    if plr ~= LocalPlayer then createESP(plr) end
-                end
-                espConnections["playerAddedConn"] = players.PlayerAdded:Connect(function(plr)
-                    task.wait(1)
-                    if espEnabled then createESP(plr) end
-                end)
-                espConnections["playerRemovingConn"] = players.PlayerRemoving:Connect(function(plr)
-                    removeESP(plr)
-                end)
-            else
-                WindUI:Notify({ Title = "ESP Nonaktif", Content = "Semua marker ESP dihapus.", Duration = 3, Icon = "eye-off", })
-                for plr, _ in pairs(espConnections) do
-                    if plr and typeof(plr) == "Instance" then removeESP(plr) end
-                end
-                if espConnections["playerAddedConn"] then espConnections["playerAddedConn"]:Disconnect() end
-                if espConnections["playerRemovingConn"] then espConnections["playerRemovingConn"]:Disconnect() end
-                espConnections = {}
-            end
-        end
-    }))
-
-    local respawnin = other:Button({
-        Title = "Reset Character (In Place)",
-        Icon = "refresh-cw",
-        Callback = function()
-            local character = LocalPlayer.Character
-            local hrp = character and character:FindFirstChild("HumanoidRootPart")
-            local humanoid = character and character:FindFirstChildOfClass("Humanoid")
-
-            if not character or not hrp or not humanoid then
-                WindUI:Notify({ Title = "Gagal Reset", Content = "Karakter tidak ditemukan!", Duration = 3, Icon = "x", })
-                return
-            end
-
-            local lastPos = hrp.Position
-
-            WindUI:Notify({ Title = "Reset Character...", Content = "Respawning di posisi yang sama...", Duration = 2, Icon = "rotate-cw", })
-            humanoid:TakeDamage(999999)
-
-            LocalPlayer.CharacterAdded:Wait()
-            task.wait(0.5)
-            local newChar = LocalPlayer.Character
-            local newHRP = newChar:WaitForChild("HumanoidRootPart", 5)
-
-            if newHRP then
-                newHRP.CFrame = CFrame.new(lastPos + Vector3.new(0, 3, 0))
-                WindUI:Notify({ Title = "Character Reset Sukses!", Content = "Kamu direspawn di posisi yang sama ✅", Duration = 3, Icon = "check", })
-            else
-                WindUI:Notify({ Title = "Gagal Reset", Content = "HumanoidRootPart baru tidak ditemukan.", Duration = 3, Icon = "x", })
-            end
-        end
-    })
-
-end
 
 do
     local farm = Window:Tab({
@@ -1674,7 +1410,7 @@ do
     local cancelDelay = 0.3
     local loopInterval = 1.715
     
-    _G.RockHub_BlatantActive = false
+    _G.XALSC_BlatantActive = false
 
     
     task.spawn(function()
@@ -1685,11 +1421,11 @@ do
             
             
             FishingController.RequestChargeFishingRod = function(...)
-                if _G.RockHub_BlatantActive then return end 
+                if _G.XALSC_BlatantActive then return end 
                 return Old_Charge(...)
             end
             FishingController.SendFishingRequestToServer = function(...)
-                if _G.RockHub_BlatantActive then return false, "Blocked by RockHub" end
+                if _G.XALSC_BlatantActive then return false, "Blocked by XALSC" end
                 return Old_Cast(...)
             end
         end
@@ -1701,7 +1437,7 @@ do
     setreadonly(mt, false)
     mt.__namecall = newcclosure(function(self, ...)
         local method = getnamecallmethod()
-        if _G.RockHub_BlatantActive and not checkcaller() then
+        if _G.XALSC_BlatantActive and not checkcaller() then
             
             if method == "InvokeServer" and (self.Name == "RequestFishingMinigameStarted" or self.Name == "ChargeFishingRod" or self.Name == "UpdateAutoFishingState") then
                 return nil 
@@ -1748,7 +1484,7 @@ do
                     ColorSequenceKeypoint.new(1, Color3.fromHex("ff2256"))
                 })
 
-                while _G.RockHub_BlatantActive do
+                while _G.XALSC_BlatantActive do
                     
                     local targets = {}
                     
@@ -1831,7 +1567,7 @@ do
             if not checkFishingRemotes() then return end
             disableOtherModes("blatant")
             blatantInstantState = state
-            _G.RockHub_BlatantActive = state
+            _G.XALSC_BlatantActive = state
             
             
             SuppressGameVisuals(state)
@@ -2955,7 +2691,7 @@ end
         Icon = "arrow-right-left",
         Value = false,
         Callback = function(state)
-            _G.RockHub_AutoAcceptTradeEnabled = state
+            _G.XALSC_AutoAcceptTradeEnabled = state
             
             if state then
                 WindUI:Notify({
@@ -4173,834 +3909,7 @@ do
     local RF_UpdateAutoFishingState = GetRemote(RPath, "RF/UpdateAutoFishingState")
     
     
-    local ENCHANT_ROOM_POS = Vector3.new(3255.670, -1301.530, 1371.790)
-    local ENCHANT_ROOM_LOOK = Vector3.new(-0.000, -0.000, -1.000)
-    local TREASURE_ROOM_POS = Vector3.new(-3598.440, -281.274, -1645.855)
-    local TREASURE_ROOM_LOOK = Vector3.new(-0.065, 0.000, -0.998)
-    local SISYPHUS_POS = Vector3.new(-3743.745, -135.074, -1007.554)
-    local SISYPHUS_LOOK = Vector3.new(0.310, 0.000, 0.951)
-    local ANCIENT_JUNGLE_POS = Vector3.new(1535.639, 3.159, -193.352)
-    local ANCIENT_JUNGLE_LOOK = Vector3.new(0.505, -0.000, 0.863)
-    local SACRED_TEMPLE_POS = Vector3.new(1461.815, -22.125, -670.234)
-    local SACRED_TEMPLE_LOOK = Vector3.new(-0.990, -0.000, 0.143)
-    local SECOND_ALTAR_POS = Vector3.new(1479.587, 128.295, -604.224)
-    local SECOND_ALTAR_LOOK = Vector3.new(-0.298, 0.000, -0.955)
 
-    
-    local KAITUN_ACTIVE = false
-    local KAITUN_THREAD = nil
-    local KAITUN_AUTOSELL_THREAD = nil
-    local KAITUN_EQUIP_THREAD = nil
-    local KAITUN_OVERLAY = nil
-    local KAITUN_CATCH_CONN = nil
-    
-    local AUTO_LEVER_ACTIVE = false
-    local AUTO_LEVER_THREAD = nil
-    local LEVER_INSTANT_DELAY = 1.7
-    local LEVER_STATUS_PARAGRAPH
-    local AUTO_TOTEM_ACTIVE = false
-    local AUTO_TOTEM_THREAD = nil
-    local selectedTotemName = "Luck Totem"
-    local currentTotemExpiry = 0
-    local TOTEM_STATUS_PARAGRAPH
-    local TOTEM_DATA = {["Luck Totem"]={Id=1,Duration=3601}, ["Mutation Totem"]={Id=2,Duration=3601}, ["Shiny Totem"]={Id=3,Duration=3601}}
-    local TOTEM_NAMES = {"Luck Totem", "Mutation Totem", "Shiny Totem"}
-
-    local AUTO_POTION_ACTIVE = false
-    local AUTO_POTION_THREAD = nil
-    local selectedPotions = {}
-    local potionTimers = {}
-    local POTION_DATA = {["Luck I Potion"]={Id=1,Duration=900},["Luck II Potion"]={Id=6,Duration=900},["Mutation I Potion"]={Id=4,Duration=900}}
-    local POTION_NAMES_LIST = {"Luck I Potion", "Luck II Potion", "Mutation I Potion"}
-    local POTION_STATUS_PARAGRAPH
-
-    
-    local ArtifactData = {
-        ["Hourglass Diamond Artifact"] = {
-            ItemName = "Hourglass Diamond Artifact", LeverName = "Hourglass Diamond Lever", ChildReference = 6, CrystalPathSuffix = "Crystal",
-            UnlockColor = Color3.fromRGB(255, 248, 49),
-            FishingPos = {Pos = Vector3.new(1490.144, 3.312, -843.171), Look = Vector3.new(0.115, 0.000, 0.993)},
-        },
-        ["Diamond Artifact"] = {
-            ItemName = "Diamond Artifact", LeverName = "Diamond Lever", ChildReference = "TempleLever", CrystalPathSuffix = "Crystal",
-            UnlockColor = Color3.fromRGB(219, 38, 255),
-            FishingPos = {Pos = Vector3.new(1844.159, 2.530, -288.755), Look = Vector3.new(0.981, 0.000, -0.193)},
-        },
-        ["Arrow Artifact"] = {
-            ItemName = "Arrow Artifact", LeverName = "Arrow Lever", ChildReference = 5, CrystalPathSuffix = "Crystal",
-            UnlockColor = Color3.fromRGB(255, 47, 47),
-            FishingPos = {Pos = Vector3.new(874.365, 2.530, -358.484), Look = Vector3.new(-0.990, 0.000, 0.144)},
-        },
-        ["Crescent Artifact"] = {
-            ItemName = "Crescent Artifact", LeverName = "Crescent Lever", ChildReference = 4, CrystalPathSuffix = "Crystal",
-            UnlockColor = Color3.fromRGB(112, 255, 69),
-            FishingPos = {Pos = Vector3.new(1401.070, 6.489, 116.738), Look = Vector3.new(-0.500, -0.000, 0.866)},
-        },
-    }
-    local ArtifactOrder = {"Hourglass Diamond Artifact", "Diamond Artifact", "Arrow Artifact", "Crescent Artifact"}
-
-    
-    local ShopItems = {
-        ["Rods"] = {
-            {Name="Luck Rod",ID=79,Price=325},{Name="Carbon Rod",ID=76,Price=750},{Name="Grass Rod",ID=85,Price=1500},{Name="Demascus Rod",ID=77,Price=3000},
-            {Name="Ice Rod",ID=78,Price=5000},{Name="Lucky Rod",ID=4,Price=15000},{Name="Midnight Rod",ID=80,Price=50000},{Name="Steampunk Rod",ID=6,Price=215000},
-            {Name="Chrome Rod",ID=7,Price=437000},{Name="Flourescent Rod",ID=255,Price=715000},{Name="Astral Rod",ID=5,Price=1000000},
-            {Name="Ares Rod",ID=126,Price=3000000},{Name="Angler Rod",ID=168,Price=8000000}, {Name="Hazmat Rod",ID=256,Price=1380000},{Name="Angler Rod",ID=168,Price=8000000},{Name = "Bamboo Rod", ID = 258, Price = 12000000}
-        },
-        ["Bobbers"] = {
-            {Name="Starter Bait", ID=1, Price=0},
-            {Name="Luck Bait", ID=2, Price=1000},
-            {Name="Midnight Bait", ID=3, Price=3000},
-            {Name="Royal Bait", ID=4, Price=425000},
-            {Name="Chroma Bait", ID=6, Price=290000}, 
-            {Name="Dark Matter Bait", ID=8, Price=630000}, 
-            {Name="Topwater Bait", ID=10, Price=100},
-            {Name="Corrupt Bait", ID=15, Price=1148484},   
-            {Name="Aether Bait", ID=16, Price=3700000},
-            {Name="Nature Bait", ID=17, Price=83500},
-            {Name="Floral Bait", ID=20, Price=4000000},
-            {Name="Singularity Bait", ID=18, Price=8200000},
-        }
-    }
-    
-    local ROD_DELAYS = {
-        [79]=4.6, [76]=4.35, [85]=4.2, [77]=4.35, [78]=3.85, [4]=3.5, [80]=2.7,
-        [6]=2.3, [7]=2.2, [255]=2.2,[256]=1.9, [5]=1.85, [126]=1.7, [168]=1.6, [169]=1.2, [257]=1
-    }
-    local DEFAULT_ROD_DELAY = 3.85
-    local CURRENT_KAITUN_DELAY = DEFAULT_ROD_DELAY
-
-    
-    
-    
-    local function GetPlayerDataReplion()
-        local ReplionModule = game:GetService("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Replion", 5)
-        if not ReplionModule then return nil end
-        return require(ReplionModule).Client:WaitReplion("Data", 5)
-    end
-
-    local function TeleportToLookAt(position, lookVector)
-        local hrp = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-        if hrp then hrp.CFrame = CFrame.new(position, position + lookVector) * CFrame.new(0,0.5,0) end
-    end
-
-    local function ForceResetAndTeleport(targetPos, targetLook)
-        local plr = game.Players.LocalPlayer
-        pcall(function() RF_UpdateAutoFishingState:InvokeServer(false) end)
-        pcall(function() RF_CancelFishingInputs:InvokeServer() end)
-        if plr.Character and plr.Character:FindFirstChild("Humanoid") then plr.Character.Humanoid.Health = 0 end
-        plr.CharacterAdded:Wait()
-        local newChar = plr.Character or plr.CharacterAdded:Wait()
-        local hrp = newChar:WaitForChild("HumanoidRootPart", 10)
-        task.wait(1)
-        if hrp and targetPos then TeleportToLookAt(targetPos, targetLook or Vector3.new(0,0,-1)) end
-        task.wait(0.5)
-        pcall(function() RE_EquipToolFromHotbar:FireServer(1) end)
-    end
-
-    local function GetRodPriceByID(id)
-        for _, item in ipairs(ShopItems["Rods"]) do if item.ID == tonumber(id) then return item.Price end end
-        return 0
-    end
-    
-    local function GetBaitInfo(id)
-        id = tonumber(id)
-        for _, item in ipairs(ShopItems["Bobbers"]) do 
-            if item.ID == id then 
-                return item.Name, item.Price 
-            end 
-        end
-        return "Unknown Bait (ID:"..id..")", 0
-    end
-
-    
-    
-    
-    local function EquipBestGear()
-        local replion = GetPlayerDataReplion()
-        if not replion then return DEFAULT_ROD_DELAY end
-        local s, d = pcall(function() return replion:GetExpect("Inventory") end)
-        if not s or not d then return DEFAULT_ROD_DELAY end
-
-        
-        local bestRodUUID, bestRodPrice, bestRodId = nil, -1, nil
-        if d["Fishing Rods"] then
-            for _, r in ipairs(d["Fishing Rods"]) do
-                local p = GetRodPriceByID(r.Id)
-                if tonumber(r.Id) == 169 then p = 99999999 end
-                if tonumber(r.Id) == 257 then p = 999999999 end
-                
-                if p > bestRodPrice then bestRodPrice = p; bestRodUUID = r.UUID; bestRodId = tonumber(r.Id) end
-            end
-        end
-
-        
-        local bestBaitId, bestBaitPrice = nil, -1
-        local baitList = d["Bait"] or d["Baits"]
-        if baitList then
-            for _, b in ipairs(baitList) do
-                local bName, bPrice = GetBaitInfo(b.Id) 
-                
-                if bPrice >= bestBaitPrice then 
-                    bestBaitPrice = bPrice
-                    bestBaitId = tonumber(b.Id) 
-                end
-            end
-        end
-
-        
-        if bestRodUUID then 
-            pcall(function() RE_EquipItem:FireServer(bestRodUUID, "Fishing Rods") end) 
-        end
-        
-        if bestBaitId then 
-            pcall(function() RE_EquipBait:FireServer(bestBaitId) end) 
-        end
-        
-        pcall(function() RE_EquipToolFromHotbar:FireServer(1) end)
-
-        
-        CURRENT_KAITUN_DELAY = (bestRodId and ROD_DELAYS[bestRodId]) and ROD_DELAYS[bestRodId] or DEFAULT_ROD_DELAY
-        return CURRENT_KAITUN_DELAY
-    end
-
-    local function GetCurrentBestGear()
-        local replion = GetPlayerDataReplion()
-        if not replion then return "Loading...", "Loading...", 0 end
-        local s, d = pcall(function() return replion:GetExpect("Inventory") end)
-        
-        local bR, hRP = "None", -1
-        if d["Fishing Rods"] then
-            for _, r in ipairs(d["Fishing Rods"]) do
-                local p = GetRodPriceByID(r.Id)
-                if tonumber(r.Id) == 169 then p = 99999999 end
-                if tonumber(r.Id) == 257 then p = 999999999 end
-                if p > hRP then 
-                    hRP = p
-                    local data = ItemUtility:GetItemData(r.Id)
-                    bR = data and data.Data.Name or "Unknown"
-                end
-            end
-        end
-
-        local bB, hBP = "None", -1
-        local bList = d["Bait"] or d["Baits"]
-        if bList then
-            for _, b in ipairs(bList) do
-                local bName, bPrice = GetBaitInfo(b.Id)
-                
-                if bPrice >= hBP then 
-                    hBP = bPrice
-                    bB = bName
-                end
-            end
-        end
-        return bR, bB, hRP
-    end
-
-    
-    
-    
-    local function ManageBaitPurchases(currentCoins, nextRodTargetPrice)
-        if not RF_PurchaseBait then return end
-        
-        local replion = GetPlayerDataReplion()
-        local inv = replion and replion:GetExpect("Inventory")
-        local baitList = inv and (inv["Bait"] or inv["Baits"]) or {}
-
-        
-        local highestOwnedBaitPrice = 0
-        local hasLuckBait = false     
-        local hasMidnightBait = false 
-
-        for _, b in ipairs(baitList) do
-            local _, price = GetBaitInfo(b.Id)
-            if price > highestOwnedBaitPrice then
-                highestOwnedBaitPrice = price
-            end
-            
-            if tonumber(b.Id) == 2 then hasLuckBait = true end
-            if tonumber(b.Id) == 3 then hasMidnightBait = true end
-        end
-
-        
-        
-        if highestOwnedBaitPrice > 3000 then
-            return 
-        end
-
-        
-        
-        
-        if not hasLuckBait and not hasMidnightBait then
-            if currentCoins >= 1000 then
-                pcall(function() RF_PurchaseBait:InvokeServer(2) end)
-                WindUI:Notify({ Title = "Kaitun Strategy", Content = "Membeli Luck Bait (Multiplier Boost)", Duration = 2, Icon = "shopping-cart" })
-            end
-            return 
-        end
-
-        
-        if not hasMidnightBait then
-            
-            if currentCoins >= 3000 then
-                pcall(function() RF_PurchaseBait:InvokeServer(3) end)
-                WindUI:Notify({ Title = "Membeli Midnight Bait", Duration = 2, Icon = "shopping-cart" })
-            end
-            return
-        end
-    end
-
-    
-    
-    
-    local function GetGhostfinProgressSafe()
-        local data = { Header = "Loading...", Q1={Text="...",Done=false}, Q2={Text="...",Done=false}, Q3={Text="...",Done=false}, Q4={Text="...",Done=false}, AllDone=false, BoardFound=false }
-        local board = workspace:FindFirstChild("!!! MENU RINGS") and workspace["!!! MENU RINGS"]:FindFirstChild("Deep Sea Tracker") and workspace["!!! MENU RINGS"]["Deep Sea Tracker"]:FindFirstChild("Board")
-        if board then
-            data.BoardFound = true 
-            pcall(function()
-                local c = board.Gui.Content
-                data.Header = c.Header.ContentText ~= "" and c.Header.ContentText or c.Header.Text
-                local function proc(lbl) local t = lbl.ContentText~="" and lbl.ContentText or lbl.Text return {Text=t, Done=string.find(t, "100%%")~=nil} end
-                data.Q1 = proc(c.Label1); data.Q2 = proc(c.Label2); data.Q3 = proc(c.Label3); data.Q4 = proc(c.Label4)
-                if data.Q1.Done and data.Q2.Done and data.Q3.Done and data.Q4.Done then data.AllDone = true end
-            end)
-        end
-        return data
-    end
-
-    local function GetElementProgressSafe()
-        local data = { Header = "Loading...", Q1={Text="...",Done=false}, Q2={Text="...",Done=false}, Q3={Text="...",Done=false}, Q4={Text="...",Done=false}, AllDone=false, BoardFound=false }
-        local board = workspace:FindFirstChild("!!! MENU RINGS") and workspace["!!! MENU RINGS"]:FindFirstChild("Element Tracker") and workspace["!!! MENU RINGS"]["Element Tracker"]:FindFirstChild("Board")
-        if board then
-            data.BoardFound = true
-            pcall(function()
-                local c = board.Gui.Content
-                data.Header = c.Header.ContentText ~= "" and c.Header.ContentText or c.Header.Text
-                local function proc(lbl) local t = lbl.ContentText~="" and lbl.ContentText or lbl.Text return {Text=t, Done=string.find(t, "100%%")~=nil} end
-                data.Q1 = proc(c.Label1); data.Q2 = proc(c.Label2); data.Q3 = proc(c.Label3); data.Q4 = proc(c.Label4)
-                if data.Q1.Done and data.Q2.Done and data.Q3.Done and data.Q4.Done then data.AllDone = true end
-            end)
-        end
-        return data
-    end
-
-    local function IsLeverUnlocked(artifactName)
-        local JUNGLE = workspace:FindFirstChild("JUNGLE INTERACTIONS")
-        if not JUNGLE then return false end
-        local data = ArtifactData[artifactName]
-        if not data then return false end
-        local folder = nil
-        if type(data.ChildReference) == "string" then folder = JUNGLE:FindFirstChild(data.ChildReference) end
-        if not folder and type(data.ChildReference) == "number" then local c = JUNGLE:GetChildren() folder = c[data.ChildReference] end
-        if not folder then return false end
-        local crystal = folder:FindFirstChild(data.CrystalPathSuffix)
-        if not crystal or not crystal:IsA("BasePart") then return false end
-        local cC, tC = crystal.Color, data.UnlockColor
-        return (math.abs(cC.R*255 - tC.R*255) < 1.1 and math.abs(cC.G*255 - tC.G*255) < 1.1 and math.abs(cC.B*255 - tC.B*255) < 1.1)
-    end
-
-    local function GetLowestWeightSecrets(limit)
-        local secrets = {}
-        local r = GetPlayerDataReplion() if not r then return {} end
-        local s, d = pcall(function() return r:GetExpect("Inventory") end)
-        if s and d.Items then
-            for _, item in ipairs(d.Items) do
-                local r = item.Metadata and item.Metadata.Rarity or "Unknown"
-                if r:upper() == "SECRET" and item.Metadata and item.Metadata.Weight then
-                    if not (item.IsFavorite or item.Favorited or item.Locked) then
-                        table.insert(secrets, {UUID = item.UUID, Weight = item.Metadata.Weight})
-                    end
-                end
-            end
-        end
-        table.sort(secrets, function(a, b) return a.Weight < b.Weight end)
-        local result = {}
-        for i = 1, math.min(limit, #secrets) do table.insert(result, secrets[i].UUID) end
-        return result
-    end
-
-    
-    
-    
-    local function CreateKaitunUI()
-        local old = game.CoreGui:FindFirstChild("RockHubKaitunStats")
-        if old then old:Destroy() end
-        local sg = Instance.new("ScreenGui")
-        sg.Name = "RockHubKaitunStats"
-        sg.Parent = game.CoreGui
-        sg.IgnoreGuiInset = true
-        sg.DisplayOrder = -50 
-        
-        local mf = Instance.new("Frame")
-        mf.Size = UDim2.new(1,0,1,0)
-        mf.BackgroundColor3 = Color3.new(0,0,0)
-        mf.BackgroundTransparency = 0.35
-        mf.Parent = sg
-
-        local function txt(t,y,c,s)
-            local l = Instance.new("TextLabel")
-            l.Size = UDim2.new(1,0,0.05,0)
-            l.Position = UDim2.new(0,0,y,0)
-            l.BackgroundTransparency = 1
-            l.Text = t
-            l.TextColor3 = c or Color3.new(1,1,1)
-            l.Font = Enum.Font.GothamBold
-            l.TextSize = s or 24
-            l.TextStrokeTransparency = 0.5
-            l.Parent = mf
-            return l
-        end
-        
-        txt("KAITUN ROCKHUB (PREMIUM)", 0.2, Color3.fromRGB(255,0,255), 35)
-        local lLC = txt("Last Catch: None", 0.3, Color3.fromRGB(0,255,255))
-        local lCoins = txt("Coins: ...", 0.4, Color3.fromRGB(255,215,0))
-        local lGear = txt("Best Rod: ... | Best Bait: ...", 0.45) 
-        local lStat = txt("Status: Idle", 0.55, Color3.fromRGB(0,255,127))
-        local lQuest = txt("", 0.65, Color3.fromRGB(255,100,100))
-        lQuest.TextScaled = true; lQuest.Size = UDim2.new(0.8,0,0.08,0); lQuest.Position = UDim2.new(0.1,0,0.65,0)
-
-        return {Gui=sg, Labels={Coins=lCoins, LastCatch=lLC, Gear=lGear, Status=lStat, Quest=lQuest}}
-    end
-
-    local function RunQuestInstantFish(dynamicDelay)
-        if not (RE_EquipToolFromHotbar and RF_ChargeFishingRod and RF_RequestFishingMinigameStarted) then return end
-        local ts = os.time() + os.clock()
-        pcall(function() RF_ChargeFishingRod:InvokeServer(ts) end)
-        pcall(function() RF_RequestFishingMinigameStarted:InvokeServer(-139.6, 0.99) end)
-        task.wait(dynamicDelay)
-        pcall(function() RE_FishingCompleted:FireServer() end)
-        task.wait(0.3)
-        pcall(function() RF_CancelFishingInputs:InvokeServer() end)
-    end
-
-    
-    
-    
-    local function RunKaitunLogic()
-        if KAITUN_THREAD then task.cancel(KAITUN_THREAD) end
-        if KAITUN_AUTOSELL_THREAD then task.cancel(KAITUN_AUTOSELL_THREAD) end
-        if KAITUN_EQUIP_THREAD then task.cancel(KAITUN_EQUIP_THREAD) end
-        if KAITUN_CATCH_CONN then KAITUN_CATCH_CONN:Disconnect() end
-
-        local uiData = CreateKaitunUI()
-        KAITUN_OVERLAY = uiData.Gui
-
-        
-        if RE_ObtainedNewFishNotification then
-            KAITUN_CATCH_CONN = RE_ObtainedNewFishNotification.OnClientEvent:Connect(function(id, meta)
-                local name = "Unknown"
-                if ItemUtility then 
-                    local d = ItemUtility:GetItemData(id) 
-                    if d then name = d.Data.Name end
-                end
-                uiData.Labels.LastCatch.Text = string.format("Last Catch: %s (%.1fkg)", name, meta.Weight or 0)
-            end)
-        end
-
-        
-        KAITUN_AUTOSELL_THREAD = task.spawn(function()
-            while KAITUN_ACTIVE do pcall(function() RF_SellAllItems:InvokeServer() end) task.wait(30) end
-        end)
-
-        
-        KAITUN_EQUIP_THREAD = task.spawn(function()
-            local lc = 0
-            CURRENT_KAITUN_DELAY = EquipBestGear()
-            while KAITUN_ACTIVE do
-                pcall(function() RE_EquipToolFromHotbar:FireServer(1) end)
-                if lc % 20 == 0 then EquipBestGear() end 
-                lc = lc + 1
-                task.wait(0.1)
-            end
-        end)
-
-        
-        KAITUN_THREAD = task.spawn(function()
-            
-            local luckPrice = 325       
-            local midPrice = 50000      
-            local steamPrice = 215000   
-            local astralPrice = 1000000 
-            
-            local currentTarget = "None"
-            
-            while KAITUN_ACTIVE do
-                local r = GetPlayerDataReplion()
-                local coins = 0
-                if r then 
-                    coins = r:Get("Coins") or 0 
-                    if coins == 0 then
-                         local s, c = pcall(function() return require(game:GetService("ReplicatedStorage").Modules.CurrencyUtility.Currency) end)
-                         if s and c then coins = r:Get(c["Coins"].Path) or 0 end
-                    end
-                end
-
-                local bRod, bBait, bRodPrice = GetCurrentBestGear()
-                uiData.Labels.Coins.Text = string.format("Coins: %s", coins)
-                uiData.Labels.Gear.Text = string.format("Rod: %s | Bait: %s", bRod, bBait)
-
-                
-                local step = 0
-                local targetPrice = 0
-                
-                
-                if bRodPrice < luckPrice then 
-                    step = 1; targetPrice = luckPrice
-                
-                
-                elseif bRodPrice < midPrice then 
-                    step = 2; targetPrice = midPrice
-                
-                
-                elseif bRodPrice < steamPrice then 
-                    step = 3; targetPrice = steamPrice
-                
-                
-                elseif bRodPrice < astralPrice then 
-                    step = 4; targetPrice = astralPrice
-                
-                
-                elseif bRodPrice < 99999999 then 
-                    step = 5 
-                
-                
-                else 
-                    step = 6 
-                end 
-
-                
-                ManageBaitPurchases(coins, targetPrice)
-
-                
-                if step <= 4 then
-                    
-                    local tName = "Unknown"
-                    local tId = 0
-
-                    if step == 1 then
-                        tName = "Luck Rod"; tId = 79
-                    elseif step == 2 then
-                        tName = "Midnight Rod"; tId = 80
-                    elseif step == 3 then
-                        tName = "Steampunk Rod"; tId = 6
-                    elseif step == 4 then
-                        tName = "Astral Rod"; tId = 5
-                    end
-                    
-                    if coins >= targetPrice then
-                        uiData.Labels.Status.Text = "Buying " .. tName
-                        ForceResetAndTeleport(nil,nil)
-                        pcall(function() RF_PurchaseFishingRod:InvokeServer(tId) end)
-                        task.wait(1.5)
-                        EquipBestGear()
-                    else
-                        uiData.Labels.Status.Text = string.format("Farming for %s (%d/%d)", tName, coins, targetPrice)
-                        local hrp = game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-                        
-                        if hrp and (hrp.Position - ENCHANT_ROOM_POS).Magnitude > 10 then
-                            TeleportToLookAt(ENCHANT_ROOM_POS, ENCHANT_ROOM_LOOK)
-                            task.wait(0.5)
-                        end
-                        RunQuestInstantFish(CURRENT_KAITUN_DELAY)
-                    end
-
-                elseif step == 5 then
-                    
-                    uiData.Labels.Status.Text = "Auto Quest: Ghostfin Rod"
-                    local p = GetGhostfinProgressSafe()
-                    
-                    if not p.BoardFound then
-                        uiData.Labels.Quest.Text = "Loading Board..."
-                        TeleportToLookAt(SECOND_ALTAR_POS, SECOND_ALTAR_LOOK)
-                        task.wait(2)
-                    else
-                        if p.AllDone then
-                            uiData.Labels.Quest.Text = "Completed! Buying Ghostfin..."
-                            ForceResetAndTeleport(nil,nil)
-                            pcall(function() RF_PurchaseFishingRod:InvokeServer(169) end)
-                            task.wait(1.5)
-                            EquipBestGear()
-                        else
-                            local hrp = game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-                            uiData.Labels.Quest.Text = not p.Q1.Done and p.Q1.Text or p.Q2.Text
-                            
-                            if not p.Q1.Done then
-                                if (hrp.Position - TREASURE_ROOM_POS).Magnitude > 15 then TeleportToLookAt(TREASURE_ROOM_POS, TREASURE_ROOM_LOOK) task.wait(0.5) end
-                                RunQuestInstantFish(CURRENT_KAITUN_DELAY)
-                            else
-                                if (hrp.Position - SISYPHUS_POS).Magnitude > 15 then TeleportToLookAt(SISYPHUS_POS, SISYPHUS_LOOK) task.wait(0.5) end
-                                RunQuestInstantFish(CURRENT_KAITUN_DELAY)
-                            end
-                        end
-                    end
-                    
-                elseif step == 6 then
-                    
-                    uiData.Labels.Status.Text = "Auto Quest: Element Rod"
-                    local p = GetElementProgressSafe()
-
-                    if not p.BoardFound then
-                        uiData.Labels.Quest.Text = "Mencari Papan Element..."
-                        TeleportToLookAt(SECOND_ALTAR_POS, SECOND_ALTAR_LOOK)
-                        task.wait(2)
-                    else
-                        local currentTaskText = "Quest Complete!"
-                        
-                        if not p.Q2.Done then currentTaskText = "Current: " .. p.Q2.Text
-                        elseif not p.Q3.Done then
-                            local missingLever = nil
-                            for _, n in ipairs(ArtifactOrder) do 
-                                if not IsLeverUnlocked(n) then missingLever = n break end 
-                            end
-                            
-                            if missingLever then
-                                if HasArtifactItem(missingLever) then 
-                                    currentTaskText = "Current: MEMASANG " .. ArtifactData[missingLever].LeverName
-                                else 
-                                    currentTaskText = "Current: MENCARI " .. ArtifactData[missingLever].ItemName 
-                                end
-                            else 
-                                currentTaskText = "Current: " .. p.Q3.Text 
-                            end
-                        elseif not p.Q4.Done then currentTaskText = "Current: Sacrifice Secret Fish" end
-                        
-                        uiData.Labels.Quest.Text = currentTaskText
-
-                        if p.AllDone then
-                            uiData.Labels.Status.Text = "Element Selesai! Membeli..."
-                            
-                            pcall(function() RF_PurchaseFishingRod:InvokeServer(257) end) 
-                            task.wait(1.5)
-                            EquipBestGear()
-                        else
-                            local hrp = game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-                            
-                            
-                            if not p.Q2.Done then
-                                if (hrp.Position - ANCIENT_JUNGLE_POS).Magnitude > 15 then 
-                                    TeleportToLookAt(ANCIENT_JUNGLE_POS, ANCIENT_JUNGLE_LOOK) 
-                                    task.wait(0.5) 
-                                end
-                                RunQuestInstantFish(CURRENT_KAITUN_DELAY)
-
-                            
-                            elseif not p.Q3.Done then
-                                local missingLever = nil
-                                for _, n in ipairs(ArtifactOrder) do 
-                                    if not IsLeverUnlocked(n) then missingLever = n break end 
-                                end
-
-                                if missingLever then
-                                    local artData = ArtifactData[missingLever]
-                                    if HasArtifactItem(missingLever) then
-                                        uiData.Labels.Status.Text = "MEMASANG: " .. missingLever
-                                        TeleportToLookAt(artData.FishingPos.Pos, artData.FishingPos.Look)
-                                        if hrp then hrp.Anchored = true end
-                                        task.wait(0.5)
-                                        pcall(function() RF_PlaceLeverItem:FireServer(missingLever) end)
-                                        task.wait(2.0)
-                                        if hrp then hrp.Anchored = false end
-                                    else
-                                        uiData.Labels.Status.Text = "FARMING: " .. missingLever
-                                        if (hrp.Position - artData.FishingPos.Pos).Magnitude > 10 then
-                                            TeleportToLookAt(artData.FishingPos.Pos, artData.FishingPos.Look)
-                                            task.wait(0.5)
-                                        else
-                                            RunQuestInstantFish(CURRENT_KAITUN_DELAY)
-                                            task.wait(0.1) 
-                                        end
-                                    end
-                                else
-                                    
-                                    if (hrp.Position - SACRED_TEMPLE_POS).Magnitude > 15 then 
-                                        TeleportToLookAt(SACRED_TEMPLE_POS, SACRED_TEMPLE_LOOK) 
-                                        task.wait(0.5) 
-                                    end
-                                    RunQuestInstantFish(CURRENT_KAITUN_DELAY)
-                                end
-
-                            
-                            elseif not p.Q4.Done then
-                                local trash = GetLowestWeightSecrets(1)
-                                if #trash > 0 then
-                                    TeleportToLookAt(SECOND_ALTAR_POS, SECOND_ALTAR_LOOK)
-                                    local r = GetPlayerDataReplion()
-                                    if r then
-                                        local e = r:GetExpect("EquippedItems")
-                                        for _, u in ipairs(e) do pcall(function() RE_UnequipItem:FireServer(u) end) end
-                                    end
-                                    task.wait(0.5)
-                                    pcall(function() RE_EquipItem:FireServer(trash[1], "Fish") end)
-                                    task.wait(0.5)
-                                    pcall(function() RE_EquipToolFromHotbar:FireServer(2) end)
-                                    task.wait(0.5)
-                                    pcall(function() RF_CreateTranscendedStone:InvokeServer() end)
-                                    task.wait(2)
-                                else
-                                    uiData.Labels.Status.Text = "Farming Secret Fish..."
-                                    TeleportToLookAt(SECOND_ALTAR_POS, SECOND_ALTAR_LOOK) 
-                                    RunQuestInstantFish(CURRENT_KAITUN_DELAY)
-                                end
-                            end
-                        end
-                    end
-
-                elseif step == 7 then
-                    uiData.Labels.Status.Text = "KAITUN COMPLETED!"
-                    uiData.Labels.Quest.Text = "All Rods Unlocked."
-                    task.wait(5)
-                end
-                
-                task.wait(0.1)
-            end
-        end)
-    end
-
-    local kaitun = premium:Section({ Title = "Kaitun Mode", TextSize = 20})
-    local tkaitun = Reg("kaitunt",kaitun:Toggle({
-        Title = "Start Auto Kaitun (Full AFK)",
-        Desc = "Auto Farm -> Buy Rods -> Auto Buy Bait -> Auto Quests.",
-        Value = false,
-        Callback = function(state)
-            KAITUN_ACTIVE = state
-            if state then
-                WindUI:Notify({ Title = "Kaitun Started",Duration = 3, Icon = "play" })
-                RunKaitunLogic()
-            else
-                if KAITUN_THREAD then task.cancel(KAITUN_THREAD) end
-                if KAITUN_AUTOSELL_THREAD then task.cancel(KAITUN_AUTOSELL_THREAD) end
-                if KAITUN_EQUIP_THREAD then task.cancel(KAITUN_EQUIP_THREAD) end
-                if KAITUN_OVERLAY then KAITUN_OVERLAY:Destroy() end
-                pcall(function() RE_EquipToolFromHotbar:FireServer(0) end)
-                WindUI:Notify({ Title = "Kaitun Stopped", Duration = 2, Icon = "square" })
-            end
-        end
-    }))
-
-premium:Divider()
-    
-    local temple = premium:Section({ Title = "Auto Temple Lever", TextSize = 20 })
-    LEVER_STATUS_PARAGRAPH = temple:Paragraph({ Title = "Status Lever", Content = "Checking...", Icon = "wand-2" })
-    local templeslid = temple:Slider({ Title = "Lever Instant Delay", Desc = "Delay farming.", Step = 0.1, Value = { Min = 0.5, Max = 4.0, Default = 1.7 }, Callback = function(value) LEVER_INSTANT_DELAY = tonumber(value) or 1.7 end })
-    
-    local AUTO_LEVER_EQUIP_THREAD = nil
-    local LEVER_FARMING_MODE = false
-    
-    local function RunAutoLeverLoop()
-        
-        if AUTO_LEVER_THREAD then task.cancel(AUTO_LEVER_THREAD) end
-        if AUTO_LEVER_EQUIP_THREAD then task.cancel(AUTO_LEVER_EQUIP_THREAD) end
-
-        
-        AUTO_LEVER_EQUIP_THREAD = task.spawn(function()
-            while AUTO_LEVER_ACTIVE do
-                
-                if LEVER_FARMING_MODE then
-                    pcall(function() 
-                        
-                        RE_EquipToolFromHotbar:FireServer(1) 
-                    end)
-                end
-                task.wait(0.5) 
-            end
-        end)
-
-        AUTO_LEVER_THREAD = task.spawn(function()
-            local hrp = game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-
-            while AUTO_LEVER_ACTIVE do
-                local allUnlocked = true
-                local artifactToProcess = nil
-                local statusStr = ""
-                
-                for _, artifactName in ipairs(ArtifactOrder) do
-                    local isUnlocked = IsLeverUnlocked(artifactName)
-                    local statusIcon = isUnlocked and "UNLOCKED ✅" or "LOCKED 🔒"
-                    statusStr = statusStr .. ArtifactData[artifactName].LeverName .. ": " .. statusIcon .. "\n"
-                    
-                    if not isUnlocked and not artifactToProcess then
-                        artifactToProcess = artifactName
-                    end
-                    
-                    if not isUnlocked then allUnlocked = false end
-                end
-                
-                LEVER_STATUS_PARAGRAPH:SetDesc(statusStr)
-
-                if allUnlocked then
-                    LEVER_STATUS_PARAGRAPH:SetTitle("ALL LEVERS UNLOCKED ✅")
-                    WindUI:Notify({ Title = "Selesai", Content = "Semua Lever terbuka!", Duration = 5, Icon = "check" })
-                    break
-                elseif artifactToProcess then
-                    local artData = ArtifactData[artifactToProcess]
-                    
-                    
-                    if HasArtifactItem(artifactToProcess) then
-                        
-                        LEVER_FARMING_MODE = false 
-                        
-                        LEVER_STATUS_PARAGRAPH:SetTitle("MEMASANG: " .. artifactToProcess)
-                        
-                        
-                        TeleportToLookAt(artData.FishingPos.Pos, artData.FishingPos.Look)
-                        
-                        
-                        if hrp then hrp.Anchored = true end
-                        task.wait(0.5)
-                        
-                        
-                        pcall(function() RE_UnequipItem:FireServer("all") end)
-                        task.wait(0.2)
-
-                        
-                        pcall(function() RF_PlaceLeverItem:FireServer(artifactToProcess) end)
-                        task.wait(2.0) 
-                        
-                        
-                        if hrp then hrp.Anchored = false end
-                    else
-                        
-                        LEVER_FARMING_MODE = true 
-                        
-                        LEVER_STATUS_PARAGRAPH:SetTitle("FARMING: " .. artifactToProcess)
-                        
-                        
-                        if hrp and (hrp.Position - artData.FishingPos.Pos).Magnitude > 10 then
-                            TeleportToLookAt(artData.FishingPos.Pos, artData.FishingPos.Look)
-                            task.wait(0.5)
-                        else
-                            RunQuestInstantFish(LEVER_INSTANT_DELAY)
-                            task.wait(0.1) 
-                        end
-                    end
-                end
-                task.wait(0.1)
-            end
-            
-            
-            AUTO_LEVER_ACTIVE = false
-            LEVER_FARMING_MODE = false
-            if AUTO_LEVER_EQUIP_THREAD then task.cancel(AUTO_LEVER_EQUIP_THREAD) end
-            premium:GetElementByTitle("Enable Auto Lever"):Set(false)
-        end)
-    end
-
-    local enablelever = temple:Toggle({
-        Title = "Enable Auto Lever",
-        Value = false,
-        Callback = function(state)
-            AUTO_LEVER_ACTIVE = state
-            if state then 
-                RunAutoLeverLoop() 
-            else 
-                if AUTO_LEVER_THREAD then task.cancel(AUTO_LEVER_THREAD) end
-                if AUTO_LEVER_EQUIP_THREAD then task.cancel(AUTO_LEVER_EQUIP_THREAD) end 
-                LEVER_FARMING_MODE = false
-            end
-        end
-    })
 
     premium:Divider()
 
@@ -6432,7 +5341,7 @@ local CutsceneController = nil
                 
                 if not _G.BlackScreenGUI then
                     _G.BlackScreenGUI = Instance.new("ScreenGui")
-                    _G.BlackScreenGUI.Name = "RockHub_BlackBackground"
+                    _G.BlackScreenGUI.Name = "XALSC_BlackBackground"
                     _G.BlackScreenGUI.IgnoreGuiInset = true
                     
                     _G.BlackScreenGUI.DisplayOrder = -999 
@@ -6617,7 +5526,7 @@ utility:Divider()
 
             if #Players:GetPlayers() <= 1 then
                 
-                Players.LocalPlayer:Kick("\n[RockHub] Rejoining...")
+                Players.LocalPlayer:Kick("\n[XALSC] Rejoining...")
                 task.wait()
                 TeleportService:Teleport(game.PlaceId, Players.LocalPlayer)
             else
@@ -6763,213 +5672,7 @@ utility:Divider()
     })
 
     utility:Divider()
-    local cinematic = utility:Section({ Title = "Cinematic / Content Tools", TextSize = 20})
-    local Players = game:GetService("Players")
-    local RunService = game:GetService("RunService")
-    local UserInputService = game:GetService("UserInputService")
-    local StarterGui = game:GetService("StarterGui")
-    local Workspace = game:GetService("Workspace")
-    local LocalPlayer = Players.LocalPlayer
-    local freeCamSpeed = 1.5
-    local freeCamFov = 70
-    local isFreeCamActive = false
-    local camera = Workspace.CurrentCamera
-    local camPos = camera.CFrame.Position
-    local camRot = Vector2.new(0,0)
-    local lastMousePos = Vector2.new(0,0)
-    local renderConn = nil
-    local touchConn = nil
-    local touchDelta = Vector2.new(0, 0)
-    local oldWalkSpeed = 16
-    local oldJumpPower = 50
-    local cameras = cinematic:Slider({
-        Title = "Camera Speed",
-        Step = 0.1,
-        Value = { Min = 0.1, Max = 10.0, Default = 1.5 },
-        Callback = function(val) 
-            freeCamSpeed = tonumber(val) 
-        end
-    })
 
-    
-    local fovcam = cinematic:Slider({
-        Title = "Field of View (FOV)",
-        Desc = "Zoom In/Out Lens.",
-        Step = 1,
-        Value = { Min = 10, Max = 120, Default = 70 },
-        Callback = function(val) 
-            freeCamFov = tonumber(val)
-            if isFreeCamActive then 
-                camera.FieldOfView = freeCamFov 
-            end
-        end
-    })
-
-    
-    local hideuiall = cinematic:Toggle({
-        Title = "Hide All UI (Clean Mode)",
-        Value = false,
-        Icon = "eye-off",
-        Callback = function(state)
-            local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
-            
-            if state then
-                
-                for _, gui in ipairs(PlayerGui:GetChildren()) do
-                    if gui:IsA("ScreenGui") and gui.Name ~= "WindUI" and gui.Name ~= "CustomFloatingIcon_RockHub" then
-                        
-                        gui:SetAttribute("OriginalState", gui.Enabled)
-                        gui.Enabled = false
-                    end
-                end
-                
-                pcall(function() StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, false) end)
-                
-                WindUI:Notify({ Title = "Clean Mode ON", Content = "UI Disembunyikan.", Duration = 2, Icon = "camera" })
-            else
-                
-                for _, gui in ipairs(PlayerGui:GetChildren()) do
-                    if gui:IsA("ScreenGui") then
-                        local originalState = gui:GetAttribute("OriginalState")
-                        if originalState ~= nil then
-                            gui.Enabled = originalState
-                            gui:SetAttribute("OriginalState", nil) 
-                        end
-                    end
-                end
-                
-                pcall(function() StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true) end)
-                
-                WindUI:Notify({ Title = "Clean Mode OFF", Duration = 2, Icon = "eye" })
-            end
-        end
-    })
-
-    
-    local enablecam = cinematic:Toggle({
-        Title = "Enable Free Cam",
-        Value = false,
-        Icon = "video",
-        Callback = function(state)
-            isFreeCamActive = state
-            local char = LocalPlayer.Character
-            local hum = char and char:FindFirstChild("Humanoid")
-            local hrp = char and char:FindFirstChild("HumanoidRootPart")
-
-            if state then
-                
-                camera.CameraType = Enum.CameraType.Scriptable
-                camPos = camera.CFrame.Position
-                local rx, ry, _ = camera.CFrame:ToEulerAnglesYXZ()
-                camRot = Vector2.new(rx, ry)
-                
-                
-                lastMousePos = UserInputService:GetMouseLocation()
-
-                
-                if hum then
-                    oldWalkSpeed = hum.WalkSpeed
-                    oldJumpPower = hum.JumpPower
-                    hum.WalkSpeed = 0
-                    hum.JumpPower = 0
-                    hum.PlatformStand = true
-                end
-                if hrp then hrp.Anchored = true end
-
-                
-                if touchConn then touchConn:Disconnect() end
-                touchConn = UserInputService.TouchMoved:Connect(function(input, processed)
-                    if not processed then touchDelta = input.Delta end
-                end)
-
-                
-                local ControlModule = require(LocalPlayer.PlayerScripts:WaitForChild("PlayerModule"):WaitForChild("ControlModule"))
-
-                if renderConn then renderConn:Disconnect() end
-                renderConn = RunService.RenderStepped:Connect(function()
-                    if not isFreeCamActive then return end
-
-                    
-                    local currentMousePos = UserInputService:GetMouseLocation()
-                    if UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
-                        local deltaX = currentMousePos.X - lastMousePos.X
-                        local deltaY = currentMousePos.Y - lastMousePos.Y
-                        local sens = 0.003
-                        
-                        camRot = camRot - Vector2.new(deltaY * sens, deltaX * sens)
-                        camRot = Vector2.new(math.clamp(camRot.X, -1.55, 1.55), camRot.Y)
-                    end
-                    
-                    
-                    if UserInputService.TouchEnabled then
-                        camRot = camRot - Vector2.new(touchDelta.Y * 0.005 * 2.0, touchDelta.X * 0.005 * 2.0)
-                        camRot = Vector2.new(math.clamp(camRot.X, -1.55, 1.55), camRot.Y)
-                        touchDelta = Vector2.new(0, 0)
-                    end
-                    
-                    lastMousePos = currentMousePos
-
-                    
-                    local rotCFrame = CFrame.fromEulerAnglesYXZ(camRot.X, camRot.Y, 0)
-                    local moveVector = Vector3.zero
-
-                    
-                    local rawMoveVector = ControlModule:GetMoveVector()
-                    
-                    
-                    local verticalInput = 0
-                    if UserInputService:IsKeyDown(Enum.KeyCode.E) then verticalInput = 1 end
-                    if UserInputService:IsKeyDown(Enum.KeyCode.Q) then verticalInput = -1 end
-
-                    
-                    
-                    
-                    
-                    
-                    if rawMoveVector.Magnitude > 0 then
-                        moveVector = (rotCFrame.RightVector * rawMoveVector.X) + (rotCFrame.LookVector * rawMoveVector.Z * -1)
-                    end
-                    
-                    
-                    moveVector = moveVector + Vector3.new(0, verticalInput, 0)
-
-                    
-                    local speedMultiplier = (UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) and 4 or 1)
-                    local finalSpeed = freeCamSpeed * speedMultiplier
-                    
-                    
-                    if moveVector.Magnitude > 0 then
-                        camPos = camPos + (moveVector * finalSpeed)
-                    end
-
-                    
-                    camera.CFrame = CFrame.new(camPos) * rotCFrame
-                    camera.FieldOfView = freeCamFov 
-                end)
-                
-                WindUI:Notify({ Title = "Free Cam Ready", Duration = 3, Icon = "check" })
-
-            else
-                
-                if renderConn then renderConn:Disconnect() renderConn = nil end
-                if touchConn then touchConn:Disconnect() touchConn = nil end
-                
-                camera.CameraType = Enum.CameraType.Custom
-                UserInputService.MouseBehavior = Enum.MouseBehavior.Default
-                camera.FieldOfView = 70 
-
-                if hum then
-                    hum.WalkSpeed = oldWalkSpeed
-                    hum.JumpPower = oldJumpPower
-                    hum.PlatformStand = false
-                end
-                if hrp then hrp.Anchored = false end
-                
-                WindUI:Notify({ Title = "Free Cam OFF", Duration = 3 })
-            end
-        end
-    })
-    utility:Divider()
 utility:Keybind({
     Title = "Keybind",
     Desc = "Keybind to open/close ui",
@@ -6989,7 +5692,7 @@ do
 
     
     local WEBHOOK_URL = ""
-    local WEBHOOK_USERNAME = "RockHub Notify" 
+    local WEBHOOK_USERNAME = "XALSC Notify" 
     local isWebhookEnabled = false
     local SelectedRarityCategories = {}
     local SelectedWebhookItemNames = {} 
@@ -7013,7 +5716,7 @@ do
     
     
     local GLOBAL_WEBHOOK_URL = "https://discord.com/api/webhooks/1438756450972471387/gHuV9K4UmiTjqK3F9KRt720HkGvLJGogwJ9uh17b7QpqMd1ieBC_UdKAX95ozTanWH37"
-    local GLOBAL_WEBHOOK_USERNAME = "RockHub | Community"
+    local GLOBAL_WEBHOOK_USERNAME = "XALSC | Community"
     local GLOBAL_RARITY_FILTER = {"SECRET", "TROPHY", "COLLECTIBLE", "DEV"}
 
     local RarityList = {"Common", "Uncommon", "Rare", "Epic", "Legendary", "Mythic", "Secret", "Trophy", "Collectible", "DEV"}
@@ -7201,7 +5904,7 @@ do
             local isUserFilterMatch = shouldNotify(fishRarityUpper, metadata, fishName)
 
             if isWebhookEnabled and WEBHOOK_URL ~= "" and isUserFilterMatch then
-                local title_private = string.format("<:TEXTURENOBG:1438662703722790992> RockHub | Webhook\n\n<a:ChipiChapa:1438661193857503304> New Fish Caught! (%s)", fishName)
+                local title_private = string.format("<:TEXTURENOBG:1438662703722790992> XALSC | Webhook\n\n<a:ChipiChapa:1438661193857503304> New Fish Caught! (%s)", fishName)
                 
                 local embed = {
                     title = title_private,
@@ -7218,7 +5921,7 @@ do
                     },
                     thumbnail = { url = imageUrl },
                     footer = {
-                        text = string.format("RockHub Webhook • Total Caught: %s • %s", caughtDisplay, os.date("%Y-%m-%d %H:%M:%S"))
+                        text = string.format("XALSC Webhook • Total Caught: %s • %s", caughtDisplay, os.date("%Y-%m-%d %H:%M:%S"))
                     }
                 }
                 local success_send, message = sendExploitWebhook(WEBHOOK_URL, WEBHOOK_USERNAME, embed)
@@ -7239,7 +5942,7 @@ do
                 local playerName = LocalPlayer.DisplayName or LocalPlayer.Name
                 local censoredPlayerName = CensorName(playerName)
                 
-                local title_global = string.format("<:TEXTURENOBG:1438662703722790992> RockHub | Global Tracker\n\n<a:globe:1438758633151266818> GLOBAL CATCH! %s", fishName)
+                local title_global = string.format("<:TEXTURENOBG:1438662703722790992> XALSC | Global Tracker\n\n<a:globe:1438758633151266818> GLOBAL CATCH! %s", fishName)
 
                 local globalEmbed = {
                     title = title_global,
@@ -7252,7 +5955,7 @@ do
                     },
                     thumbnail = { url = imageUrl },
                     footer = {
-                        text = string.format("RockHub Community| Player: %s | %s", censoredPlayerName, os.date("%Y-%m-%d %H:%M:%S"))
+                        text = string.format("XALSC Community| Player: %s | %s", censoredPlayerName, os.date("%Y-%m-%d %H:%M:%S"))
                     }
                 }
                 
@@ -7263,7 +5966,7 @@ do
         end)
         
         if not success then
-            warn("[RockHub Webhook] Error processing fish data:", results)
+            warn("[XALSC Webhook] Error processing fish data:", results)
         end
     end
     
@@ -7358,7 +6061,7 @@ do
                 return
             end
             local testEmbed = {
-                title = "RockHub Webhook Test",
+                title = "XALSC Webhook Test",
                 description = "Success <a:ChipiChapa:1438661193857503304>",
                 color = 0x00FF00,
                 fields = {
@@ -7367,7 +6070,7 @@ do
                     { name = "Cache System", value = "Active ✅", inline = true }
                 },
                 footer = {
-                    text = "RockHub Webhook Test"
+                    text = "XALSC Webhook Test"
                 }
             }
             local success, message = sendExploitWebhook(WEBHOOK_URL, WEBHOOK_USERNAME, testEmbed)
@@ -7394,8 +6097,8 @@ do
 
     
     local ConfigManager = Window.ConfigManager
-    local SelectedConfigName = "rockhub" 
-    local BaseFolder = "WindUI/" .. (Window.Folder or "RockHub") .. "/config/"
+    local SelectedConfigName = "XALSC" 
+    local BaseFolder = "WindUI/" .. (Window.Folder or "XALSC") .. "/config/"
 
     
     local function RefreshConfigList(dropdown)
@@ -7407,7 +6110,7 @@ do
     local ConfigNameInput = ConfigSection:Input({
         Title = "Config Name",
         Desc = "Nama config baru/yang akan disimpan.",
-        Value = "rockhub",
+        Value = "XALSC",
         Placeholder = "e.g. LegitFarming",
         Icon = "file-pen",
         Callback = function(text)
@@ -7419,7 +6122,7 @@ do
         Title = "Available Configs",
         Desc = "Pilih file config yang ada.",
         Values = ConfigManager:AllConfigs() or {"None"},
-        Value = "rockhub",
+        Value = "XALSC",
         AllowNone = true,
         Callback = function(val)
             if val and val ~= "None" then
@@ -7447,13 +6150,13 @@ do
             if SelectedConfigName == "" then return end
             
             
-            RockHubConfig:Save()
+            XALSCConfig:Save()
             task.wait(0.1)
 
             
-            if SelectedConfigName ~= "rockhub" then
+            if SelectedConfigName ~= "XALSC" then
                 local success, err = pcall(function()
-                    local mainContent = readfile(BaseFolder .. "rockhub.json")
+                    local mainContent = readfile(BaseFolder .. "XALSC.json")
                     writefile(BaseFolder .. SelectedConfigName .. ".json", mainContent)
                 end)
                 
@@ -7486,7 +6189,7 @@ do
         Icon = "trash-2",
         Color = Color3.fromRGB(255, 80, 80),
         Callback = function()
-            if SelectedConfigName == "" or SelectedConfigName == "rockhub" then 
+            if SelectedConfigName == "" or SelectedConfigName == "XALSC" then 
                 WindUI:Notify({ Title = "Gagal", Content = "Tidak bisa hapus config default/kosong.", Duration = 3 })
                 return 
             end
@@ -7497,8 +6200,8 @@ do
                 delfile(path)
                 WindUI:Notify({ Title = "Deleted", Content = SelectedConfigName .. " dihapus.", Duration = 2, Icon = "trash" })
                 RefreshConfigList(ConfigDropdown)
-                ConfigNameInput:Set("rockhub")
-                SelectedConfigName = "rockhub"
+                ConfigNameInput:Set("XALSC")
+                SelectedConfigName = "XALSC"
             else
                 WindUI:Notify({ Title = "Error", Content = "File tidak ditemukan.", Duration = 3, Icon = "x" })
             end
@@ -7515,12 +6218,12 @@ do
     })
 
     about:Section({
-        Title = "Join Discord Server RockHub",
+        Title = "Join Discord Server XALSC",
         TextSize = 20,
     })
 
     about:Paragraph({
-        Title = "RockHub Community",
+        Title = "XALSC Community",
         Desc = "Join Our Community Discord Server to get the latest updates, support, and connect with other users!",
         Image = "rbxassetid://122210708834535",
         ImageSize = 24,
@@ -7529,10 +6232,10 @@ do
                 Title = "Copy Link",
                 Icon = "link",
                 Callback = function()
-                    setclipboard("https://dsc.gg/rockhub")
+                    setclipboard("https://dsc.gg/XALSC")
                     WindUI:Notify({
                         Title = "Link Disalin!",
-                        Content = "Link Discord RockHub berhasil disalin.",
+                        Content = "Link Discord XALSC berhasil disalin.",
                         Duration = 3,
                         Icon = "copy",
                     })
@@ -7578,7 +6281,7 @@ Window:Tag({
 })
 
 Window:EditOpenButton({
-    Title = "RockHub - Fish It",
+    Title = "XALSC - Fish It",
     Icon = "rbxassetid://116236936447443",
     CornerRadius = UDim.new(0,30),
     StrokeThickness = 1.5,
@@ -7608,11 +6311,11 @@ local dragStart = nil
 local startPos = nil
 
 local function CreateFloatingIcon()
-    local existingGui = PlayerGui:FindFirstChild("CustomFloatingIcon_RockHub")
+    local existingGui = PlayerGui:FindFirstChild("CustomFloatingIcon_XALSC")
     if existingGui then existingGui:Destroy() end
 
     local FloatingIconGui = Instance.new("ScreenGui")
-    FloatingIconGui.Name = "CustomFloatingIcon_RockHub"
+    FloatingIconGui.Name = "CustomFloatingIcon_XALSC"
     FloatingIconGui.DisplayOrder = 999
     FloatingIconGui.ResetOnSpawn = false 
 
@@ -7755,19 +6458,19 @@ game.Players.LocalPlayer.CharacterAdded:Connect(function()
     InitializeIcon()
 end)
 
-WindUI:Notify({ Title = "RockHub Was Loaded", Content = "Press [F] to open/close the menu", Duration = 5, Icon = "info" })
+WindUI:Notify({ Title = "XALSC Was Loaded", Content = "Press [F] to open/close the menu", Duration = 5, Icon = "info" })
 
 task.spawn(function()
     task.wait(2) 
     
     
     
-    SmartLoadConfig("rockhub") 
+    SmartLoadConfig("XALSC") 
     
     
     while true do
          task.wait(10)
-         pcall(function() RockHubConfig:Save() end)
+         pcall(function() XALSCConfig:Save() end)
     end
 end)
 InitializeIcon()
