@@ -101,8 +101,7 @@ local StoneList = { "Ruby" }
 local Settings = { 
     SecretEnabled = false, 
     RubyEnabled = false, 
-    EvolvedEnabled = false, 
-    LeviathanRageEnabled = false,
+
     MutationCrystalized = false,
     CaveCrystalEnabled = false,
     LeaveEnabled = false, 
@@ -121,7 +120,6 @@ local SessionStats = {
     Secret = 0,
     Ruby = 0,
     Evolved = 0,
-    Rage = 0,
     Crystalized = 0,
     CaveCrystal = 0,
     TotalSent = 0
@@ -426,13 +424,12 @@ end
 local Page_Webhook = CreatePage("Webhook")
 local Page_Config = nil -- Deprecated
 local Page_Save = CreatePage("SaveConfig") 
-local Page_Url = CreatePage("UrlWebhook") 
+-- local Page_Url = CreatePage("UrlWebhook") -- Removed
 local Page_Tag = CreatePage("TagDiscord")
 local Page_AdminBoost = CreatePage("AdminBoost")
 local Page_SessionStats = CreatePage("SessionStats")
 local Page_Fhising = CreatePage("Fhising")
 local Page_Setting -- Forward declaration for Setting Tab
-
 
 Page_Webhook.Visible = false
 
@@ -458,7 +455,7 @@ local function CreateTab(name, target, isDefault)
     Instance.new("UICorner", Indicator).CornerRadius = UDim.new(1, 0)
 
     TabBtn.MouseButton1Click:Connect(function()
-        Page_Webhook.Visible = false; Page_Tag.Visible = false; Page_Url.Visible = false; Page_Save.Visible = false; Page_AdminBoost.Visible = false; Page_SessionStats.Visible = false; Page_Fhising.Visible = false
+        Page_Webhook.Visible = false; Page_Tag.Visible = false; Page_Save.Visible = false; Page_AdminBoost.Visible = false; Page_SessionStats.Visible = false; Page_Fhising.Visible = false
         if Page_Setting then Page_Setting.Visible = false end
         target.Visible = true
 
@@ -493,7 +490,7 @@ CreateTab("Server Info", Page_SessionStats, true)
 CreateTab("Fhising", Page_Fhising)
 CreateTab("Notification", Page_Webhook)
 CreateTab("Admin Boost", Page_AdminBoost)
-CreateTab("Webhook", Page_Url)
+-- CreateTab("Webhook", Page_Url) -- Removed
 CreateTab("List Player", Page_Tag)
 -- SETTING TAB
 Page_Setting = Instance.new("ScrollingFrame", ContentContainer)
@@ -1305,31 +1302,7 @@ local function TestWebhook(url, name)
     end)
 end
 
-local TestAllBtn = Instance.new("TextButton", Page_Url)
-TestAllBtn.BackgroundColor3 = Theme.Accent
-TestAllBtn.Size = UDim2.new(1, -5, 0, 30)
-TestAllBtn.Font = Enum.Font.GothamBold
-TestAllBtn.Text = "TEST ALL CONNECTION"
-TestAllBtn.TextColor3 = Color3.new(1, 1, 1)
-TestAllBtn.TextSize = 12
-TestAllBtn.LayoutOrder = -1
-Instance.new("UICorner", TestAllBtn).CornerRadius = UDim.new(0, 6)
 
-TestAllBtn.MouseButton1Click:Connect(function()
-    local c = 0
-    if Current_Webhook_Fish ~= "" then TestWebhook(Current_Webhook_Fish, "Fish"); c=c+1 end
-    if Current_Webhook_Leave ~= "" then TestWebhook(Current_Webhook_Leave, "Leave"); c=c+1 end
-    if Current_Webhook_List ~= "" then TestWebhook(Current_Webhook_List, "Player List"); c=c+1 end
-    if Current_Webhook_Admin ~= "" then TestWebhook(Current_Webhook_Admin, "Admin"); c=c+1 end
-    if c == 0 then ShowNotification("No Webhooks Set!", true) else ShowNotification("Testing " .. c .. " Webhooks...", false) end
-end)
-
-local SpacerW = Instance.new("Frame", Page_Url); SpacerW.BackgroundTransparency=1; SpacerW.Size=UDim2.new(1,0,0,0); SpacerW.LayoutOrder = -1
-
-UI_FishInput = CreateInput(Page_Url, "Fish Caught", Current_Webhook_Fish, function(v) Current_Webhook_Fish = v end)
-UI_LeaveInput = CreateInput(Page_Url, "Player Leave", Current_Webhook_Leave, function(v) Current_Webhook_Leave = v end)
-UI_ListInput = CreateInput(Page_Url, "Player List", Current_Webhook_List, function(v) Current_Webhook_List = v end)
-UI_AdminInput = CreateInput(Page_Url, "Admin Host", Current_Webhook_Admin, function(v) Current_Webhook_Admin = v end)
 
 -- Page_Tag Sub-Menu Setup
 local SubTabContainer = Instance.new("Frame", Page_Tag)
@@ -1486,12 +1459,102 @@ if #TagList > 0 then
     end
 end
 
-CreateToggle(Page_Webhook, "Secret Fish Caught", Settings.SecretEnabled, function(v) Settings.SecretEnabled = v end, function() return Current_Webhook_Fish ~= "" end)
-CreateToggle(Page_Webhook, "Ruby Gemstone", Settings.RubyEnabled, function(v) Settings.RubyEnabled = v end, function() return Current_Webhook_Fish ~= "" end)
-CreateToggle(Page_Webhook, "Notif Cave Crystal", Settings.CaveCrystalEnabled, function(v) Settings.CaveCrystalEnabled = v end, function() return Current_Webhook_Fish ~= "" end)
-CreateToggle(Page_Webhook, "Evolved Enchant Stone", Settings.EvolvedEnabled, function(v) Settings.EvolvedEnabled = v end, function() return Current_Webhook_Fish ~= "" end)
-CreateToggle(Page_Webhook, "Mutation Leviathan Rage", Settings.LeviathanRageEnabled, function(v) Settings.LeviathanRageEnabled = v end, function() return Current_Webhook_Fish ~= "" end)
-CreateToggle(Page_Webhook, "Mutation Crystalized (Legendary)", Settings.MutationCrystalized, function(v) Settings.MutationCrystalized = v end, function() return Current_Webhook_Fish ~= "" end)
+-- Page_Webhook Sub-Menu Setup
+local NotifSubContainer = Instance.new("Frame", Page_Webhook)
+NotifSubContainer.BackgroundColor3 = Theme.Content
+NotifSubContainer.BackgroundTransparency = 1
+NotifSubContainer.Size = UDim2.new(1, -5, 0, 30)
+NotifSubContainer.LayoutOrder = -2
+
+local BtnViewNotif = Instance.new("TextButton", NotifSubContainer)
+BtnViewNotif.BackgroundColor3 = Theme.Accent
+BtnViewNotif.Size = UDim2.new(0.5, -3, 1, 0)
+BtnViewNotif.Font = Enum.Font.GothamBold
+BtnViewNotif.Text = "NOTIFICATION"
+BtnViewNotif.TextColor3 = Color3.new(1,1,1)
+BtnViewNotif.TextSize = 11
+Instance.new("UICorner", BtnViewNotif).CornerRadius = UDim.new(0, 6)
+
+local BtnViewWebhook = Instance.new("TextButton", NotifSubContainer)
+BtnViewWebhook.BackgroundColor3 = Theme.Input
+BtnViewWebhook.Position = UDim2.new(0.5, 3, 0, 0)
+BtnViewWebhook.Size = UDim2.new(0.5, -3, 1, 0)
+BtnViewWebhook.Font = Enum.Font.GothamBold
+BtnViewWebhook.Text = "WEBHOOK URL"
+BtnViewWebhook.TextColor3 = Theme.TextSecondary
+BtnViewWebhook.TextSize = 11
+Instance.new("UICorner", BtnViewWebhook).CornerRadius = UDim.new(0, 6)
+
+local View_Notif = Instance.new("Frame", Page_Webhook)
+View_Notif.BackgroundTransparency = 1
+View_Notif.Size = UDim2.new(1, 0, 0, 0)
+View_Notif.AutomaticSize = Enum.AutomaticSize.Y
+View_Notif.LayoutOrder = 1
+local ListLayout_Notif = Instance.new("UIListLayout", View_Notif)
+ListLayout_Notif.Padding = UDim.new(0, 6)
+ListLayout_Notif.SortOrder = Enum.SortOrder.LayoutOrder
+
+local View_Webhook = Instance.new("Frame", Page_Webhook)
+View_Webhook.BackgroundTransparency = 1
+View_Webhook.Size = UDim2.new(1, 0, 0, 0)
+View_Webhook.AutomaticSize = Enum.AutomaticSize.Y
+View_Webhook.Visible = false
+View_Webhook.LayoutOrder = 2
+local ListLayout_Webhook = Instance.new("UIListLayout", View_Webhook)
+ListLayout_Webhook.Padding = UDim.new(0, 6)
+ListLayout_Webhook.SortOrder = Enum.SortOrder.LayoutOrder
+
+BtnViewNotif.MouseButton1Click:Connect(function()
+    View_Notif.Visible = true
+    View_Webhook.Visible = false
+    BtnViewNotif.BackgroundColor3 = Theme.Accent
+    BtnViewNotif.TextColor3 = Color3.new(1,1,1)
+    BtnViewWebhook.BackgroundColor3 = Theme.Input
+    BtnViewWebhook.TextColor3 = Theme.TextSecondary
+end)
+
+BtnViewWebhook.MouseButton1Click:Connect(function()
+    View_Notif.Visible = false
+    View_Webhook.Visible = true
+    BtnViewNotif.BackgroundColor3 = Theme.Input
+    BtnViewNotif.TextColor3 = Theme.TextSecondary
+    BtnViewWebhook.BackgroundColor3 = Theme.Accent
+    BtnViewWebhook.TextColor3 = Color3.new(1,1,1)
+end)
+
+-- Move Toggles to View_Notif
+CreateToggle(View_Notif, "Secret Fish Caught", Settings.SecretEnabled, function(v) Settings.SecretEnabled = v end, function() return Current_Webhook_Fish ~= "" end)
+CreateToggle(View_Notif, "Ruby Gemstone", Settings.RubyEnabled, function(v) Settings.RubyEnabled = v end, function() return Current_Webhook_Fish ~= "" end)
+CreateToggle(View_Notif, "Notif Cave Crystal", Settings.CaveCrystalEnabled, function(v) Settings.CaveCrystalEnabled = v end, function() return Current_Webhook_Fish ~= "" end)
+CreateToggle(View_Notif, "Evolved Enchant Stone", Settings.EvolvedEnabled, function(v) Settings.EvolvedEnabled = v end, function() return Current_Webhook_Fish ~= "" end)
+CreateToggle(View_Notif, "Mutation Crystalized (Legendary)", Settings.MutationCrystalized, function(v) Settings.MutationCrystalized = v end, function() return Current_Webhook_Fish ~= "" end)
+
+-- Move Webhook Inputs to View_Webhook
+local TestAllBtn = Instance.new("TextButton", View_Webhook)
+TestAllBtn.BackgroundColor3 = Theme.Accent
+TestAllBtn.Size = UDim2.new(1, -5, 0, 30)
+TestAllBtn.Font = Enum.Font.GothamBold
+TestAllBtn.Text = "TEST ALL CONNECTION"
+TestAllBtn.TextColor3 = Color3.new(1, 1, 1)
+TestAllBtn.TextSize = 12
+TestAllBtn.LayoutOrder = -1
+Instance.new("UICorner", TestAllBtn).CornerRadius = UDim.new(0, 6)
+
+TestAllBtn.MouseButton1Click:Connect(function()
+    local c = 0
+    if Current_Webhook_Fish ~= "" then TestWebhook(Current_Webhook_Fish, "Fish"); c=c+1 end
+    if Current_Webhook_Leave ~= "" then TestWebhook(Current_Webhook_Leave, "Leave"); c=c+1 end
+    if Current_Webhook_List ~= "" then TestWebhook(Current_Webhook_List, "Player List"); c=c+1 end
+    if Current_Webhook_Admin ~= "" then TestWebhook(Current_Webhook_Admin, "Admin"); c=c+1 end
+    if c == 0 then ShowNotification("No Webhooks Set!", true) else ShowNotification("Testing " .. c .. " Webhooks...", false) end
+end)
+
+local SpacerW = Instance.new("Frame", View_Webhook); SpacerW.BackgroundTransparency=1; SpacerW.Size=UDim2.new(1,0,0,0); SpacerW.LayoutOrder = -1
+
+UI_FishInput = CreateInput(View_Webhook, "Fish Caught", Current_Webhook_Fish, function(v) Current_Webhook_Fish = v end)
+UI_LeaveInput = CreateInput(View_Webhook, "Player Leave", Current_Webhook_Leave, function(v) Current_Webhook_Leave = v end)
+UI_ListInput = CreateInput(View_Webhook, "Player List", Current_Webhook_List, function(v) Current_Webhook_List = v end)
+UI_AdminInput = CreateInput(View_Webhook, "Admin Host", Current_Webhook_Admin, function(v) Current_Webhook_Admin = v end)
 
 local function CheckAndSendNonPS(isManual)
     if not ScriptActive then return end
@@ -1704,7 +1767,6 @@ CreateInput(Page_SessionStats, "Server Title", ServerTitle, function(v) ServerTi
 CreateStatItem(Page_SessionStats, "Secret Fish Caught", "Secret")
 CreateStatItem(Page_SessionStats, "Ruby Gemstones", "Ruby")
 CreateStatItem(Page_SessionStats, "Evolved Stones", "Evolved")
-CreateStatItem(Page_SessionStats, "Leviathan Rage", "Rage")
 CreateStatItem(Page_SessionStats, "Crystalized Mutations", "Crystalized")
 CreateStatItem(Page_SessionStats, "Cave Crystals Found", "CaveCrystal")
 
@@ -1725,7 +1787,6 @@ SendStatsBtn.MouseButton1Click:Connect(function()
     contentStr = contentStr .. "⚓ Secrets: " .. SessionStats.Secret .. "\n"
     contentStr = contentStr .. "💎 Rubies: " .. SessionStats.Ruby .. "\n"
     contentStr = contentStr .. "🔮 Evolved: " .. SessionStats.Evolved .. "\n"
-    contentStr = contentStr .. "🔥 Rage: " .. SessionStats.Rage .. "\n"
     contentStr = contentStr .. "✨ Crystalized: " .. SessionStats.Crystalized .. "\n"
     contentStr = contentStr .. "⛏️ Cave Crystals: " .. SessionStats.CaveCrystal
     
@@ -1826,7 +1887,6 @@ local function SendWebhook(data, category)
     if category == "SECRET" and not Settings.SecretEnabled then return end
     if category == "STONE" and not Settings.RubyEnabled then return end
     if category == "EVOLVED" and not Settings.EvolvedEnabled then return end 
-    if category == "RAGE" and not Settings.LeviathanRageEnabled then return end 
     if category == "CRYSTALIZED" and not Settings.MutationCrystalized then return end 
     if category == "CAVECRYSTAL" and not Settings.CaveCrystalEnabled then return end 
     if category == "LEAVE" and not Settings.LeaveEnabled then return end 
@@ -1856,14 +1916,6 @@ local function SendWebhook(data, category)
         embedColor = 10181046 
         local lines = { "🔮 Item: " .. data.Item }
         descriptionText = "Player: " .. pName .. "\n\n```\n" .. table.concat(lines, "\n") .. "\n```"
-    elseif category == "RAGE" then
-        SessionStats.Rage = SessionStats.Rage + 1
-        embedTitle = "LEVIATHAN RAGE!"
-        embedColor = 10038562 
-        local lines = { "🔥 Fish: " .. data.Item }
-        table.insert(lines, "🧬 Mutation: Leviathan Rage")
-        table.insert(lines, "⚖️ Weight: " .. data.Weight)
-        descriptionText = "Player: " .. pName .. "\n\n```\n" .. table.concat(lines, "\n") .. "\n```"
     elseif category == "CRYSTALIZED" then
         SessionStats.Crystalized = SessionStats.Crystalized + 1
         embedTitle = "CRYSTALIZED MUTATION!"
@@ -1886,7 +1938,6 @@ local function SendWebhook(data, category)
     if UI_StatsLabels["Secret"] then UI_StatsLabels["Secret"].Text = tostring(SessionStats.Secret) end
     if UI_StatsLabels["Ruby"] then UI_StatsLabels["Ruby"].Text = tostring(SessionStats.Ruby) end
     if UI_StatsLabels["Evolved"] then UI_StatsLabels["Evolved"].Text = tostring(SessionStats.Evolved) end
-    if UI_StatsLabels["Rage"] then UI_StatsLabels["Rage"].Text = tostring(SessionStats.Rage) end
     if UI_StatsLabels["Crystalized"] then UI_StatsLabels["Crystalized"].Text = tostring(SessionStats.Crystalized) end
     if UI_StatsLabels["CaveCrystal"] then UI_StatsLabels["CaveCrystal"].Text = tostring(SessionStats.CaveCrystal) end
     
@@ -1913,20 +1964,7 @@ local function CheckAndSend(msg)
         return
     end
 
-    if string.find(lowerMsg, "leviathan rage") then
-        local p, item_full, w = string.match(cleanMsg, "^(.*) obtained a (.*) %((.*)%)")
-        if p and item_full then
-             local finalFishName = item_full
-             local s_rage, e_rage = string.find(string.lower(item_full), "leviathan rage")
-             if s_rage then
-                 finalFishName = string.sub(item_full, e_rage + 1)
-                 finalFishName = string.gsub(finalFishName, "^%s+", "")
-             end
-             local data = { Player = p, Item = finalFishName, Mutation = "Leviathan Rage", Weight = w }
-             SendWebhook(data, "RAGE")
-             return
-        end
-    end
+
 
     if string.find(lowerMsg, "crystalized") then
         local tempMsg = string.gsub(cleanMsg, "^%[Server%]:%s*", "")
