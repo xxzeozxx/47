@@ -1214,7 +1214,6 @@ LoadBtn.MouseButton1Click:Connect(function()
                     end
                 end
             end
-            end
         end
         
         if data.Toggles then
