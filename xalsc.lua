@@ -331,6 +331,7 @@ local MenuContainer = Instance.new("Frame", Sidebar)
 MenuContainer.BackgroundTransparency = 1
 MenuContainer.Size = UDim2.new(1, 0, 1, -25) 
 MenuContainer.Position = UDim2.new(0, 0, 0, 5)
+MenuContainer.ZIndex = 5 -- Boost ZIndex
 
 local SideLayout = Instance.new("UIListLayout", MenuContainer)
 SideLayout.Padding = UDim.new(0, 2) 
@@ -340,7 +341,7 @@ Instance.new("UIPadding", MenuContainer).PaddingTop = UDim.new(0, 8)
 
 local ContentContainer = Instance.new("Frame", MainFrame)
 ContentContainer.BackgroundTransparency = 1
-ContentContainer.Position = UDim2.new(0, 115, 0, 42) 
+ContentContainer.Position = UDim2.new(0, 120, 0, 42) -- Increased offset
 ContentContainer.Size = UDim2.new(1, -120, 1, -48) 
 ContentContainer.ZIndex = 3
 
@@ -352,7 +353,7 @@ ModalFrame.Position = UDim2.new(0.5, -120, 0.5, -55)
 ModalFrame.BorderSizePixel = 0
 ModalFrame.ZIndex = 100 
 ModalFrame.Visible = false
-ModalFrame.Active = true 
+ModalFrame.Active = false  -- Changed to false to prevent blocking input
 Instance.new("UICorner", ModalFrame).CornerRadius = UDim.new(0, 8)
 AddStroke(ModalFrame, Theme.Border, 1)
 
@@ -423,7 +424,7 @@ local function CreatePage(name)
 end
 
 local Page_Webhook = CreatePage("Webhook")
-local Page_Config = CreatePage("Config") 
+local Page_Config = nil -- Deprecated
 local Page_Save = CreatePage("SaveConfig") 
 local Page_Url = CreatePage("UrlWebhook") 
 local Page_Tag = CreatePage("TagDiscord")
@@ -431,6 +432,7 @@ local Page_AdminBoost = CreatePage("AdminBoost")
 local Page_SessionStats = CreatePage("SessionStats")
 local Page_Fhising = CreatePage("Fhising")
 local Page_Setting -- Forward declaration for Setting Tab
+
 
 Page_Webhook.Visible = false
 
@@ -442,7 +444,7 @@ local function CreateTab(name, target, isDefault)
     TabBtn.Font = Enum.Font.GothamMedium 
     TabBtn.Text = name
     TabBtn.TextColor3 = Theme.TextSecondary
-    TabBtn.TextSize = 12 
+    TabBtn.TextSize = 11
     TabBtn.ZIndex = 3
     Instance.new("UICorner", TabBtn).CornerRadius = UDim.new(0, 4)
     
@@ -456,7 +458,7 @@ local function CreateTab(name, target, isDefault)
     Instance.new("UICorner", Indicator).CornerRadius = UDim.new(1, 0)
 
     TabBtn.MouseButton1Click:Connect(function()
-        Page_Webhook.Visible = false; Page_Config.Visible = false; Page_Tag.Visible = false; Page_Url.Visible = false; Page_Save.Visible = false; Page_AdminBoost.Visible = false; Page_SessionStats.Visible = false; Page_Fhising.Visible = false
+        Page_Webhook.Visible = false; Page_Tag.Visible = false; Page_Url.Visible = false; Page_Save.Visible = false; Page_AdminBoost.Visible = false; Page_SessionStats.Visible = false; Page_Fhising.Visible = false
         if Page_Setting then Page_Setting.Visible = false end
         target.Visible = true
 
@@ -493,7 +495,6 @@ CreateTab("Notification", Page_Webhook)
 CreateTab("Admin Boost", Page_AdminBoost)
 CreateTab("Webhook", Page_Url)
 CreateTab("List Player", Page_Tag)
-CreateTab("Import List", Page_Config) 
 -- SETTING TAB
 Page_Setting = Instance.new("ScrollingFrame", ContentContainer)
 Page_Setting.Name = "Page_Setting"; Page_Setting.Size = UDim2.new(1, 0, 1, 0); Page_Setting.BackgroundTransparency = 1; Page_Setting.Visible = false; Page_Setting.ScrollBarThickness = 2
@@ -673,6 +674,70 @@ local function GetRemote(name)
     return curr:FindFirstChild(name)
 end
 
+-- Helper for Detector Stuck
+local function getFishCount()
+    local playerGui = Players.LocalPlayer:WaitForChild("PlayerGui", 5)
+    if not playerGui then return 0 end
+    local inv = playerGui:FindFirstChild("Inventory")
+    if inv then
+        local label = inv:FindFirstChild("Main") and inv.Main:FindFirstChild("Top") and inv.Main.Top:FindFirstChild("Options") and inv.Main.Top.Options:FindFirstChild("Fish") and inv.Main.Top.Options.Fish:FindFirstChild("Label") and inv.Main.Top.Options.Fish.Label:FindFirstChild("BagSize")
+        if label then
+            return tonumber((label.Text or "0/???"):match("(%d+)/")) or 0
+        end
+    end
+    return 0
+end
+
+local DetectorStuckEnabled = false
+local StuckThreshold = 15
+local LastFishCount = 0
+local StuckTimer = 0
+local SavedCFrame = nil
+
+CreateToggle(Page_Fhising, "Detector Stuck (15s)", false, function(state)
+    DetectorStuckEnabled = state
+    if state then
+        LastFishCount = getFishCount()
+        StuckTimer = 0
+        local char = Players.LocalPlayer.Character or Players.LocalPlayer.CharacterAdded:Wait()
+        SavedCFrame = char:WaitForChild("HumanoidRootPart").CFrame
+        
+        task.spawn(function()
+            while DetectorStuckEnabled and ScriptActive do
+                task.wait(1)
+                local currentFish = getFishCount()
+                if currentFish == LastFishCount then
+                    StuckTimer = StuckTimer + 1
+                    if StuckTimer >= StuckThreshold then
+                         ShowNotification("Stuck Detected! Resetting...", true)
+                         
+                         local char = Players.LocalPlayer.Character
+                         if char and char:FindFirstChild("HumanoidRootPart") then
+                            SavedCFrame = char.HumanoidRootPart.CFrame
+                         end
+                         
+                         if char then char:BreakJoints() end
+                         
+                         local newChar = Players.LocalPlayer.CharacterAdded:Wait()
+                         local hrp = newChar:WaitForChild("HumanoidRootPart")
+                         task.wait(0.5)
+                         hrp.CFrame = SavedCFrame
+                         
+                         StuckTimer = 0
+                         LastFishCount = getFishCount()
+                         
+                         -- Re-Equip Rod (Assuming slot 1)
+                         local RE_Equip = GetRemote("RE/EquipToolFromHotbar")
+                         if RE_Equip then pcall(function() RE_Equip:FireServer(1) end) end
+                    end
+                else
+                    LastFishCount = currentFish
+                    StuckTimer = 0
+                end
+            end
+        end)
+    end
+end)
 
 local AutoShakeEnabled = false
 CreateToggle(Page_Fhising, "Auto Click Fishing", false, function(val)
@@ -800,28 +865,18 @@ local WaterPlatform = nil
 local WalkConnection = nil
 
 -- ANTI AFK
-local AntiAFKEnabled = false
-local AntiAFKConnection = nil
+-- Anti AFK (Always Active)
+task.spawn(function()
+    local afkConn = Players.LocalPlayer.Idled:Connect(function()
+        VirtualUser:CaptureController()
+        VirtualUser:ClickButton2(Vector2.new())
+    end)
+    table.insert(Connections, afkConn)
 
-CreateToggle(Page_Setting, "Anti AFK", false, function(state)
-    AntiAFKEnabled = state
-    if state then
-        if AntiAFKConnection then AntiAFKConnection:Disconnect() end
-        
-        AntiAFKConnection = Players.LocalPlayer.Idled:Connect(function()
-            if AntiAFKEnabled then
-                VirtualUser:CaptureController()
-                VirtualUser:ClickButton2(Vector2.new())
-            end
-        end)
-        
-        -- Also try the method from r.lua loop clearing
-        for i, v in pairs(getconnections(Players.LocalPlayer.Idled)) do
-            if v.Disable then v:Disable() end
-        end
-    else
-        if AntiAFKConnection then AntiAFKConnection:Disconnect() end
+    for i, v in pairs(getconnections(Players.LocalPlayer.Idled)) do
+        if v.Disable then v:Disable() end
     end
+    print("XAL: Anti-AFK Active")
 end)
 
 CreateToggle(Page_Setting, "Walk On Water", false, function(state)
@@ -886,11 +941,6 @@ CreateToggle(Page_Setting, "Walk On Water", false, function(state)
         if WaterPlatform then WaterPlatform:Destroy() WaterPlatform = nil end
     end
 end)
-
-local BulkLabel = Instance.new("TextLabel", Page_Config)
-BulkLabel.BackgroundTransparency = 1; BulkLabel.Size = UDim2.new(1, 0, 0, 20)
-BulkLabel.Font = Enum.Font.GothamBold; BulkLabel.Text = "Bulk Input (Format: User:DiscordID)"; BulkLabel.TextColor3 = Theme.TextSecondary; BulkLabel.TextSize = 11; BulkLabel.TextXAlignment = "Left"
-
 
 -- SETTING FEATURES
 -- 1. Remove Fish Notification Pop-up
@@ -1001,48 +1051,12 @@ CreateToggle(Page_Setting, "Remove Skin Effect", false, function(state)
     end
 end)
 
+local BulkContainer = nil
+local BulkInput = nil
+local ImportBtnWrapper = nil
+local ImportBtn = nil
+-- End Moved
 
-local BulkContainer = Instance.new("Frame", Page_Config)
-BulkContainer.BackgroundColor3 = Theme.Content; BulkContainer.Size = UDim2.new(1, -5, 0, 100); BulkContainer.BorderSizePixel = 0
-Instance.new("UICorner", BulkContainer).CornerRadius = UDim.new(0, 6)
-AddStroke(BulkContainer, Theme.Border, 1)
-
-local BulkInput = Instance.new("TextBox", BulkContainer)
-BulkInput.BackgroundTransparency = 1; BulkInput.Position = UDim2.new(0, 8, 0, 8); BulkInput.Size = UDim2.new(1, -16, 1, -16)
-BulkInput.Font = Enum.Font.GothamMedium; BulkInput.Text = ""; BulkInput.PlaceholderText = "Username:DiscordID\nUsername:DiscordID"; BulkInput.TextColor3 = Theme.TextPrimary; BulkInput.TextSize = 11; BulkInput.TextXAlignment = "Left"; BulkInput.TextYAlignment = "Top"; BulkInput.MultiLine = true; BulkInput.ClearTextOnFocus = false; BulkInput.TextWrapped = true
-
-local ImportBtnWrapper = Instance.new("Frame", Page_Config)
-ImportBtnWrapper.BackgroundTransparency = 1; ImportBtnWrapper.Size = UDim2.new(1, -5, 0, 26); ImportBtnWrapper.Position = UDim2.new(0, 0, 0, 110)
-
-local ImportBtn = Instance.new("TextButton", ImportBtnWrapper)
-ImportBtn.BackgroundColor3 = Theme.Success; ImportBtn.BackgroundTransparency = 0.1; ImportBtn.Size = UDim2.new(1, 0, 0, 26)
-ImportBtn.Font = Enum.Font.GothamBold; ImportBtn.Text = "IMPORT BULK DATA"; ImportBtn.TextColor3 = Color3.new(1, 1, 1); ImportBtn.TextSize = 11
-Instance.new("UICorner", ImportBtn).CornerRadius = UDim.new(0, 6)
-
-ImportBtn.MouseButton1Click:Connect(function()
-    local text = BulkInput.Text
-    local addedCount = 0; local listFull = false; local currentIndex = 3
-    
-    while currentIndex <= 20 and TagList[currentIndex][1] ~= "" do currentIndex = currentIndex + 1 end
-    
-    if currentIndex > 20 then ShowNotification("List Player Full!", true) return end
-    
-    local maxImport = 18
-    local processed = 0
-    
-    for line in text:gmatch("[^\r\n]+") do
-        if currentIndex > 20 or processed >= maxImport then listFull = true; break end
-        local split = string.split(line, ":"); local user = split[1] or ""; local id = split[2] or ""
-        user = user:match("^%s*(.-)%s*$"); id = id:match("^%s*(.-)%s*$")
-        if user ~= "" then
-            TagList[currentIndex] = {user, id}
-            if TagUIElements[currentIndex] then TagUIElements[currentIndex].User.Text = user; TagUIElements[currentIndex].ID.Text = id end
-            currentIndex = currentIndex + 1; addedCount = addedCount + 1; processed = processed + 1
-        end
-    end
-    if addedCount > 0 then BulkInput.Text = ""; ShowNotification("Imported " .. addedCount .. " Players!") else if not listFull then ShowNotification("No Data Found!", true) end end
-    if listFull then ShowNotification("List Full (Max 18 Imported)", true) end
-end)
 
 local SaveInput = CreateInput(Page_Save, "Config Name", "", function(v) end, 36)
 
@@ -1317,9 +1331,121 @@ UI_LeaveInput = CreateInput(Page_Url, "Player Leave", Current_Webhook_Leave, fun
 UI_ListInput = CreateInput(Page_Url, "Player List", Current_Webhook_List, function(v) Current_Webhook_List = v end)
 UI_AdminInput = CreateInput(Page_Url, "Admin Host", Current_Webhook_Admin, function(v) Current_Webhook_Admin = v end)
 
+-- Page_Tag Sub-Menu Setup
+local SubTabContainer = Instance.new("Frame", Page_Tag)
+SubTabContainer.BackgroundColor3 = Theme.Content
+SubTabContainer.BackgroundTransparency = 1
+SubTabContainer.Size = UDim2.new(1, -5, 0, 30)
+SubTabContainer.LayoutOrder = -2
+
+local BtnListPlayer = Instance.new("TextButton", SubTabContainer)
+BtnListPlayer.BackgroundColor3 = Theme.Accent
+BtnListPlayer.Size = UDim2.new(0.5, -3, 1, 0)
+BtnListPlayer.Font = Enum.Font.GothamBold
+BtnListPlayer.Text = "LIST PLAYER"
+BtnListPlayer.TextColor3 = Color3.new(1,1,1)
+BtnListPlayer.TextSize = 11
+Instance.new("UICorner", BtnListPlayer).CornerRadius = UDim.new(0, 6)
+
+local BtnImportList = Instance.new("TextButton", SubTabContainer)
+BtnImportList.BackgroundColor3 = Theme.Input
+BtnImportList.Position = UDim2.new(0.5, 3, 0, 0)
+BtnImportList.Size = UDim2.new(0.5, -3, 1, 0)
+BtnImportList.Font = Enum.Font.GothamBold
+BtnImportList.Text = "IMPORT LIST"
+BtnImportList.TextColor3 = Theme.TextSecondary
+BtnImportList.TextSize = 11
+Instance.new("UICorner", BtnImportList).CornerRadius = UDim.new(0, 6)
+
+local View_List = Instance.new("Frame", Page_Tag)
+View_List.BackgroundTransparency = 1
+View_List.Size = UDim2.new(1, 0, 0, 0)
+View_List.AutomaticSize = Enum.AutomaticSize.Y
+View_List.LayoutOrder = 1
+local ListLayout_List = Instance.new("UIListLayout", View_List)
+ListLayout_List.Padding = UDim.new(0, 6)
+ListLayout_List.SortOrder = Enum.SortOrder.LayoutOrder
+
+local View_Import = Instance.new("Frame", Page_Tag)
+View_Import.BackgroundTransparency = 1
+View_Import.Size = UDim2.new(1, 0, 0, 0)
+View_Import.AutomaticSize = Enum.AutomaticSize.Y
+View_Import.Visible = false
+View_Import.LayoutOrder = 2
+local ListLayout_Import = Instance.new("UIListLayout", View_Import)
+ListLayout_Import.Padding = UDim.new(0, 6)
+ListLayout_Import.SortOrder = Enum.SortOrder.LayoutOrder
+
+BtnListPlayer.MouseButton1Click:Connect(function()
+    View_List.Visible = true
+    View_Import.Visible = false
+    BtnListPlayer.BackgroundColor3 = Theme.Accent
+    BtnListPlayer.TextColor3 = Color3.new(1,1,1)
+    BtnImportList.BackgroundColor3 = Theme.Input
+    BtnImportList.TextColor3 = Theme.TextSecondary
+end)
+
+BtnImportList.MouseButton1Click:Connect(function()
+    View_List.Visible = false
+    View_Import.Visible = true
+    BtnListPlayer.BackgroundColor3 = Theme.Input
+    BtnListPlayer.TextColor3 = Theme.TextSecondary
+    BtnImportList.BackgroundColor3 = Theme.Accent
+    BtnImportList.TextColor3 = Color3.new(1,1,1)
+end)
+
+-- Move Bulk/Import Content to View_Import
+local BulkLabel = Instance.new("TextLabel", View_Import)
+BulkLabel.BackgroundTransparency = 1; BulkLabel.Size = UDim2.new(1, 0, 0, 20)
+BulkLabel.Font = Enum.Font.GothamBold; BulkLabel.Text = "Bulk Input (Format: User:DiscordID)"; BulkLabel.TextColor3 = Theme.TextSecondary; BulkLabel.TextSize = 11; BulkLabel.TextXAlignment = "Left"
+
+local BulkContainer = Instance.new("Frame", View_Import)
+BulkContainer.BackgroundColor3 = Theme.Content; BulkContainer.Size = UDim2.new(1, -5, 0, 100); BulkContainer.BorderSizePixel = 0
+Instance.new("UICorner", BulkContainer).CornerRadius = UDim.new(0, 6)
+AddStroke(BulkContainer, Theme.Border, 1)
+
+local BulkInput = Instance.new("TextBox", BulkContainer)
+BulkInput.BackgroundTransparency = 1; BulkInput.Position = UDim2.new(0, 8, 0, 8); BulkInput.Size = UDim2.new(1, -16, 1, -16)
+BulkInput.Font = Enum.Font.GothamMedium; BulkInput.Text = ""; BulkInput.PlaceholderText = "Username:DiscordID\nUsername:DiscordID"; BulkInput.TextColor3 = Theme.TextPrimary; BulkInput.TextSize = 11; BulkInput.TextXAlignment = "Left"; BulkInput.TextYAlignment = "Top"; BulkInput.MultiLine = true; BulkInput.ClearTextOnFocus = false; BulkInput.TextWrapped = true
+
+local ImportBtnWrapper = Instance.new("Frame", View_Import)
+ImportBtnWrapper.BackgroundTransparency = 1; ImportBtnWrapper.Size = UDim2.new(1, -5, 0, 26)
+
+local ImportBtn = Instance.new("TextButton", ImportBtnWrapper)
+ImportBtn.BackgroundColor3 = Theme.Success; ImportBtn.BackgroundTransparency = 0.1; ImportBtn.Size = UDim2.new(1, 0, 0, 26)
+ImportBtn.Font = Enum.Font.GothamBold; ImportBtn.Text = "IMPORT BULK DATA"; ImportBtn.TextColor3 = Color3.new(1, 1, 1); ImportBtn.TextSize = 11
+Instance.new("UICorner", ImportBtn).CornerRadius = UDim.new(0, 6)
+
+ImportBtn.MouseButton1Click:Connect(function()
+    local text = BulkInput.Text
+    local addedCount = 0; local listFull = false; local currentIndex = 3
+    
+    while currentIndex <= 20 and TagList[currentIndex][1] ~= "" do currentIndex = currentIndex + 1 end
+    
+    if currentIndex > 20 then ShowNotification("List Player Full!", true) return end
+    
+    local maxImport = 18
+    local processed = 0
+    
+    for line in text:gmatch("[^\r\n]+") do
+        if currentIndex > 20 or processed >= maxImport then listFull = true; break end
+        local split = string.split(line, ":"); local user = split[1] or ""; local id = split[2] or ""
+        user = user:match("^%s*(.-)%s*$"); id = id:match("^%s*(.-)%s*$")
+        if user ~= "" then
+            TagList[currentIndex] = {user, id}
+            if TagUIElements[currentIndex] then TagUIElements[currentIndex].User.Text = user; TagUIElements[currentIndex].ID.Text = id end
+            currentIndex = currentIndex + 1; addedCount = addedCount + 1; processed = processed + 1
+        end
+    end
+    if addedCount > 0 then BulkInput.Text = ""; ShowNotification("Imported " .. addedCount .. " Players!") else if not listFull then ShowNotification("No Data Found!", true) end end
+    if listFull then ShowNotification("List Full (Max 18 Imported)", true) end
+end)
+
+
+-- Generate List Player Rows in View_List
 for i = 1, 20 do
     local rowData = TagList[i]
-    local Row = Instance.new("Frame", Page_Tag)
+    local Row = Instance.new("Frame", View_List)
     Row.BackgroundColor3 = Theme.Content; Row.BackgroundTransparency = 0; Row.Size = UDim2.new(1, -5, 0, 28) 
     Instance.new("UICorner", Row).CornerRadius = UDim.new(0, 5)
     
@@ -1348,6 +1474,16 @@ for i = 1, 20 do
     TagUIElements[i] = {User = UserInput, ID = IDInput}
     local function Sync() TagList[i] = {UserInput.Text, IDInput.Text} end
     UserInput.FocusLost:Connect(Sync); IDInput.FocusLost:Connect(Sync)
+end
+
+-- Force Update UI from loaded data
+if #TagList > 0 then
+    for i = 1, 20 do
+        if TagUIElements[i] and TagList[i] then
+            TagUIElements[i].User.Text = TagList[i][1]
+            TagUIElements[i].ID.Text = TagList[i][2]
+        end
+    end
 end
 
 CreateToggle(Page_Webhook, "Secret Fish Caught", Settings.SecretEnabled, function(v) Settings.SecretEnabled = v end, function() return Current_Webhook_Fish ~= "" end)
