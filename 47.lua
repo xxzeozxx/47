@@ -591,7 +591,7 @@ local function CreateToggle(parent, text, default, callback, validationFunc, set
     Instance.new("UICorner", Circle).CornerRadius = UDim.new(1, 0)
 
     if settingKey then
-        ToggleUIElements[settingKey] = {Switch = Switch, Circle = Circle}
+        ToggleUIElements[settingKey] = {Switch = Switch, Circle = Circle, Callback = callback}
     end
     
 
@@ -1227,15 +1227,9 @@ SaveBtn.MouseButton1Click:Connect(function()
             List = Current_Webhook_List,
             Admin = Current_Webhook_Admin
         },
-        Players = TagList
-        Webhooks = {
-            Fish = Current_Webhook_Fish,
-            Leave = Current_Webhook_Leave,
-            List = Current_Webhook_List,
-            Admin = Current_Webhook_Admin
-        },
         Players = TagList,
         Settings = Settings
+    }
     
     local success, err = pcall(function()
         writefile("XAL_Configs/" .. name .. ".json", HttpService:JSONEncode(saveData))
@@ -1307,17 +1301,8 @@ LoadBtn.MouseButton1Click:Connect(function()
                     ui.Switch.BackgroundColor3 = v and Theme.Success or Theme.Input
                     ui.Circle.Position = v and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8)
                     
-                    -- Handle specific callbacks that rely on event connections rather than just Settings polling
-                    if k == "RemoveNotificationPopUp" then
-                         -- Manually re-trigger callback if needed is complex due to closure.
-                         -- However, for simple visual persistence logic requested: "tombol otomatis on".
-                         -- Logic loops (like RenderStepped) should be checking Settings table if possible.
-                         -- But previously logic was inside callback for this specific toggle.
-                         -- To make it fully functional, we should ideally refactor logic out to a function called by polling loop or directly call it.
-                         -- Currently: User asked for "tombol on", assuming logic follows.
-                         -- Since we can't easily recall anonymous callback, we rely on user toggling if state desyncs, 
-                         -- OR we refactor logic to be outside callback.
-                         -- Given constraints, visual sync is the primary step.
+                    if ui.Callback then
+                        task.spawn(function() ui.Callback(v) end)
                     end
                 end
             end
