@@ -1278,20 +1278,7 @@ LoadBtn.MouseButton1Click:Connect(function()
                     end
                 end
             end
-        if data.Players then
-            TagList = data.Players
-            for i = 1, 20 do
-                if not TagList[i] or type(TagList[i]) ~= "table" then TagList[i] = {"", ""} end
-            end
-            if #TagUIElements > 0 then
-                for i = 1, 20 do
-                    if TagUIElements[i] then
-                        TagUIElements[i].User.Text = TagList[i][1] or ""
-                        TagUIElements[i].ID.Text = TagList[i][2] or ""
-                    end
-                end
-            end
-        end
+
         
         if data.Settings then
             for k, v in pairs(data.Settings) do
