@@ -111,6 +111,9 @@ local Settings = {
     PingMonitor = false
 }
 
+local ToggleRegistry = {}
+local ToggleStates = {}
+
 local TagList = {} 
 local TagUIElements = {} 
 local UI_FishInput, UI_LeaveInput, UI_ListInput, UI_AdminInput
@@ -524,17 +527,34 @@ local function CreateToggle(parent, text, default, callback, validationFunc)
     Circle.Position = default and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8); Circle.Size = UDim2.new(0, 16, 0, 16)
     Instance.new("UICorner", Circle).CornerRadius = UDim.new(1, 0)
     
-    Switch.MouseButton1Click:Connect(function()
-        local n = not (Switch.BackgroundColor3 == Theme.Success)
-        if n and validationFunc and not validationFunc() then ShowNotification("Webhook Empty!", true) return end
+    -- Register state
+    ToggleStates[text] = default
+    
+    local function SetToggle(state, silent)
+        if state and validationFunc and not validationFunc() then 
+            if not silent then ShowNotification("Requirement Missing!", true) end
+            return 
+        end
         
-        local targetColor = n and Theme.Success or Theme.Input
-        local targetPos = n and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8)
+        local targetColor = state and Theme.Success or Theme.Input
+        local targetPos = state and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8)
         
         TweenService:Create(Switch, TweenInfo.new(0.2), {BackgroundColor3 = targetColor}):Play()
         Circle:TweenPosition(targetPos, "Out", "Sine", 0.15, true)
         
-        callback(n); ShowNotification(text .. (n and " Enabled" or " Disabled"))
+        ToggleStates[text] = state
+        callback(state)
+        
+        if not silent then
+            ShowNotification(text .. (state and " Enabled" or " Disabled"))
+        end
+    end
+    
+    ToggleRegistry[text] = SetToggle
+
+    Switch.MouseButton1Click:Connect(function()
+        local currentState = ToggleStates[text]
+        SetToggle(not currentState, false)
     end)
 end
 
@@ -1143,7 +1163,8 @@ SaveBtn.MouseButton1Click:Connect(function()
             List = Current_Webhook_List,
             Admin = Current_Webhook_Admin
         },
-        Players = TagList
+        Players = TagList,
+        Toggles = ToggleStates
     }
     
     local success, err = pcall(function()
@@ -1191,6 +1212,18 @@ LoadBtn.MouseButton1Click:Connect(function()
                         TagUIElements[i].User.Text = TagList[i][1] or ""
                         TagUIElements[i].ID.Text = TagList[i][2] or ""
                     end
+                end
+            end
+            end
+        end
+        
+        if data.Toggles then
+            for name, state in pairs(data.Toggles) do
+                if ToggleRegistry[name] then
+                    -- Only update if state is different to avoid unnecessary callbacks
+                     if ToggleStates[name] ~= state then
+                        ToggleRegistry[name](state, true) -- true for silent load
+                     end
                 end
             end
         end
