@@ -432,16 +432,6 @@ SideLayout.HorizontalAlignment = "Center"
 Instance.new("UIPadding", MenuContainer).PaddingTop = UDim.new(0, 8)
 
 
-local VersionLabel = Instance.new("TextLabel", Sidebar)
-VersionLabel.BackgroundTransparency = 1
-VersionLabel.Position = UDim2.new(0, 0, 1, -20)
-VersionLabel.Size = UDim2.new(1, 0, 0, 20)
-VersionLabel.Font = Enum.Font.GothamBold
-VersionLabel.Text = "UPDATED v2"
-VersionLabel.TextColor3 = Theme.TextSecondary
-VersionLabel.TextSize = 10
-VersionLabel.ZIndex = 5
-
 local ContentContainer = Instance.new("Frame", MainFrame)
 ContentContainer.BackgroundTransparency = 1
 ContentContainer.Position = UDim2.new(0, 120, 0, 42) -- Increased offset
