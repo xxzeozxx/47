@@ -1271,15 +1271,24 @@ SaveBtn.MouseButton1Click:Connect(function()
         Settings = Settings
     }
     
+    local jsonSuccess, encodedData = pcall(function() return HttpService:JSONEncode(saveData) end)
+    if not jsonSuccess then
+        ShowNotification("Encoding Error: " .. tostring(encodedData), true)
+        warn("XAL SAVE ERROR (JSON):", encodedData)
+        return
+    end
+
     local success, err = pcall(function()
-        writefile("XAL_Configs/" .. name .. ".json", HttpService:JSONEncode(saveData))
+        if not isfolder("XAL_Configs") then makefolder("XAL_Configs") end
+        writefile("XAL_Configs/" .. name .. ".json", encodedData)
     end)
     
     if success then
         ShowNotification("Config Saved!", false)
         RefreshConfigList()
     else
-        ShowNotification("Save Failed!", true)
+        ShowNotification("Write Error: " .. tostring(err), true)
+        warn("XAL SAVE ERROR (WRITE):", err)
     end
 end)
 
