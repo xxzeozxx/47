@@ -112,6 +112,23 @@ local Settings = {
     AutoExecute = false
 }
 
+-- Anti-AFK (Always On)
+task.spawn(function()
+    local VirtualUser = game:GetService("VirtualUser")
+    Players.LocalPlayer.Idled:Connect(function()
+        VirtualUser:CaptureController()
+        VirtualUser:ClickButton2(Vector2.new())
+    end)
+    
+    -- Additional check using getconnections if available
+    pcall(function()
+        for i,v in pairs(getconnections(Players.LocalPlayer.Idled)) do
+            v:Disable()
+        end
+    end)
+    print("XAL: Anti-AFK Active")
+end)
+
 -- Queue On Teleport Logic
 task.spawn(function()
     local success, err = pcall(function()
