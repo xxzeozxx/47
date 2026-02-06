@@ -111,7 +111,8 @@ local Settings = {
     PingMonitor = false,
     AutoExecute = false,
     NoAnimation = false,
-    RemoveVFX = false
+    RemoveVFX = false,
+    DisablePopups = false
 }
 
 -- Anti-AFK (Always On)
@@ -1011,7 +1012,7 @@ end)
 -- SETTING FEATURES
 -- 1. Remove Fish Notification Pop-up
 local DisableNotificationConnection = nil
-CreateToggle(Page_Setting, "Remove Fish Notification Pop-up", false, function(state)
+CreateToggle(Page_Setting, "Remove Fish Notification Pop-up", "DisablePopups", function(state)
     local PlayerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
     local SmallNotification = PlayerGui:FindFirstChild("Small Notification")
     
