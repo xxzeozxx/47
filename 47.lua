@@ -1261,6 +1261,15 @@ SaveBtn.MouseButton1Click:Connect(function()
     local name = SaveInput.Text
     if name == "" then ShowNotification("Name cannot be empty!", true) return end
     
+    local cleanSettings = {}
+    for k, v in pairs(Settings) do
+        if type(k) == "string" then
+            cleanSettings[k] = v
+        else
+            warn("Removed invalid setting key:", k, "Type:", type(k))
+        end
+    end
+
     local saveData = {
         Webhooks = {
             Fish = Current_Webhook_Fish,
@@ -1269,7 +1278,7 @@ SaveBtn.MouseButton1Click:Connect(function()
             Admin = Current_Webhook_Admin
         },
         Players = TagList,
-        Settings = Settings
+        Settings = cleanSettings
     }
     
     local jsonSuccess, encodedData = pcall(function() return HttpService:JSONEncode(saveData) end)
