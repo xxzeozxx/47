@@ -98,6 +98,44 @@ local SecretList = {
 
 local StoneList = { "Ruby" }
 
+local function TeleportToLookAt(position, lookVector)
+    local Character = Players.LocalPlayer.Character
+    if not Character then Character = Players.LocalPlayer.CharacterAdded:Wait() end
+    local hrp = Character:WaitForChild("HumanoidRootPart", 5)
+    
+    if hrp and typeof(position) == "Vector3" and typeof(lookVector) == "Vector3" then
+        local targetCFrame = CFrame.new(position, position + lookVector)
+        hrp.CFrame = targetCFrame * CFrame.new(0, 3, 0) -- Slight height offset
+        ShowNotification("Teleported!", false)
+    else
+        ShowNotification("Invalid TP Data", true)
+    end
+end
+
+local FishingAreas = {
+    ["Leviathan Den"] = {Pos = Vector3.new(3431.640, -287.726, 3529.052), Look = Vector3.new(-0.176, 0.444, -0.879)},
+    ["Crystal Depths"] = {Pos = Vector3.new(5820.647, -907.482, 15425.794), Look = Vector3.new(0.131, -0.666, 0.735)},
+    ["Pirate Cove"] = {Pos = Vector3.new(3479.794, 4.192, 3451.693), Look = Vector3.new(0.578, -0.396, -0.713)},
+    ["Pirate Tresure"] = {Pos = Vector3.new(3305.745, -302.160, 3028.795), Look = Vector3.new(-0.331, -0.396, -0.856)},
+    ["Maze Door Room"] = {Pos = Vector3.new(3446.691, -287.845, 3402.136), Look = Vector3.new(0.324, -0.396, 0.859)},
+    ["Ancient Jungle"] = {Pos = Vector3.new(1535.639, 3.159, -193.352), Look = Vector3.new(0.505, -0.000, 0.863)},
+    ["Coral Reef"] = {Pos = Vector3.new(-3207.538, 6.087, 2011.079), Look = Vector3.new(0.973, 0.000, 0.229)},
+    ["Crater Island"] = {Pos = Vector3.new(1058.976, 2.330, 5032.878), Look = Vector3.new(-0.789, 0.000, 0.615)},
+    ["Ancient Ruin"] = {Pos = Vector3.new(6031.981, -585.924, 4713.157), Look = Vector3.new(0.316, -0.000, -0.949)},
+    ["Enchant Room"] = {Pos = Vector3.new(3255.670, -1301.530, 1371.790), Look = Vector3.new(-0.000, -0.000, -1.000)},
+    ["Fisherman Island"] = {Pos = Vector3.new(74.030, 9.530, 2705.230), Look = Vector3.new(-0.000, -0.000, -1.000)},
+    ["Kohana"] = {Pos = Vector3.new(-668.732, 3.000, 681.580), Look = Vector3.new(0.889, -0.000, 0.458)},
+    ["Lost Isle"] = {Pos = Vector3.new(-3804.105, 2.344, -904.653), Look = Vector3.new(-0.901, -0.000, 0.433)},
+    ["Sacred Temple"] = {Pos = Vector3.new(1461.815, -22.125, -670.234), Look = Vector3.new(-0.990, -0.000, 0.143)},
+    ["Second Enchant Altar"] = {Pos = Vector3.new(1479.587, 128.295, -604.224), Look = Vector3.new(-0.298, 0.000, -0.955)},
+    ["Sisyphus Statue"] = {Pos = Vector3.new(-3743.745, -135.074, -1007.554), Look = Vector3.new(0.310, 0.000, 0.951)},
+    ["Treasure Room"] = {Pos = Vector3.new(-3598.440, -281.274, -1645.855), Look = Vector3.new(-0.065, 0.000, -0.998)},
+    ["Tropical Island"] = {Pos = Vector3.new(-2162.920, 2.825, 3638.445), Look = Vector3.new(0.381, -0.000, 0.925)},
+    ["Underground Cellar"] = {Pos = Vector3.new(2118.417, -91.448, -733.800), Look = Vector3.new(0.854, 0.000, 0.521)},
+    ["Volcano"] = {Pos = Vector3.new(-552.797, 21.174, 186.940), Look = Vector3.new(-0.251, -0.534, -0.808)},
+    ["Volcanic Cavern"] = {Pos = Vector3.new(1249.005, 82.830, -10224.920), Look = Vector3.new(-0.649, -0.666, 0.368)},
+}
+
 local Settings = { 
     SecretEnabled = false, 
     RubyEnabled = false, 
@@ -512,8 +550,12 @@ local function CreateTab(name, target, isDefault)
     Instance.new("UICorner", Indicator).CornerRadius = UDim.new(1, 0)
 
     TabBtn.MouseButton1Click:Connect(function()
-        Page_Webhook.Visible = false; Page_Tag.Visible = false; Page_Save.Visible = false; Page_AdminBoost.Visible = false; Page_SessionStats.Visible = false; Page_Fhising.Visible = false
-        if Page_Setting then Page_Setting.Visible = false end
+        -- Geneic Page Hiding (Hide all pages in ContentContainer)
+        for _, page in pairs(ContentContainer:GetChildren()) do
+            if page:IsA("ScrollingFrame") or page:IsA("Frame") then
+                page.Visible = false
+            end
+        end
         target.Visible = true
 
         for _, child in pairs(MenuContainer:GetChildren()) do
@@ -545,6 +587,68 @@ end
 
 CreateTab("Server Info", Page_SessionStats, true)
 CreateTab("Fhising", Page_Fhising)
+
+local Page_Teleport = CreatePage("Teleport")
+
+
+
+local TeleportList = Instance.new("UIListLayout", Page_Teleport)
+TeleportList.Padding = UDim.new(0, 5)
+TeleportList.SortOrder = Enum.SortOrder.LayoutOrder
+
+CreateTab("Teleport", Page_Teleport)
+
+-- Helper for independent buttons inside Row
+local function CreateTeleportButton(parent, text, pos, size, callback)
+    local Frame = Instance.new("Frame", parent)
+    Frame.BackgroundColor3 = Theme.Content
+    Frame.Size = size
+    Frame.Position = pos
+    Frame.BorderSizePixel = 0
+    Instance.new("UICorner", Frame).CornerRadius = UDim.new(0, 6)
+    AddStroke(Frame, Theme.Border, 1)
+    
+    local Btn = Instance.new("TextButton", Frame)
+    Btn.BackgroundColor3 = Theme.Accent
+    Btn.BackgroundTransparency = 0.1
+    Btn.Size = UDim2.new(1, -10, 1, -10)
+    Btn.Position = UDim2.new(0, 5, 0, 5)
+    Btn.Font = Enum.Font.GothamBold
+    Btn.Text = text
+    Btn.TextColor3 = Color3.new(1,1,1)
+    Btn.TextSize = 11
+    Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 4)
+    
+    Btn.MouseButton1Click:Connect(callback)
+    return Btn
+end
+
+-- Populate Teleport Buttons (Manual Row Mode)
+local sortedAreas = {}
+for name, _ in pairs(FishingAreas) do table.insert(sortedAreas, name) end
+table.sort(sortedAreas)
+
+for i = 1, #sortedAreas, 2 do
+    local name1 = sortedAreas[i]
+    local name2 = sortedAreas[i+1] -- Can be nil
+    
+    local Row = Instance.new("Frame", Page_Teleport)
+    Row.BackgroundTransparency = 1
+    Row.Size = UDim2.new(1, 0, 0, 35)
+    
+    local data1 = FishingAreas[name1]
+    CreateTeleportButton(Row, name1, UDim2.new(0, 0, 0, 0), UDim2.new(0.5, -3, 1, 0), function()
+        TeleportToLookAt(data1.Pos, data1.Look)
+    end)
+    
+    if name2 then
+        local data2 = FishingAreas[name2]
+        CreateTeleportButton(Row, name2, UDim2.new(0.5, 3, 0, 0), UDim2.new(0.5, -3, 1, 0), function()
+            TeleportToLookAt(data2.Pos, data2.Look)
+        end)
+    end
+end
+
 CreateTab("Notification", Page_Webhook)
 CreateTab("Admin Boost", Page_AdminBoost)
 CreateTab("List Player", Page_Tag)
@@ -1011,6 +1115,49 @@ CreateToggle(Page_Setting, "Walk On Water", false, function(state)
 end)
 
 -- SETTING FEATURES
+-- 0. Coordinate Grabber
+local CoordInput = CreateInput(Page_Setting, "Coordinates", "", function(v) end)
+
+local GrabFrame = Instance.new("Frame", Page_Setting)
+GrabFrame.BackgroundColor3 = Theme.Content
+GrabFrame.Size = UDim2.new(1, -5, 0, 36)
+GrabFrame.BorderSizePixel = 0
+Instance.new("UICorner", GrabFrame).CornerRadius = UDim.new(0, 6)
+AddStroke(GrabFrame, Theme.Border, 1)
+
+local GrabBtn = Instance.new("TextButton", GrabFrame)
+GrabBtn.BackgroundColor3 = Theme.Accent
+GrabBtn.Size = UDim2.new(1, -10, 1, -10)
+GrabBtn.Position = UDim2.new(0, 5, 0, 5)
+GrabBtn.Font = Enum.Font.GothamBold
+GrabBtn.Text = "GET CURRENT COORDINATES"
+GrabBtn.TextColor3 = Color3.new(1, 1, 1)
+GrabBtn.TextSize = 12
+Instance.new("UICorner", GrabBtn).CornerRadius = UDim.new(0, 4)
+
+GrabBtn.MouseButton1Click:Connect(function()
+    ShowNotification("Grabbing...", false)
+    local char = Players.LocalPlayer.Character
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    local cam = workspace.CurrentCamera
+    
+    if hrp and cam then
+        local pos = hrp.Position
+        local look = cam.CFrame.LookVector
+        
+        local posStr = string.format("Vector3.new(%.3f, %.3f, %.3f)", pos.X, pos.Y, pos.Z)
+        local lookStr = string.format("Vector3.new(%.3f, %.3f, %.3f)", look.X, look.Y, look.Z)
+        
+        local fullStr = string.format('["New Location"] = {Pos = %s, Look = %s},', posStr, lookStr)
+        
+        CoordInput.Text = fullStr
+        pcall(function() setclipboard(fullStr) end) 
+        ShowNotification("Coords --> Input Box!", false)
+    else
+        ShowNotification("Character not found!", true)
+    end
+end)
+
 -- 1. Remove Fish Notification Pop-up
 local DisableNotificationConnection = nil
 CreateToggle(Page_Setting, "Remove Fish Notification Pop-up", "DisablePopups", function(state)
