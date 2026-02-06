@@ -1158,11 +1158,9 @@ SaveBtn.MouseButton1Click:Connect(function()
     end
 end)
 
-LoadBtn.MouseButton1Click:Connect(function()
-    if not selectedConfig then ShowNotification("Select a config!", true) return end
-    
-    local success, content = pcall(function() return readfile("XAL_Configs/" .. selectedConfig .. ".json") end)
-    if not success then ShowNotification("Read Failed!", true) return end
+local function LoadConfig(configName)
+    local success, content = pcall(function() return readfile("XAL_Configs/" .. configName .. ".json") end)
+    if not success then ShowNotification("Read Failed!", true) return false end
 
     local decodeSuccess, data = pcall(function() return HttpService:JSONDecode(content) end)
     
@@ -1195,9 +1193,16 @@ LoadBtn.MouseButton1Click:Connect(function()
             end
         end
         ShowNotification("Config Loaded!", false)
+        return true
     else
         ShowNotification("JSON Error!", true)
+        return false
     end
+end
+
+LoadBtn.MouseButton1Click:Connect(function()
+    if not selectedConfig then ShowNotification("Select a config!", true) return end
+    LoadConfig(selectedConfig)
 end)
 
 DeleteBtn.MouseButton1Click:Connect(function()
@@ -1206,6 +1211,113 @@ DeleteBtn.MouseButton1Click:Connect(function()
     ShowNotification("Deleted!", false)
     RefreshConfigList()
 end)
+
+-- AUTOLOAD FEATURE
+local AutoLoadToggle = nil
+local AutoLoadConfigPath = "XAL_Configs/autoload.json"
+local currentAutoLoad = nil
+
+local function SaveAutoLoadPref(configName, enabled)
+    local data = { config = configName, enabled = enabled }
+    writefile(AutoLoadConfigPath, HttpService:JSONEncode(data))
+    currentAutoLoad = enabled and configName or nil
+end
+
+local function GetAutoLoadPref()
+    if isfile(AutoLoadConfigPath) then
+        local s, c = pcall(function() return readfile(AutoLoadConfigPath) end)
+        if s then
+            local s2, d = pcall(function() return HttpService:JSONDecode(c) end)
+            if s2 and d then return d end
+        end
+    end
+    return nil
+end
+
+local AutoLoadWrapper = Instance.new("Frame", Page_Save)
+AutoLoadWrapper.BackgroundTransparency = 1; AutoLoadWrapper.Size = UDim2.new(1, -5, 0, 30)
+AutoLoadWrapper.LayoutOrder = 5
+
+local AutoLoadBtn = Instance.new("TextButton", AutoLoadWrapper)
+AutoLoadBtn.BackgroundColor3 = Theme.Input
+AutoLoadBtn.Size = UDim2.new(1, 0, 1, 0)
+AutoLoadBtn.Font = Enum.Font.GothamBold
+AutoLoadBtn.Text = "SET AS AUTOLOAD"
+AutoLoadBtn.TextColor3 = Theme.TextSecondary
+AutoLoadBtn.TextSize = 11
+Instance.new("UICorner", AutoLoadBtn).CornerRadius = UDim.new(0, 6)
+AddStroke(AutoLoadBtn, Theme.Border, 1)
+
+local function UpdateAutoLoadBtnState()
+    local pref = GetAutoLoadPref()
+    if pref and pref.enabled and pref.config == selectedConfig then
+        AutoLoadBtn.BackgroundColor3 = Theme.Success
+        AutoLoadBtn.TextColor3 = Color3.new(1,1,1)
+        AutoLoadBtn.Text = "AUTOLOAD ACTIVE"
+    else
+        AutoLoadBtn.BackgroundColor3 = Theme.Input
+        AutoLoadBtn.TextColor3 = Theme.TextSecondary
+        AutoLoadBtn.Text = "SET AS AUTOLOAD"
+    end
+end
+
+AutoLoadBtn.MouseButton1Click:Connect(function()
+    if not selectedConfig then ShowNotification("Select a config first!", true) return end
+    
+    local pref = GetAutoLoadPref()
+    local isCurrentlyEnabled = (pref and pref.enabled and pref.config == selectedConfig)
+    
+    if isCurrentlyEnabled then
+        SaveAutoLoadPref(selectedConfig, false)
+        ShowNotification("Autoload Disabled", false)
+    else
+        SaveAutoLoadPref(selectedConfig, true)
+        ShowNotification("Autoload Set: " .. selectedConfig, false)
+    end
+    UpdateAutoLoadBtnState()
+end)
+
+-- Hook into selection change to update button status
+local originalRefresh = RefreshConfigList
+RefreshConfigList = function()
+    -- Clear list
+    for _, v in pairs(ConfigList:GetChildren()) do
+        if v:IsA("TextButton") then v:Destroy() end
+    end
+    selectedConfig = nil
+    LoadBtn.BackgroundColor3 = Theme.Input
+    UpdateAutoLoadBtnState() -- Reset state
+    
+    local success, files = pcall(function() return listfiles("XAL_Configs") end)
+    if not success or not files then files = {} end
+
+    for _, file in pairs(files) do
+        local name = file:match("([^/\\]+)$") or file
+        
+        -- Skip autoload.json
+        if name ~= "autoload.json" then 
+            name = name:gsub("%.json$", "")
+            
+            local Btn = Instance.new("TextButton", ConfigList)
+            Btn.BackgroundColor3 = Theme.Background
+            Btn.Size = UDim2.new(1, -8, 0, 24); Btn.Font = Enum.Font.GothamMedium
+            Btn.Text = "  " .. name; Btn.TextColor3 = Theme.TextSecondary
+            Btn.TextSize = 11; Btn.TextXAlignment = "Left"
+            Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 4)
+            
+            Btn.MouseButton1Click:Connect(function()
+                for _, b in pairs(ConfigList:GetChildren()) do
+                    if b:IsA("TextButton") then b.BackgroundColor3 = Theme.Background; b.TextColor3 = Theme.TextSecondary end
+                end
+                Btn.BackgroundColor3 = Theme.Accent
+                Btn.TextColor3 = Color3.new(1, 1, 1)
+                selectedConfig = name
+                LoadBtn.BackgroundColor3 = Theme.Success 
+                UpdateAutoLoadBtnState() -- Update AutoLoad button
+            end)
+        end
+    end
+end
 
 RefreshConfigList() 
 
@@ -2197,3 +2309,12 @@ end
 task.spawn(StartInventoryWatcher)
 
 print("✅ XAL System Session v1.3 Loaded!")
+
+-- Trigger Autoload
+task.delay(1, function()
+    local autoPref = GetAutoLoadPref()
+    if autoPref and autoPref.enabled and autoPref.config then
+        print("🔄 Autoloading Config: " .. autoPref.config)
+        LoadConfig(autoPref.config)
+    end
+end)
