@@ -548,8 +548,12 @@ local function CreateTab(name, target, isDefault)
     Instance.new("UICorner", Indicator).CornerRadius = UDim.new(1, 0)
 
     TabBtn.MouseButton1Click:Connect(function()
-        Page_Webhook.Visible = false; Page_Tag.Visible = false; Page_Save.Visible = false; Page_AdminBoost.Visible = false; Page_SessionStats.Visible = false; Page_Fhising.Visible = false
-        if Page_Setting then Page_Setting.Visible = false end
+        -- Geneic Page Hiding (Hide all pages in ContentContainer)
+        for _, page in pairs(ContentContainer:GetChildren()) do
+            if page:IsA("ScrollingFrame") or page:IsA("Frame") then
+                page.Visible = false
+            end
+        end
         target.Visible = true
 
         for _, child in pairs(MenuContainer:GetChildren()) do
@@ -1090,6 +1094,7 @@ GrabBtn.TextSize = 12
 Instance.new("UICorner", GrabBtn).CornerRadius = UDim.new(0, 6)
 
 GrabBtn.MouseButton1Click:Connect(function()
+    ShowNotification("Grabbing...", false)
     local char = Players.LocalPlayer.Character
     local hrp = char and char:FindFirstChild("HumanoidRootPart")
     local cam = workspace.CurrentCamera
