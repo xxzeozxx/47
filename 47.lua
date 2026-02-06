@@ -590,9 +590,10 @@ local Page_Teleport = CreatePage("Teleport")
 
 
 
-local TeleportList = Instance.new("UIListLayout", Page_Teleport)
-TeleportList.Padding = UDim.new(0, 5)
-TeleportList.SortOrder = Enum.SortOrder.LayoutOrder
+local TeleportGrid = Instance.new("UIGridLayout", Page_Teleport)
+TeleportGrid.CellSize = UDim2.new(0.5, -5, 0, 35)
+TeleportGrid.CellPadding = UDim2.new(0, 5, 0, 5)
+TeleportGrid.SortOrder = Enum.SortOrder.LayoutOrder
 
 CreateTab("Teleport", Page_Teleport)
 
@@ -600,7 +601,6 @@ CreateTab("Teleport", Page_Teleport)
 local function CreateStyledButton(parent, text, color, callback)
     local Frame = Instance.new("Frame", parent)
     Frame.BackgroundColor3 = Theme.Content
-    Frame.Size = UDim2.new(1, -5, 0, 36)
     Frame.BorderSizePixel = 0
     Instance.new("UICorner", Frame).CornerRadius = UDim.new(0, 6)
     AddStroke(Frame, Theme.Border, 1)
@@ -613,21 +613,21 @@ local function CreateStyledButton(parent, text, color, callback)
     Btn.Font = Enum.Font.GothamBold
     Btn.Text = text
     Btn.TextColor3 = Color3.new(1,1,1)
-    Btn.TextSize = 12
+    Btn.TextSize = 11
     Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 4)
     
     Btn.MouseButton1Click:Connect(callback)
     return Btn
 end
 
--- Populate Teleport Buttons (List Mode)
+-- Populate Teleport Buttons (Grid Mode)
 local sortedAreas = {}
 for name, _ in pairs(FishingAreas) do table.insert(sortedAreas, name) end
 table.sort(sortedAreas)
 
 for _, name in ipairs(sortedAreas) do
     local data = FishingAreas[name]
-    CreateStyledButton(Page_Teleport, "Teleport to: " .. name, Theme.Accent, function()
+    CreateStyledButton(Page_Teleport, name, Theme.Accent, function()
         TeleportToLookAt(data.Pos, data.Look)
     end)
 end
