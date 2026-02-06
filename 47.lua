@@ -1261,23 +1261,37 @@ SaveBtn.MouseButton1Click:Connect(function()
     local name = SaveInput.Text
     if name == "" then ShowNotification("Name cannot be empty!", true) return end
     
+    -- 1. Sanitize Settings (Force String Keys)
     local cleanSettings = {}
     for k, v in pairs(Settings) do
-        if type(k) == "string" then
-            cleanSettings[k] = v
+        if type(k) ~= "string" then
+            warn("XAL: Dropped invalid setting key type:", type(k), tostring(k))
         else
-            warn("Removed invalid setting key:", k, "Type:", type(k))
+            cleanSettings[k] = v
         end
     end
 
+    -- 2. Sanitize Players (Force Array 1-20)
+    local cleanPlayers = {}
+    for i = 1, 20 do
+        if TagList[i] and type(TagList[i]) == "table" then
+            cleanPlayers[i] = {tostring(TagList[i][1] or ""), tostring(TagList[i][2] or "")}
+        else
+            cleanPlayers[i] = {"", ""} -- Default empty
+        end
+    end
+
+    -- 3. Sanitize Webhooks (Strings only)
+    local cleanWebhooks = {
+        Fish = tostring(Current_Webhook_Fish or ""),
+        Leave = tostring(Current_Webhook_Leave or ""),
+        List = tostring(Current_Webhook_List or ""),
+        Admin = tostring(Current_Webhook_Admin or "")
+    }
+
     local saveData = {
-        Webhooks = {
-            Fish = Current_Webhook_Fish,
-            Leave = Current_Webhook_Leave,
-            List = Current_Webhook_List,
-            Admin = Current_Webhook_Admin
-        },
-        Players = TagList,
+        Webhooks = cleanWebhooks,
+        Players = cleanPlayers,
         Settings = cleanSettings
     }
     
