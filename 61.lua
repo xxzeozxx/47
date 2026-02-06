@@ -1,3 +1,4 @@
+print("XAL: Script Starting...")
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local StarterGui = game:GetService("StarterGui")
@@ -7,6 +8,8 @@ local CoreGui = game:GetService("CoreGui")
 local TeleportService = game:GetService("TeleportService")
 local GuiService = game:GetService("GuiService")
 local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
 local httpRequest = (syn and syn.request) or (http and http.request) or http_request or (fluxus and fluxus.request) or request
 local ScriptActive = true
 local Connections = {}
@@ -14,6 +17,7 @@ local ScreenGui
 local VirtualUser = game:GetService("VirtualUser")
 local SafeName = "RobloxReplicatedService"
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (gethui and function(g) g.Parent = gethui() end) or function(g) g.Parent = CoreGui end
+local FishingController = require(ReplicatedStorage.Controllers.FishingController)
 
 task.spawn(function()
     while ScriptActive do
@@ -97,8 +101,7 @@ local StoneList = { "Ruby" }
 local Settings = { 
     SecretEnabled = false, 
     RubyEnabled = false, 
-    EvolvedEnabled = false, 
-    LeviathanRageEnabled = false,
+
     MutationCrystalized = false,
     CaveCrystalEnabled = false,
     LeaveEnabled = false, 
@@ -117,7 +120,6 @@ local SessionStats = {
     Secret = 0,
     Ruby = 0,
     Evolved = 0,
-    Rage = 0,
     Crystalized = 0,
     CaveCrystal = 0,
     TotalSent = 0
@@ -327,28 +329,17 @@ local MenuContainer = Instance.new("Frame", Sidebar)
 MenuContainer.BackgroundTransparency = 1
 MenuContainer.Size = UDim2.new(1, 0, 1, -25) 
 MenuContainer.Position = UDim2.new(0, 0, 0, 5)
+MenuContainer.ZIndex = 5 -- Boost ZIndex
 
 local SideLayout = Instance.new("UIListLayout", MenuContainer)
 SideLayout.Padding = UDim.new(0, 2) 
 SideLayout.HorizontalAlignment = "Center"
 Instance.new("UIPadding", MenuContainer).PaddingTop = UDim.new(0, 8)
 
-local Watermark = Instance.new("TextLabel", Sidebar)
-Watermark.Name = "Watermark"
-Watermark.BackgroundColor3 = Theme.Background 
-Watermark.BackgroundTransparency = 1 
-Watermark.BorderSizePixel = 0
-Watermark.Position = UDim2.new(0, 0, 1, -25) 
-Watermark.Size = UDim2.new(1, 0, 0, 20) 
-Watermark.Font = Enum.Font.GothamBold
-Watermark.Text = "ALgiFH"
-Watermark.TextColor3 = Theme.Accent 
-Watermark.TextSize = 11 
-Watermark.ZIndex = 5
 
 local ContentContainer = Instance.new("Frame", MainFrame)
 ContentContainer.BackgroundTransparency = 1
-ContentContainer.Position = UDim2.new(0, 115, 0, 42) 
+ContentContainer.Position = UDim2.new(0, 120, 0, 42) -- Increased offset
 ContentContainer.Size = UDim2.new(1, -120, 1, -48) 
 ContentContainer.ZIndex = 3
 
@@ -360,7 +351,7 @@ ModalFrame.Position = UDim2.new(0.5, -120, 0.5, -55)
 ModalFrame.BorderSizePixel = 0
 ModalFrame.ZIndex = 100 
 ModalFrame.Visible = false
-ModalFrame.Active = true 
+ModalFrame.Active = false  -- Changed to false to prevent blocking input
 Instance.new("UICorner", ModalFrame).CornerRadius = UDim.new(0, 8)
 AddStroke(ModalFrame, Theme.Border, 1)
 
@@ -431,12 +422,14 @@ local function CreatePage(name)
 end
 
 local Page_Webhook = CreatePage("Webhook")
-local Page_Config = CreatePage("Config") 
+local Page_Config = nil -- Deprecated
 local Page_Save = CreatePage("SaveConfig") 
-local Page_Url = CreatePage("UrlWebhook") 
+-- local Page_Url = CreatePage("UrlWebhook") -- Removed
 local Page_Tag = CreatePage("TagDiscord")
 local Page_AdminBoost = CreatePage("AdminBoost")
 local Page_SessionStats = CreatePage("SessionStats")
+local Page_Fhising = CreatePage("Fhising")
+local Page_Setting -- Forward declaration for Setting Tab
 
 Page_Webhook.Visible = false
 
@@ -448,7 +441,7 @@ local function CreateTab(name, target, isDefault)
     TabBtn.Font = Enum.Font.GothamMedium 
     TabBtn.Text = name
     TabBtn.TextColor3 = Theme.TextSecondary
-    TabBtn.TextSize = 12 
+    TabBtn.TextSize = 11
     TabBtn.ZIndex = 3
     Instance.new("UICorner", TabBtn).CornerRadius = UDim.new(0, 4)
     
@@ -462,7 +455,8 @@ local function CreateTab(name, target, isDefault)
     Instance.new("UICorner", Indicator).CornerRadius = UDim.new(1, 0)
 
     TabBtn.MouseButton1Click:Connect(function()
-        Page_Webhook.Visible = false; Page_Config.Visible = false; Page_Tag.Visible = false; Page_Url.Visible = false; Page_Save.Visible = false; Page_AdminBoost.Visible = false; Page_SessionStats.Visible = false
+        Page_Webhook.Visible = false; Page_Tag.Visible = false; Page_Save.Visible = false; Page_AdminBoost.Visible = false; Page_SessionStats.Visible = false; Page_Fhising.Visible = false
+        if Page_Setting then Page_Setting.Visible = false end
         target.Visible = true
 
         for _, child in pairs(MenuContainer:GetChildren()) do
@@ -493,12 +487,19 @@ local function CreateTab(name, target, isDefault)
 end
 
 CreateTab("Server Info", Page_SessionStats, true)
+CreateTab("Fhising", Page_Fhising)
 CreateTab("Notification", Page_Webhook)
 CreateTab("Admin Boost", Page_AdminBoost)
-CreateTab("Webhook", Page_Url)
+-- CreateTab("Webhook", Page_Url) -- Removed
 CreateTab("List Player", Page_Tag)
-CreateTab("Import List", Page_Config) 
+-- SETTING TAB
+Page_Setting = Instance.new("ScrollingFrame", ContentContainer)
+Page_Setting.Name = "Page_Setting"; Page_Setting.Size = UDim2.new(1, 0, 1, 0); Page_Setting.BackgroundTransparency = 1; Page_Setting.Visible = false; Page_Setting.ScrollBarThickness = 2
+Instance.new("UIListLayout", Page_Setting).Padding = UDim.new(0, 5)
+CreateTab("Setting", Page_Setting)
 CreateTab("Save Config", Page_Save) 
+
+
 
 local function CreateToggle(parent, text, default, callback, validationFunc)
     local Frame = Instance.new("Frame", parent)
@@ -587,51 +588,472 @@ local function CreateInput(parent, placeholder, default, callback, height)
     return Input
 end
 
-local BulkLabel = Instance.new("TextLabel", Page_Config)
-BulkLabel.BackgroundTransparency = 1; BulkLabel.Size = UDim2.new(1, 0, 0, 20)
-BulkLabel.Font = Enum.Font.GothamBold; BulkLabel.Text = "Bulk Input (Format: User:DiscordID)"; BulkLabel.TextColor3 = Theme.TextSecondary; BulkLabel.TextSize = 11; BulkLabel.TextXAlignment = "Left"
+local function CreateDropdown(parent, labelText, options, default, callback)
+    local Frame = Instance.new("Frame", parent)
+    Frame.BackgroundColor3 = Theme.Content
+    Frame.Size = UDim2.new(1, -5, 0, 36)
+    Frame.BorderSizePixel = 0
+    Instance.new("UICorner", Frame).CornerRadius = UDim.new(0, 6)
+    AddStroke(Frame, Theme.Border, 1)
 
-local BulkContainer = Instance.new("Frame", Page_Config)
-BulkContainer.BackgroundColor3 = Theme.Content; BulkContainer.Size = UDim2.new(1, -5, 0, 100); BulkContainer.BorderSizePixel = 0
-Instance.new("UICorner", BulkContainer).CornerRadius = UDim.new(0, 6)
-AddStroke(BulkContainer, Theme.Border, 1)
+    local Label = Instance.new("TextLabel", Frame)
+    Label.BackgroundTransparency = 1; Label.Position = UDim2.new(0, 10, 0, 0); Label.Size = UDim2.new(0, 140, 1, 0)
+    Label.Font = Enum.Font.GothamBold; Label.Text = labelText; Label.TextColor3 = Theme.TextPrimary; Label.TextSize = 12; Label.TextXAlignment = "Left"
 
-local BulkInput = Instance.new("TextBox", BulkContainer)
-BulkInput.BackgroundTransparency = 1; BulkInput.Position = UDim2.new(0, 8, 0, 8); BulkInput.Size = UDim2.new(1, -16, 1, -16)
-BulkInput.Font = Enum.Font.GothamMedium; BulkInput.Text = ""; BulkInput.PlaceholderText = "Username:DiscordID\nUsername:DiscordID"; BulkInput.TextColor3 = Theme.TextPrimary; BulkInput.TextSize = 11; BulkInput.TextXAlignment = "Left"; BulkInput.TextYAlignment = "Top"; BulkInput.MultiLine = true; BulkInput.ClearTextOnFocus = false; BulkInput.TextWrapped = true
-
-local ImportBtnWrapper = Instance.new("Frame", Page_Config)
-ImportBtnWrapper.BackgroundTransparency = 1; ImportBtnWrapper.Size = UDim2.new(1, -5, 0, 26); ImportBtnWrapper.Position = UDim2.new(0, 0, 0, 110)
-
-local ImportBtn = Instance.new("TextButton", ImportBtnWrapper)
-ImportBtn.BackgroundColor3 = Theme.Success; ImportBtn.BackgroundTransparency = 0.1; ImportBtn.Size = UDim2.new(1, 0, 0, 26)
-ImportBtn.Font = Enum.Font.GothamBold; ImportBtn.Text = "IMPORT BULK DATA"; ImportBtn.TextColor3 = Color3.new(1, 1, 1); ImportBtn.TextSize = 11
-Instance.new("UICorner", ImportBtn).CornerRadius = UDim.new(0, 6)
-
-ImportBtn.MouseButton1Click:Connect(function()
-    local text = BulkInput.Text
-    local addedCount = 0; local listFull = false; local currentIndex = 3
+    local currentVal = default or (options and options[1]) or "None"
     
-    while currentIndex <= 20 and TagList[currentIndex][1] ~= "" do currentIndex = currentIndex + 1 end
+    local DropBtn = Instance.new("TextButton", Frame)
+    DropBtn.BackgroundColor3 = Theme.Input
+    DropBtn.Position = UDim2.new(0, 160, 0.5, -10)
+    DropBtn.Size = UDim2.new(1, -170, 0, 20)
+    DropBtn.Font = Enum.Font.GothamMedium
+    DropBtn.Text = currentVal .. " v"
+    DropBtn.TextColor3 = Theme.TextPrimary
+    DropBtn.TextSize = 11
+    Instance.new("UICorner", DropBtn).CornerRadius = UDim.new(0, 4)
+    AddStroke(DropBtn, Theme.Border, 1)
     
-    if currentIndex > 20 then ShowNotification("List Player Full!", true) return end
-    
-    local maxImport = 18
-    local processed = 0
-    
-    for line in text:gmatch("[^\r\n]+") do
-        if currentIndex > 20 or processed >= maxImport then listFull = true; break end
-        local split = string.split(line, ":"); local user = split[1] or ""; local id = split[2] or ""
-        user = user:match("^%s*(.-)%s*$"); id = id:match("^%s*(.-)%s*$")
-        if user ~= "" then
-            TagList[currentIndex] = {user, id}
-            if TagUIElements[currentIndex] then TagUIElements[currentIndex].User.Text = user; TagUIElements[currentIndex].ID.Text = id end
-            currentIndex = currentIndex + 1; addedCount = addedCount + 1; processed = processed + 1
+    DropBtn.MouseButton1Click:Connect(function()
+        if MainFrame:FindFirstChild("DropdownList_" .. labelText) then 
+            MainFrame:FindFirstChild("DropdownList_" .. labelText):Destroy() 
+            return 
+        end
+        
+        local Float = Instance.new("ScrollingFrame", MainFrame)
+        Float.Name = "DropdownList_" .. labelText
+        Float.BackgroundColor3 = Theme.Content
+        Float.Size = UDim2.new(0, 200, 0, math.min(#options * 25 + 5, 200))
+        Float.Position = UDim2.new(0.5, -100, 0.5, -75)
+        Float.ZIndex = 200
+        Float.ScrollBarThickness = 4
+        Instance.new("UICorner", Float).CornerRadius = UDim.new(0, 6)
+        AddStroke(Float, Theme.Accent, 1)
+        
+        local ListLayout = Instance.new("UIListLayout", Float)
+        ListLayout.Padding = UDim.new(0, 2)
+        
+        for _, opt in ipairs(options) do
+            local OBtn = Instance.new("TextButton", Float)
+            OBtn.Size = UDim2.new(1,0,0,25)
+            OBtn.BackgroundColor3 = Theme.Input
+            OBtn.BackgroundTransparency = 0.5
+            OBtn.Text = opt
+            OBtn.TextColor3 = Theme.TextPrimary
+            OBtn.Font = Enum.Font.GothamMedium
+            OBtn.TextSize = 11
+            
+            OBtn.MouseButton1Click:Connect(function()
+                currentVal = opt
+                DropBtn.Text = currentVal .. " v"
+                callback(opt)
+                Float:Destroy()
+            end)
+        end
+        
+        local Close = Instance.new("TextButton", Float)
+        Close.Size = UDim2.new(1,0,0,20)
+        Close.BackgroundColor3 = Theme.Error
+        Close.Text = "CLOSE"
+        Close.TextColor3 = Color3.new(1,1,1)
+        Close.TextSize = 10
+        Close.MouseButton1Click:Connect(function() Float:Destroy() end)
+    end)
+end
+
+-- Feature Helpers
+local RPath = {"Packages", "_Index", "sleitnick_net@0.2.0", "net"}
+local function GetRemote(name)
+    local curr = ReplicatedStorage
+    for _, child in ipairs(RPath) do
+        curr = curr:WaitForChild(child, 1)
+        if not curr then return nil end
+    end
+    return curr:FindFirstChild(name)
+end
+
+-- Helper for Detector Stuck
+local function getFishCount()
+    local playerGui = Players.LocalPlayer:WaitForChild("PlayerGui", 5)
+    if not playerGui then return 0 end
+    local inv = playerGui:FindFirstChild("Inventory")
+    if inv then
+        local label = inv:FindFirstChild("Main") and inv.Main:FindFirstChild("Top") and inv.Main.Top:FindFirstChild("Options") and inv.Main.Top.Options:FindFirstChild("Fish") and inv.Main.Top.Options.Fish:FindFirstChild("Label") and inv.Main.Top.Options.Fish.Label:FindFirstChild("BagSize")
+        if label then
+            return tonumber((label.Text or "0/???"):match("(%d+)/")) or 0
         end
     end
-    if addedCount > 0 then BulkInput.Text = ""; ShowNotification("Imported " .. addedCount .. " Players!") else if not listFull then ShowNotification("No Data Found!", true) end end
-    if listFull then ShowNotification("List Full (Max 18 Imported)", true) end
+    return 0
+end
+
+local DetectorStuckEnabled = false
+local StuckThreshold = 15
+local LastFishCount = 0
+local StuckTimer = 0
+local SavedCFrame = nil
+
+CreateToggle(Page_Fhising, "Detector Stuck (15s)", false, function(state)
+    DetectorStuckEnabled = state
+    if state then
+        LastFishCount = getFishCount()
+        StuckTimer = 0
+        local char = Players.LocalPlayer.Character or Players.LocalPlayer.CharacterAdded:Wait()
+        SavedCFrame = char:WaitForChild("HumanoidRootPart").CFrame
+        
+        task.spawn(function()
+            while DetectorStuckEnabled and ScriptActive do
+                task.wait(1)
+                local currentFish = getFishCount()
+                if currentFish == LastFishCount then
+                    StuckTimer = StuckTimer + 1
+                    if StuckTimer >= StuckThreshold then
+                         ShowNotification("Stuck Detected! Resetting...", true)
+                         
+                         local char = Players.LocalPlayer.Character
+                         if char and char:FindFirstChild("HumanoidRootPart") then
+                            SavedCFrame = char.HumanoidRootPart.CFrame
+                         end
+                         
+                         if char then char:BreakJoints() end
+                         
+                         local newChar = Players.LocalPlayer.CharacterAdded:Wait()
+                         local hrp = newChar:WaitForChild("HumanoidRootPart")
+                         task.wait(0.5)
+                         hrp.CFrame = SavedCFrame
+                         
+                         StuckTimer = 0
+                         LastFishCount = getFishCount()
+                         
+                         -- Re-Equip Rod (Assuming slot 1)
+                         local RE_Equip = GetRemote("RE/EquipToolFromHotbar")
+                         if RE_Equip then pcall(function() RE_Equip:FireServer(1) end) end
+                    end
+                else
+                    LastFishCount = currentFish
+                    StuckTimer = 0
+                end
+            end
+        end)
+    end
 end)
+
+local AutoShakeEnabled = false
+CreateToggle(Page_Fhising, "Auto Click Fishing", false, function(val)
+    AutoShakeEnabled = val
+    local clickEffect = Players.LocalPlayer.PlayerGui:FindFirstChild("!!! Click Effect")
+    if AutoShakeEnabled then
+        if clickEffect then clickEffect.Enabled = false end
+        task.spawn(function()
+            while AutoShakeEnabled and ScriptActive do
+                pcall(function() FishingController:RequestFishingMinigameClick() end)
+                task.wait(0.1)
+            end
+        end)
+    elseif clickEffect then
+        clickEffect.Enabled = true
+    end
+end)
+
+-- AUTO SELL FISH
+local AutoSellEnabled = false
+local SellMethod = "Count" 
+local SellValue = 600 
+
+CreateToggle(Page_Fhising, "Auto Sell (10m / 600 Items)", false, function(state)
+    AutoSellEnabled = state
+    if state then
+        local RF_Sell = GetRemote("RF/SellAllItems")
+        if not RF_Sell then ShowNotification("Remote Sell Missing!", true) AutoSellEnabled = false return end
+        
+        task.spawn(function()
+            local LastSellTime = tick()
+            while AutoSellEnabled and ScriptActive do
+                if (tick() - LastSellTime) >= 600 then
+                    pcall(function() RF_Sell:InvokeServer() end)
+                    LastSellTime = tick()
+                end
+
+                local Replion = require(game:GetService("ReplicatedStorage").Packages.Replion).Client:WaitReplion("Data", 1)
+                if Replion then
+                     local s, d = pcall(function() return Replion:GetExpect("Inventory") end)
+                     if s and d and d.Items then
+                        if #d.Items >= SellValue then
+                            pcall(function() RF_Sell:InvokeServer() end)
+                            LastSellTime = tick()
+                            task.wait(1)
+                        end
+                     end
+                end
+                task.wait(1)
+            end
+        end)
+    end
+end)
+
+-- AUTO BUY WEATHER
+local WeatherList = { "Wind", "Cloudy", "Storm" }
+local SimpleWeatherEnabled = false
+
+CreateToggle(Page_Fhising, "Enable Auto Buy Weather", false, function(state)
+    SimpleWeatherEnabled = state
+    if state then
+        local RF_BuyWeather = GetRemote("RF/PurchaseWeatherEvent")
+        if not RF_BuyWeather then ShowNotification("Remote Weather Missing!", true) SimpleWeatherEnabled = false return end
+        
+        task.spawn(function()
+            while SimpleWeatherEnabled and ScriptActive do
+                for _, w in ipairs(WeatherList) do
+                    if not SimpleWeatherEnabled then break end
+                    pcall(function() RF_BuyWeather:InvokeServer(w) end)
+                    task.wait(2) 
+                end
+                task.wait(5)
+            end
+        end)
+    end
+end)
+
+-- AUTO SPAWN TOTEM
+local TotemList = {"Luck Totem", "Mutation Totem", "Shiny Totem"}
+local SelectedTotem = "Luck Totem"
+local TotemMap = {["Luck Totem"]=1, ["Mutation Totem"]=2, ["Shiny Totem"]=3}
+local AutoTotemEnabled = false
+
+CreateDropdown(Page_Fhising, "Select Totem", TotemList, "Luck Totem", function(v) SelectedTotem = v end)
+CreateToggle(Page_Fhising, "Enable Auto Spawn Totem", false, function(state)
+    AutoTotemEnabled = state
+    if state then
+        local RE_Spawn = GetRemote("RE/SpawnTotem")
+        local RE_Equip = GetRemote("RE/EquipToolFromHotbar")
+        if not RE_Spawn then ShowNotification("Remote Totem Missing!", true) AutoTotemEnabled = false return end
+        
+        task.spawn(function()
+            while AutoTotemEnabled and ScriptActive do
+                local Replion = require(game:GetService("ReplicatedStorage").Packages.Replion).Client:WaitReplion("Data", 2)
+                local uuid = nil
+                if Replion then
+                    local s, d = pcall(function() return Replion:GetExpect("Inventory") end)
+                    if s and d and d.Totems then
+                         for _, i in ipairs(d.Totems) do
+                            if tonumber(i.Id) == TotemMap[SelectedTotem] and (i.Count or 1) >= 1 then
+                                uuid = i.UUID
+                                break
+                            end
+                         end
+                    end
+                end
+                
+                if uuid then
+                    pcall(function() RE_Spawn:FireServer(uuid) end)
+                    task.wait(1)
+                    pcall(function() RE_Equip:FireServer(1) end) 
+                    task.wait(3600) 
+                else
+                    ShowNotification("Totem UUID Not Found!", true)
+                    task.wait(5)
+                end
+            end
+        end)
+    end
+end)
+
+-- WALK ON WATER
+local WalkOnWaterEnabled = false
+local WaterPlatform = nil
+local WalkConnection = nil
+
+-- ANTI AFK
+-- Anti AFK (Always Active)
+task.spawn(function()
+    local afkConn = Players.LocalPlayer.Idled:Connect(function()
+        VirtualUser:CaptureController()
+        VirtualUser:ClickButton2(Vector2.new())
+    end)
+    table.insert(Connections, afkConn)
+
+    for i, v in pairs(getconnections(Players.LocalPlayer.Idled)) do
+        if v.Disable then v:Disable() end
+    end
+    print("XAL: Anti-AFK Active")
+end)
+
+CreateToggle(Page_Setting, "Walk On Water", false, function(state)
+    WalkOnWaterEnabled = state
+    if state then
+        if not WaterPlatform then
+             WaterPlatform = Instance.new("Part")
+             WaterPlatform.Name = "WaterPlatform"
+             WaterPlatform.Anchored = true
+             WaterPlatform.CanCollide = true
+             WaterPlatform.Transparency = 1
+             WaterPlatform.Size = Vector3.new(15, 1, 15)
+             WaterPlatform.Parent = workspace
+        end
+        
+        if WalkConnection then WalkConnection:Disconnect() end
+        WalkConnection = RunService.RenderStepped:Connect(function()
+             if not ScriptActive then 
+                 if WalkConnection then WalkConnection:Disconnect() end 
+                 return 
+             end
+             local char = Players.LocalPlayer.Character
+             if not WalkOnWaterEnabled or not char then return end
+             local hrp = char:FindFirstChild("HumanoidRootPart")
+             if not hrp then return end
+             
+             if not WaterPlatform or not WaterPlatform.Parent then
+                 WaterPlatform = Instance.new("Part")
+                 WaterPlatform.Name = "WaterPlatform"
+                 WaterPlatform.Anchored = true
+                 WaterPlatform.CanCollide = true
+                 WaterPlatform.Transparency = 1
+                 WaterPlatform.Size = Vector3.new(15, 1, 15)
+                 WaterPlatform.Parent = workspace
+             end
+             
+             local params = RaycastParams.new()
+             params.FilterDescendantsInstances = {workspace.Terrain}
+             params.FilterType = Enum.RaycastFilterType.Include
+             params.IgnoreWater = false
+             
+             local origin = hrp.Position + Vector3.new(0, 5, 0)
+             local dir = Vector3.new(0, -500, 0)
+             local res = workspace:Raycast(origin, dir, params)
+             
+             if res and res.Material == Enum.Material.Water then
+                 local waterHeight = res.Position.Y
+                 WaterPlatform.Position = Vector3.new(hrp.Position.X, waterHeight, hrp.Position.Z)
+                 
+                 if hrp.Position.Y < (waterHeight + 2) and hrp.Position.Y > (waterHeight - 5) then
+                     if not UserInputService:IsKeyDown(Enum.KeyCode.Space) then
+                         hrp.CFrame = CFrame.new(hrp.Position.X, waterHeight + 3.2, hrp.Position.Z)
+                     end
+                 end
+             else
+                 WaterPlatform.Position = Vector3.new(hrp.Position.X, -500, hrp.Position.Z)
+             end
+        end)
+    else
+        WalkOnWaterEnabled = false
+        if WalkConnection then WalkConnection:Disconnect() WalkConnection = nil end
+        if WaterPlatform then WaterPlatform:Destroy() WaterPlatform = nil end
+    end
+end)
+
+-- SETTING FEATURES
+-- 1. Remove Fish Notification Pop-up
+local DisableNotificationConnection = nil
+CreateToggle(Page_Setting, "Remove Fish Notification Pop-up", false, function(state)
+    local PlayerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
+    local SmallNotification = PlayerGui:FindFirstChild("Small Notification")
+    
+    if not SmallNotification then
+        SmallNotification = PlayerGui:WaitForChild("Small Notification", 5)
+    end
+
+    if state then
+        if SmallNotification then
+             DisableNotificationConnection = RunService.RenderStepped:Connect(function()
+                 if not ScriptActive then
+                     if DisableNotificationConnection then DisableNotificationConnection:Disconnect() end
+                     return
+                 end
+                 SmallNotification.Enabled = false
+             end)
+             ShowNotification("Pop-up Diblokir", false)
+        end
+    else
+        if DisableNotificationConnection then
+            DisableNotificationConnection:Disconnect()
+            DisableNotificationConnection = nil
+        end
+        if SmallNotification then SmallNotification.Enabled = true end
+        ShowNotification("Pop-up Diaktifkan", false)
+    end
+end)
+
+-- 2. No Animation
+local isNoAnimationActive = false
+local originalAnimator = nil
+local originalAnimateScript = nil
+
+local function DisableAnimations()
+    local character = Players.LocalPlayer.Character or Players.LocalPlayer.CharacterAdded:Wait()
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
+    if not humanoid then return end
+
+    local animateScript = character:FindFirstChild("Animate")
+    if animateScript and animateScript:IsA("LocalScript") and animateScript.Enabled then
+        originalAnimateScript = animateScript.Enabled
+        animateScript.Enabled = false
+    end
+    
+    local animator = humanoid:FindFirstChildOfClass("Animator")
+    if animator then
+        originalAnimator = animator
+        animator:Destroy()
+    end
+end
+
+local function EnableAnimations()
+    local character = Players.LocalPlayer.Character
+    local animateScript = character and character:FindFirstChild("Animate")
+    if animateScript and originalAnimateScript ~= nil then
+        animateScript.Enabled = originalAnimateScript
+    end
+    
+    local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+    if humanoid then
+        if not humanoid:FindFirstChildOfClass("Animator") then
+             if originalAnimator then originalAnimator.Parent = humanoid else Instance.new("Animator", humanoid) end
+        end
+    end
+end
+
+table.insert(Connections, Players.LocalPlayer.CharacterAdded:Connect(function(newChar)
+    if isNoAnimationActive then
+        task.wait(0.2)
+        DisableAnimations()
+    end
+end))
+
+CreateToggle(Page_Setting, "No Animation", false, function(state)
+    isNoAnimationActive = state
+    if state then
+        DisableAnimations()
+        ShowNotification("No Animation ON", false)
+    else
+        EnableAnimations()
+        ShowNotification("No Animation OFF", false)
+    end
+end)
+
+-- 3. Remove Skin Effect
+local VFXControllerModule = require(ReplicatedStorage.Controllers.VFXController)
+local originalVFXHandle = VFXControllerModule.Handle
+local isVFXDisabled = false
+
+CreateToggle(Page_Setting, "Remove Skin Effect", false, function(state)
+    isVFXDisabled = state
+    if state then
+        VFXControllerModule.Handle = function(...) end
+        VFXControllerModule.RenderAtPoint = function(...) end
+        VFXControllerModule.RenderInstance = function(...) end
+        
+        local cosmeticFolder = workspace:FindFirstChild("CosmeticFolder")
+        if cosmeticFolder then pcall(function() cosmeticFolder:ClearAllChildren() end) end
+        ShowNotification("No Skin Effect ON", false)
+    else
+        VFXControllerModule.Handle = originalVFXHandle
+        ShowNotification("Skin Effect Restored (Rejoin to fully fix)", false)
+    end
+end)
+
+local BulkContainer = nil
+local BulkInput = nil
+local ImportBtnWrapper = nil
+local ImportBtn = nil
+-- End Moved
+
 
 local SaveInput = CreateInput(Page_Save, "Config Name", "", function(v) end, 36)
 
@@ -787,45 +1209,216 @@ end)
 
 RefreshConfigList() 
 
+local function ShowAlert(title, msg)
+    local AlertFrame = Instance.new("Frame", ScreenGui)
+    AlertFrame.Name = "AlertFrame"
+    AlertFrame.BackgroundColor3 = Theme.Header
+    AlertFrame.Size = UDim2.new(0, 300, 0, 200)
+    AlertFrame.Position = UDim2.new(0.5, -150, 0.5, -100)
+    AlertFrame.BorderSizePixel = 0
+    AlertFrame.ZIndex = 300
+    AlertFrame.Visible = true
+    Instance.new("UICorner", AlertFrame).CornerRadius = UDim.new(0, 8)
+    AddStroke(AlertFrame, Theme.Border, 1)
+
+    local AlertShadow = Instance.new("ImageLabel", AlertFrame)
+    AlertShadow.Image = "rbxassetid://6014261993"
+    AlertShadow.ImageColor3 = Color3.new(0,0,0)
+    AlertShadow.ImageTransparency = 0.5
+    AlertShadow.BackgroundTransparency = 1
+    AlertShadow.Position = UDim2.new(0.5,0,0.5,0)
+    AlertShadow.AnchorPoint = Vector2.new(0.5,0.5)
+    AlertShadow.Size = UDim2.new(1,50,1,50)
+    AlertShadow.SliceCenter = Rect.new(49,49,450,450)
+    AlertShadow.ScaleType = Enum.ScaleType.Slice
+    AlertShadow.ZIndex = 299
+
+    local AlertTitle = Instance.new("TextLabel", AlertFrame)
+    AlertTitle.BackgroundTransparency = 1
+    AlertTitle.Position = UDim2.new(0, 10, 0, 10)
+    AlertTitle.Size = UDim2.new(1, -20, 0, 20)
+    AlertTitle.Font = Enum.Font.GothamBold
+    AlertTitle.Text = title
+    AlertTitle.TextColor3 = Theme.TextPrimary
+    AlertTitle.TextSize = 14
+    AlertTitle.ZIndex = 302
+
+    local AlertMsg = Instance.new("TextBox", AlertFrame)
+    AlertMsg.BackgroundTransparency = 1
+    AlertMsg.Position = UDim2.new(0, 10, 0, 40)
+    AlertMsg.Size = UDim2.new(1, -20, 1, -80)
+    AlertMsg.Font = Enum.Font.GothamMedium
+    AlertMsg.Text = msg
+    AlertMsg.TextColor3 = Theme.TextSecondary
+    AlertMsg.TextSize = 11
+    AlertMsg.TextXAlignment = "Left"
+    AlertMsg.TextYAlignment = "Top"
+    AlertMsg.MultiLine = true
+    AlertMsg.TextWrapped = true
+    AlertMsg.ClearTextOnFocus = false
+    AlertMsg.Editable = false
+    AlertMsg.ZIndex = 302
+
+    local OkBtn = Instance.new("TextButton", AlertFrame)
+    OkBtn.BackgroundColor3 = Theme.Accent
+    OkBtn.Position = UDim2.new(0.5, -40, 1, -35)
+    OkBtn.Size = UDim2.new(0, 80, 0, 25)
+    OkBtn.Font = Enum.Font.GothamBold
+    OkBtn.Text = "OK"
+    OkBtn.TextColor3 = Color3.new(1,1,1)
+    OkBtn.TextSize = 12
+    OkBtn.ZIndex = 302
+    Instance.new("UICorner", OkBtn).CornerRadius = UDim.new(0, 6)
+    
+    OkBtn.MouseButton1Click:Connect(function()
+        AlertFrame:Destroy()
+    end)
+end
+
 local function TestWebhook(url, name)
     if not ScriptActive then return end
     if url == "" then ShowNotification("URL Empty!", true) return end
     ShowNotification("Sending Test...", false)
     task.spawn(function()
         local p = { content = "✅ **TEST:** " .. name .. " Connected!", username = "XAL Notifications!", avatar_url = "https://i.imgur.com/GWx0mX9.jpeg" }
-        httpRequest({ Url = url, Method = "POST", Headers = {["Content-Type"]="application/json"}, Body = HttpService:JSONEncode(p) })
+        local success, response = pcall(function()
+            return httpRequest({ Url = url, Method = "POST", Headers = {["Content-Type"]="application/json"}, Body = HttpService:JSONEncode(p) })
+        end)
+        
+        if success and response then
+            local status = response.StatusCode or "Unknown"
+            local body = response.Body or "No Body"
+            
+            if status and (status < 200 or status >= 300) then
+                ShowAlert("Webhook Failed: " .. status, "Response Body:\n" .. string.sub(tostring(body), 1, 500))
+                ShowNotification("Failed: " .. status, true)
+            else
+                ShowNotification("Success: " .. status, false)
+            end
+        else
+            ShowAlert("Request Error", "Error: " .. tostring(response))
+            ShowNotification("Request Error!", true)
+        end
     end)
 end
 
-local TestAllBtn = Instance.new("TextButton", Page_Url)
-TestAllBtn.BackgroundColor3 = Theme.Accent
-TestAllBtn.Size = UDim2.new(1, -5, 0, 30)
-TestAllBtn.Font = Enum.Font.GothamBold
-TestAllBtn.Text = "TEST ALL CONNECTION"
-TestAllBtn.TextColor3 = Color3.new(1, 1, 1)
-TestAllBtn.TextSize = 12
-TestAllBtn.LayoutOrder = -1
-Instance.new("UICorner", TestAllBtn).CornerRadius = UDim.new(0, 6)
 
-TestAllBtn.MouseButton1Click:Connect(function()
-    local c = 0
-    if Current_Webhook_Fish ~= "" then TestWebhook(Current_Webhook_Fish, "Fish"); c=c+1 end
-    if Current_Webhook_Leave ~= "" then TestWebhook(Current_Webhook_Leave, "Leave"); c=c+1 end
-    if Current_Webhook_List ~= "" then TestWebhook(Current_Webhook_List, "Player List"); c=c+1 end
-    if Current_Webhook_Admin ~= "" then TestWebhook(Current_Webhook_Admin, "Admin"); c=c+1 end
-    if c == 0 then ShowNotification("No Webhooks Set!", true) else ShowNotification("Testing " .. c .. " Webhooks...", false) end
+
+-- Page_Tag Sub-Menu Setup
+local SubTabContainer = Instance.new("Frame", Page_Tag)
+SubTabContainer.BackgroundColor3 = Theme.Content
+SubTabContainer.BackgroundTransparency = 1
+SubTabContainer.Size = UDim2.new(1, -5, 0, 30)
+SubTabContainer.LayoutOrder = -2
+
+local BtnListPlayer = Instance.new("TextButton", SubTabContainer)
+BtnListPlayer.BackgroundColor3 = Theme.Accent
+BtnListPlayer.Size = UDim2.new(0.5, -3, 1, 0)
+BtnListPlayer.Font = Enum.Font.GothamBold
+BtnListPlayer.Text = "LIST PLAYER"
+BtnListPlayer.TextColor3 = Color3.new(1,1,1)
+BtnListPlayer.TextSize = 11
+Instance.new("UICorner", BtnListPlayer).CornerRadius = UDim.new(0, 6)
+
+local BtnImportList = Instance.new("TextButton", SubTabContainer)
+BtnImportList.BackgroundColor3 = Theme.Input
+BtnImportList.Position = UDim2.new(0.5, 3, 0, 0)
+BtnImportList.Size = UDim2.new(0.5, -3, 1, 0)
+BtnImportList.Font = Enum.Font.GothamBold
+BtnImportList.Text = "IMPORT LIST"
+BtnImportList.TextColor3 = Theme.TextSecondary
+BtnImportList.TextSize = 11
+Instance.new("UICorner", BtnImportList).CornerRadius = UDim.new(0, 6)
+
+local View_List = Instance.new("Frame", Page_Tag)
+View_List.BackgroundTransparency = 1
+View_List.Size = UDim2.new(1, 0, 0, 0)
+View_List.AutomaticSize = Enum.AutomaticSize.Y
+View_List.LayoutOrder = 1
+local ListLayout_List = Instance.new("UIListLayout", View_List)
+ListLayout_List.Padding = UDim.new(0, 6)
+ListLayout_List.SortOrder = Enum.SortOrder.LayoutOrder
+
+local View_Import = Instance.new("Frame", Page_Tag)
+View_Import.BackgroundTransparency = 1
+View_Import.Size = UDim2.new(1, 0, 0, 0)
+View_Import.AutomaticSize = Enum.AutomaticSize.Y
+View_Import.Visible = false
+View_Import.LayoutOrder = 2
+local ListLayout_Import = Instance.new("UIListLayout", View_Import)
+ListLayout_Import.Padding = UDim.new(0, 6)
+ListLayout_Import.SortOrder = Enum.SortOrder.LayoutOrder
+
+BtnListPlayer.MouseButton1Click:Connect(function()
+    View_List.Visible = true
+    View_Import.Visible = false
+    BtnListPlayer.BackgroundColor3 = Theme.Accent
+    BtnListPlayer.TextColor3 = Color3.new(1,1,1)
+    BtnImportList.BackgroundColor3 = Theme.Input
+    BtnImportList.TextColor3 = Theme.TextSecondary
 end)
 
-local SpacerW = Instance.new("Frame", Page_Url); SpacerW.BackgroundTransparency=1; SpacerW.Size=UDim2.new(1,0,0,0); SpacerW.LayoutOrder = -1
+BtnImportList.MouseButton1Click:Connect(function()
+    View_List.Visible = false
+    View_Import.Visible = true
+    BtnListPlayer.BackgroundColor3 = Theme.Input
+    BtnListPlayer.TextColor3 = Theme.TextSecondary
+    BtnImportList.BackgroundColor3 = Theme.Accent
+    BtnImportList.TextColor3 = Color3.new(1,1,1)
+end)
 
-UI_FishInput = CreateInput(Page_Url, "Fish Caught", Current_Webhook_Fish, function(v) Current_Webhook_Fish = v end)
-UI_LeaveInput = CreateInput(Page_Url, "Player Leave", Current_Webhook_Leave, function(v) Current_Webhook_Leave = v end)
-UI_ListInput = CreateInput(Page_Url, "Player List", Current_Webhook_List, function(v) Current_Webhook_List = v end)
-UI_AdminInput = CreateInput(Page_Url, "Admin Host", Current_Webhook_Admin, function(v) Current_Webhook_Admin = v end)
+-- Move Bulk/Import Content to View_Import
+local BulkLabel = Instance.new("TextLabel", View_Import)
+BulkLabel.BackgroundTransparency = 1; BulkLabel.Size = UDim2.new(1, 0, 0, 20)
+BulkLabel.Font = Enum.Font.GothamBold; BulkLabel.Text = "Bulk Input (Format: User:DiscordID)"; BulkLabel.TextColor3 = Theme.TextSecondary; BulkLabel.TextSize = 11; BulkLabel.TextXAlignment = "Left"
 
+local BulkContainer = Instance.new("Frame", View_Import)
+BulkContainer.BackgroundColor3 = Theme.Content; BulkContainer.Size = UDim2.new(1, -5, 0, 100); BulkContainer.BorderSizePixel = 0
+Instance.new("UICorner", BulkContainer).CornerRadius = UDim.new(0, 6)
+AddStroke(BulkContainer, Theme.Border, 1)
+
+local BulkInput = Instance.new("TextBox", BulkContainer)
+BulkInput.BackgroundTransparency = 1; BulkInput.Position = UDim2.new(0, 8, 0, 8); BulkInput.Size = UDim2.new(1, -16, 1, -16)
+BulkInput.Font = Enum.Font.GothamMedium; BulkInput.Text = ""; BulkInput.PlaceholderText = "Username:DiscordID\nUsername:DiscordID"; BulkInput.TextColor3 = Theme.TextPrimary; BulkInput.TextSize = 11; BulkInput.TextXAlignment = "Left"; BulkInput.TextYAlignment = "Top"; BulkInput.MultiLine = true; BulkInput.ClearTextOnFocus = false; BulkInput.TextWrapped = true
+
+local ImportBtnWrapper = Instance.new("Frame", View_Import)
+ImportBtnWrapper.BackgroundTransparency = 1; ImportBtnWrapper.Size = UDim2.new(1, -5, 0, 26)
+
+local ImportBtn = Instance.new("TextButton", ImportBtnWrapper)
+ImportBtn.BackgroundColor3 = Theme.Success; ImportBtn.BackgroundTransparency = 0.1; ImportBtn.Size = UDim2.new(1, 0, 0, 26)
+ImportBtn.Font = Enum.Font.GothamBold; ImportBtn.Text = "IMPORT BULK DATA"; ImportBtn.TextColor3 = Color3.new(1, 1, 1); ImportBtn.TextSize = 11
+Instance.new("UICorner", ImportBtn).CornerRadius = UDim.new(0, 6)
+
+ImportBtn.MouseButton1Click:Connect(function()
+    local text = BulkInput.Text
+    local addedCount = 0; local listFull = false; local currentIndex = 3
+    
+    while currentIndex <= 20 and TagList[currentIndex][1] ~= "" do currentIndex = currentIndex + 1 end
+    
+    if currentIndex > 20 then ShowNotification("List Player Full!", true) return end
+    
+    local maxImport = 18
+    local processed = 0
+    
+    for line in text:gmatch("[^\r\n]+") do
+        if currentIndex > 20 or processed >= maxImport then listFull = true; break end
+        local split = string.split(line, ":"); local user = split[1] or ""; local id = split[2] or ""
+        user = user:match("^%s*(.-)%s*$"); id = id:match("^%s*(.-)%s*$")
+        if user ~= "" then
+            TagList[currentIndex] = {user, id}
+            if TagUIElements[currentIndex] then TagUIElements[currentIndex].User.Text = user; TagUIElements[currentIndex].ID.Text = id end
+            currentIndex = currentIndex + 1; addedCount = addedCount + 1; processed = processed + 1
+        end
+    end
+    if addedCount > 0 then BulkInput.Text = ""; ShowNotification("Imported " .. addedCount .. " Players!") else if not listFull then ShowNotification("No Data Found!", true) end end
+    if listFull then ShowNotification("List Full (Max 18 Imported)", true) end
+end)
+
+
+-- Generate List Player Rows in View_List
 for i = 1, 20 do
     local rowData = TagList[i]
-    local Row = Instance.new("Frame", Page_Tag)
+    local Row = Instance.new("Frame", View_List)
     Row.BackgroundColor3 = Theme.Content; Row.BackgroundTransparency = 0; Row.Size = UDim2.new(1, -5, 0, 28) 
     Instance.new("UICorner", Row).CornerRadius = UDim.new(0, 5)
     
@@ -856,12 +1449,112 @@ for i = 1, 20 do
     UserInput.FocusLost:Connect(Sync); IDInput.FocusLost:Connect(Sync)
 end
 
-CreateToggle(Page_Webhook, "Secret Fish Caught", Settings.SecretEnabled, function(v) Settings.SecretEnabled = v end, function() return Current_Webhook_Fish ~= "" end)
-CreateToggle(Page_Webhook, "Ruby Gemstone", Settings.RubyEnabled, function(v) Settings.RubyEnabled = v end, function() return Current_Webhook_Fish ~= "" end)
-CreateToggle(Page_Webhook, "Notif Cave Crystal", Settings.CaveCrystalEnabled, function(v) Settings.CaveCrystalEnabled = v end, function() return Current_Webhook_Fish ~= "" end)
-CreateToggle(Page_Webhook, "Evolved Enchant Stone", Settings.EvolvedEnabled, function(v) Settings.EvolvedEnabled = v end, function() return Current_Webhook_Fish ~= "" end)
-CreateToggle(Page_Webhook, "Mutation Leviathan Rage", Settings.LeviathanRageEnabled, function(v) Settings.LeviathanRageEnabled = v end, function() return Current_Webhook_Fish ~= "" end)
-CreateToggle(Page_Webhook, "Mutation Crystalized (Legendary)", Settings.MutationCrystalized, function(v) Settings.MutationCrystalized = v end, function() return Current_Webhook_Fish ~= "" end)
+-- Force Update UI from loaded data
+if #TagList > 0 then
+    for i = 1, 20 do
+        if TagUIElements[i] and TagList[i] then
+            TagUIElements[i].User.Text = TagList[i][1]
+            TagUIElements[i].ID.Text = TagList[i][2]
+        end
+    end
+end
+
+-- Page_Webhook Sub-Menu Setup
+local NotifSubContainer = Instance.new("Frame", Page_Webhook)
+NotifSubContainer.BackgroundColor3 = Theme.Content
+NotifSubContainer.BackgroundTransparency = 1
+NotifSubContainer.Size = UDim2.new(1, -5, 0, 30)
+NotifSubContainer.LayoutOrder = -2
+
+local BtnViewNotif = Instance.new("TextButton", NotifSubContainer)
+BtnViewNotif.BackgroundColor3 = Theme.Accent
+BtnViewNotif.Size = UDim2.new(0.5, -3, 1, 0)
+BtnViewNotif.Font = Enum.Font.GothamBold
+BtnViewNotif.Text = "NOTIFICATION"
+BtnViewNotif.TextColor3 = Color3.new(1,1,1)
+BtnViewNotif.TextSize = 11
+Instance.new("UICorner", BtnViewNotif).CornerRadius = UDim.new(0, 6)
+
+local BtnViewWebhook = Instance.new("TextButton", NotifSubContainer)
+BtnViewWebhook.BackgroundColor3 = Theme.Input
+BtnViewWebhook.Position = UDim2.new(0.5, 3, 0, 0)
+BtnViewWebhook.Size = UDim2.new(0.5, -3, 1, 0)
+BtnViewWebhook.Font = Enum.Font.GothamBold
+BtnViewWebhook.Text = "WEBHOOK URL"
+BtnViewWebhook.TextColor3 = Theme.TextSecondary
+BtnViewWebhook.TextSize = 11
+Instance.new("UICorner", BtnViewWebhook).CornerRadius = UDim.new(0, 6)
+
+local View_Notif = Instance.new("Frame", Page_Webhook)
+View_Notif.BackgroundTransparency = 1
+View_Notif.Size = UDim2.new(1, 0, 0, 0)
+View_Notif.AutomaticSize = Enum.AutomaticSize.Y
+View_Notif.LayoutOrder = 1
+local ListLayout_Notif = Instance.new("UIListLayout", View_Notif)
+ListLayout_Notif.Padding = UDim.new(0, 6)
+ListLayout_Notif.SortOrder = Enum.SortOrder.LayoutOrder
+
+local View_Webhook = Instance.new("Frame", Page_Webhook)
+View_Webhook.BackgroundTransparency = 1
+View_Webhook.Size = UDim2.new(1, 0, 0, 0)
+View_Webhook.AutomaticSize = Enum.AutomaticSize.Y
+View_Webhook.Visible = false
+View_Webhook.LayoutOrder = 2
+local ListLayout_Webhook = Instance.new("UIListLayout", View_Webhook)
+ListLayout_Webhook.Padding = UDim.new(0, 6)
+ListLayout_Webhook.SortOrder = Enum.SortOrder.LayoutOrder
+
+BtnViewNotif.MouseButton1Click:Connect(function()
+    View_Notif.Visible = true
+    View_Webhook.Visible = false
+    BtnViewNotif.BackgroundColor3 = Theme.Accent
+    BtnViewNotif.TextColor3 = Color3.new(1,1,1)
+    BtnViewWebhook.BackgroundColor3 = Theme.Input
+    BtnViewWebhook.TextColor3 = Theme.TextSecondary
+end)
+
+BtnViewWebhook.MouseButton1Click:Connect(function()
+    View_Notif.Visible = false
+    View_Webhook.Visible = true
+    BtnViewNotif.BackgroundColor3 = Theme.Input
+    BtnViewNotif.TextColor3 = Theme.TextSecondary
+    BtnViewWebhook.BackgroundColor3 = Theme.Accent
+    BtnViewWebhook.TextColor3 = Color3.new(1,1,1)
+end)
+
+-- Move Toggles to View_Notif
+CreateToggle(View_Notif, "Secret Fish Caught", Settings.SecretEnabled, function(v) Settings.SecretEnabled = v end, function() return Current_Webhook_Fish ~= "" end)
+CreateToggle(View_Notif, "Ruby Gemstone", Settings.RubyEnabled, function(v) Settings.RubyEnabled = v end, function() return Current_Webhook_Fish ~= "" end)
+CreateToggle(View_Notif, "Notif Cave Crystal", Settings.CaveCrystalEnabled, function(v) Settings.CaveCrystalEnabled = v end, function() return Current_Webhook_Fish ~= "" end)
+CreateToggle(View_Notif, "Evolved Enchant Stone", Settings.EvolvedEnabled, function(v) Settings.EvolvedEnabled = v end, function() return Current_Webhook_Fish ~= "" end)
+CreateToggle(View_Notif, "Mutation Crystalized (Legendary)", Settings.MutationCrystalized, function(v) Settings.MutationCrystalized = v end, function() return Current_Webhook_Fish ~= "" end)
+
+-- Move Webhook Inputs to View_Webhook
+local TestAllBtn = Instance.new("TextButton", View_Webhook)
+TestAllBtn.BackgroundColor3 = Theme.Accent
+TestAllBtn.Size = UDim2.new(1, -5, 0, 30)
+TestAllBtn.Font = Enum.Font.GothamBold
+TestAllBtn.Text = "TEST ALL CONNECTION"
+TestAllBtn.TextColor3 = Color3.new(1, 1, 1)
+TestAllBtn.TextSize = 12
+TestAllBtn.LayoutOrder = -1
+Instance.new("UICorner", TestAllBtn).CornerRadius = UDim.new(0, 6)
+
+TestAllBtn.MouseButton1Click:Connect(function()
+    local c = 0
+    if Current_Webhook_Fish ~= "" then TestWebhook(Current_Webhook_Fish, "Fish"); c=c+1 end
+    if Current_Webhook_Leave ~= "" then TestWebhook(Current_Webhook_Leave, "Leave"); c=c+1 end
+    if Current_Webhook_List ~= "" then TestWebhook(Current_Webhook_List, "Player List"); c=c+1 end
+    if Current_Webhook_Admin ~= "" then TestWebhook(Current_Webhook_Admin, "Admin"); c=c+1 end
+    if c == 0 then ShowNotification("No Webhooks Set!", true) else ShowNotification("Testing " .. c .. " Webhooks...", false) end
+end)
+
+local SpacerW = Instance.new("Frame", View_Webhook); SpacerW.BackgroundTransparency=1; SpacerW.Size=UDim2.new(1,0,0,0); SpacerW.LayoutOrder = -1
+
+UI_FishInput = CreateInput(View_Webhook, "Fish Caught", Current_Webhook_Fish, function(v) Current_Webhook_Fish = v end)
+UI_LeaveInput = CreateInput(View_Webhook, "Player Leave", Current_Webhook_Leave, function(v) Current_Webhook_Leave = v end)
+UI_ListInput = CreateInput(View_Webhook, "Player List", Current_Webhook_List, function(v) Current_Webhook_List = v end)
+UI_AdminInput = CreateInput(View_Webhook, "Admin Host", Current_Webhook_Admin, function(v) Current_Webhook_Admin = v end)
 
 local function CheckAndSendNonPS(isManual)
     if not ScriptActive then return end
@@ -1074,7 +1767,6 @@ CreateInput(Page_SessionStats, "Server Title", ServerTitle, function(v) ServerTi
 CreateStatItem(Page_SessionStats, "Secret Fish Caught", "Secret")
 CreateStatItem(Page_SessionStats, "Ruby Gemstones", "Ruby")
 CreateStatItem(Page_SessionStats, "Evolved Stones", "Evolved")
-CreateStatItem(Page_SessionStats, "Leviathan Rage", "Rage")
 CreateStatItem(Page_SessionStats, "Crystalized Mutations", "Crystalized")
 CreateStatItem(Page_SessionStats, "Cave Crystals Found", "CaveCrystal")
 
@@ -1095,7 +1787,6 @@ SendStatsBtn.MouseButton1Click:Connect(function()
     contentStr = contentStr .. "⚓ Secrets: " .. SessionStats.Secret .. "\n"
     contentStr = contentStr .. "💎 Rubies: " .. SessionStats.Ruby .. "\n"
     contentStr = contentStr .. "🔮 Evolved: " .. SessionStats.Evolved .. "\n"
-    contentStr = contentStr .. "🔥 Rage: " .. SessionStats.Rage .. "\n"
     contentStr = contentStr .. "✨ Crystalized: " .. SessionStats.Crystalized .. "\n"
     contentStr = contentStr .. "⛏️ Cave Crystals: " .. SessionStats.CaveCrystal
     
@@ -1196,7 +1887,6 @@ local function SendWebhook(data, category)
     if category == "SECRET" and not Settings.SecretEnabled then return end
     if category == "STONE" and not Settings.RubyEnabled then return end
     if category == "EVOLVED" and not Settings.EvolvedEnabled then return end 
-    if category == "RAGE" and not Settings.LeviathanRageEnabled then return end 
     if category == "CRYSTALIZED" and not Settings.MutationCrystalized then return end 
     if category == "CAVECRYSTAL" and not Settings.CaveCrystalEnabled then return end 
     if category == "LEAVE" and not Settings.LeaveEnabled then return end 
@@ -1226,14 +1916,6 @@ local function SendWebhook(data, category)
         embedColor = 10181046 
         local lines = { "🔮 Item: " .. data.Item }
         descriptionText = "Player: " .. pName .. "\n\n```\n" .. table.concat(lines, "\n") .. "\n```"
-    elseif category == "RAGE" then
-        SessionStats.Rage = SessionStats.Rage + 1
-        embedTitle = "LEVIATHAN RAGE!"
-        embedColor = 10038562 
-        local lines = { "🔥 Fish: " .. data.Item }
-        table.insert(lines, "🧬 Mutation: Leviathan Rage")
-        table.insert(lines, "⚖️ Weight: " .. data.Weight)
-        descriptionText = "Player: " .. pName .. "\n\n```\n" .. table.concat(lines, "\n") .. "\n```"
     elseif category == "CRYSTALIZED" then
         SessionStats.Crystalized = SessionStats.Crystalized + 1
         embedTitle = "CRYSTALIZED MUTATION!"
@@ -1256,7 +1938,6 @@ local function SendWebhook(data, category)
     if UI_StatsLabels["Secret"] then UI_StatsLabels["Secret"].Text = tostring(SessionStats.Secret) end
     if UI_StatsLabels["Ruby"] then UI_StatsLabels["Ruby"].Text = tostring(SessionStats.Ruby) end
     if UI_StatsLabels["Evolved"] then UI_StatsLabels["Evolved"].Text = tostring(SessionStats.Evolved) end
-    if UI_StatsLabels["Rage"] then UI_StatsLabels["Rage"].Text = tostring(SessionStats.Rage) end
     if UI_StatsLabels["Crystalized"] then UI_StatsLabels["Crystalized"].Text = tostring(SessionStats.Crystalized) end
     if UI_StatsLabels["CaveCrystal"] then UI_StatsLabels["CaveCrystal"].Text = tostring(SessionStats.CaveCrystal) end
     
@@ -1283,20 +1964,7 @@ local function CheckAndSend(msg)
         return
     end
 
-    if string.find(lowerMsg, "leviathan rage") then
-        local p, item_full, w = string.match(cleanMsg, "^(.*) obtained a (.*) %((.*)%)")
-        if p and item_full then
-             local finalFishName = item_full
-             local s_rage, e_rage = string.find(string.lower(item_full), "leviathan rage")
-             if s_rage then
-                 finalFishName = string.sub(item_full, e_rage + 1)
-                 finalFishName = string.gsub(finalFishName, "^%s+", "")
-             end
-             local data = { Player = p, Item = finalFishName, Mutation = "Leviathan Rage", Weight = w }
-             SendWebhook(data, "RAGE")
-             return
-        end
-    end
+
 
     if string.find(lowerMsg, "crystalized") then
         local tempMsg = string.gsub(cleanMsg, "^%[Server%]:%s*", "")
