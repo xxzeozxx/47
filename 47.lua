@@ -1873,18 +1873,6 @@ CreateToggle(View_Notif, "Mutation Crystalized (Legendary)", "MutationCrystalize
 
 -- Move Webhook Inputs to View_Webhook
 local TestAllBtn = Instance.new("TextButton", View_Webhook)
--- ... (skipping unchanged lines) ...
-
--- (Skipping down to Page_AdminBoost Toggles at 1835)
--- Wait, replace_file_content works on contiguous blocks.
--- Logic Check: Lines 1721-1725 are separate from 1835-1840.
--- I should use multi_replace for non-contiguous, or just two replaces.
--- I'll do 1721 first.
-CreateToggle(View_Notif, "Secret Fish Caught", "SecretEnabled", function(v) Settings.SecretEnabled = v end, function() return Current_Webhook_Fish ~= "" end)
-CreateToggle(View_Notif, "Ruby Gemstone", "RubyEnabled", function(v) Settings.RubyEnabled = v end, function() return Current_Webhook_Fish ~= "" end)
-CreateToggle(View_Notif, "Notif Cave Crystal", "CaveCrystalEnabled", function(v) Settings.CaveCrystalEnabled = v end, function() return Current_Webhook_Fish ~= "" end)
-CreateToggle(View_Notif, "Evolved Enchant Stone", "EvolvedEnabled", function(v) Settings.EvolvedEnabled = v end, function() return Current_Webhook_Fish ~= "" end)
-CreateToggle(View_Notif, "Mutation Crystalized (Legendary)", "MutationCrystalized", function(v) Settings.MutationCrystalized = v end, function() return Current_Webhook_Fish ~= "" end)
 
 -- Move Webhook Inputs to View_Webhook
 local TestAllBtn = Instance.new("TextButton", View_Webhook)
