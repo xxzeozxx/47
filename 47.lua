@@ -112,7 +112,8 @@ local Settings = {
     AutoExecute = false,
     NoAnimation = false,
     RemoveVFX = false,
-    DisablePopups = false
+    DisablePopups = false,
+    EvolvedEnabled = false
 }
 
 -- Anti-AFK (Always On)
@@ -1261,13 +1262,19 @@ SaveBtn.MouseButton1Click:Connect(function()
     local name = SaveInput.Text
     if name == "" then ShowNotification("Name cannot be empty!", true) return end
     
-    -- 1. Sanitize Settings (Force String Keys)
+    -- 1. Sanitize Settings (Whitelist Approach)
+    -- Only save known valid keys to avoid garbage data from corruption
+    local validKeys = {
+        "SecretEnabled", "RubyEnabled", "MutationCrystalized", "CaveCrystalEnabled", 
+        "LeaveEnabled", "PlayerNonPSAuto", "ForeignDetection", "SpoilerName", 
+        "PingMonitor", "AutoExecute", "NoAnimation", "RemoveVFX", "DisablePopups", 
+        "EvolvedEnabled"
+    }
+    
     local cleanSettings = {}
-    for k, v in pairs(Settings) do
-        if type(k) ~= "string" then
-            warn("XAL: Dropped invalid setting key type:", type(k), tostring(k))
-        else
-            cleanSettings[k] = v
+    for _, key in ipairs(validKeys) do
+        if Settings[key] ~= nil then
+             cleanSettings[key] = Settings[key]
         end
     end
 
