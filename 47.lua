@@ -590,28 +590,44 @@ local Page_Teleport = CreatePage("Teleport")
 
 
 
-local TeleportGrid = Instance.new("UIGridLayout", Page_Teleport)
-TeleportGrid.CellSize = UDim2.new(0.5, -3, 0, 30)
-TeleportGrid.CellPadding = UDim2.new(0, 5, 0, 5)
+local TeleportList = Instance.new("UIListLayout", Page_Teleport)
+TeleportList.Padding = UDim.new(0, 5)
+TeleportList.SortOrder = Enum.SortOrder.LayoutOrder
 
 CreateTab("Teleport", Page_Teleport)
--- Populate Teleport Buttons
+
+-- Helper for independent buttons
+local function CreateStyledButton(parent, text, color, callback)
+    local Frame = Instance.new("Frame", parent)
+    Frame.BackgroundColor3 = Theme.Content
+    Frame.Size = UDim2.new(1, -5, 0, 36)
+    Frame.BorderSizePixel = 0
+    Instance.new("UICorner", Frame).CornerRadius = UDim.new(0, 6)
+    AddStroke(Frame, Theme.Border, 1)
+    
+    local Btn = Instance.new("TextButton", Frame)
+    Btn.BackgroundColor3 = color
+    Btn.BackgroundTransparency = 0.1
+    Btn.Size = UDim2.new(1, -10, 1, -10)
+    Btn.Position = UDim2.new(0, 5, 0, 5)
+    Btn.Font = Enum.Font.GothamBold
+    Btn.Text = text
+    Btn.TextColor3 = Color3.new(1,1,1)
+    Btn.TextSize = 12
+    Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 4)
+    
+    Btn.MouseButton1Click:Connect(callback)
+    return Btn
+end
+
+-- Populate Teleport Buttons (List Mode)
 local sortedAreas = {}
 for name, _ in pairs(FishingAreas) do table.insert(sortedAreas, name) end
 table.sort(sortedAreas)
 
 for _, name in ipairs(sortedAreas) do
     local data = FishingAreas[name]
-    local TpBtn = Instance.new("TextButton", Page_Teleport)
-    TpBtn.BackgroundColor3 = Theme.Content
-    TpBtn.Font = Enum.Font.GothamBold
-    TpBtn.Text = name
-    TpBtn.TextColor3 = Theme.TextPrimary
-    TpBtn.TextSize = 11
-    Instance.new("UICorner", TpBtn).CornerRadius = UDim.new(0, 6)
-    AddStroke(TpBtn, Theme.Border, 1)
-    
-    TpBtn.MouseButton1Click:Connect(function()
+    CreateStyledButton(Page_Teleport, "Teleport to: " .. name, Theme.Accent, function()
         TeleportToLookAt(data.Pos, data.Look)
     end)
 end
@@ -1084,14 +1100,23 @@ end)
 -- SETTING FEATURES
 -- 0. Coordinate Grabber
 local CoordInput = CreateInput(Page_Setting, "Coordinates will appear here", "", function(v) end)
-local GrabBtn = Instance.new("TextButton", Page_Setting)
+
+local GrabFrame = Instance.new("Frame", Page_Setting)
+GrabFrame.BackgroundColor3 = Theme.Content
+GrabFrame.Size = UDim2.new(1, -5, 0, 36)
+GrabFrame.BorderSizePixel = 0
+Instance.new("UICorner", GrabFrame).CornerRadius = UDim.new(0, 6)
+AddStroke(GrabFrame, Theme.Border, 1)
+
+local GrabBtn = Instance.new("TextButton", GrabFrame)
 GrabBtn.BackgroundColor3 = Theme.Accent
-GrabBtn.Size = UDim2.new(1, -5, 0, 30)
+GrabBtn.Size = UDim2.new(1, -10, 1, -10)
+GrabBtn.Position = UDim2.new(0, 5, 0, 5)
 GrabBtn.Font = Enum.Font.GothamBold
 GrabBtn.Text = "GET CURRENT COORDINATES"
 GrabBtn.TextColor3 = Color3.new(1, 1, 1)
 GrabBtn.TextSize = 12
-Instance.new("UICorner", GrabBtn).CornerRadius = UDim.new(0, 6)
+Instance.new("UICorner", GrabBtn).CornerRadius = UDim.new(0, 4)
 
 GrabBtn.MouseButton1Click:Connect(function()
     ShowNotification("Grabbing...", false)
