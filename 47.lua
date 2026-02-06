@@ -1126,7 +1126,7 @@ end)
 
 -- SETTING FEATURES
 -- 0. Coordinate Grabber
-local CoordInput = CreateInput(Page_Setting, "Coordinates will appear here", "", function(v) end)
+local CoordInput = CreateInput(Page_Setting, "Coordinates", "", function(v) end)
 
 local GrabFrame = Instance.new("Frame", Page_Setting)
 GrabFrame.BackgroundColor3 = Theme.Content
