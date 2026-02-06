@@ -113,47 +113,38 @@ local Settings = {
 }
 
 -- Queue On Teleport Logic
-if queue_on_teleport then
-    task.spawn(function()
-        while task.wait(1) do
-            if Settings.AutoExecute then
-                -- Check if already queued to avoid spamming? 
-                -- queue_on_teleport usually stacks, but typically we only need to call it once before TP.
-                -- However, since we don't know WHEN TP happens, we just ensure it's set.
-                -- Actually, queue_on_teleport adds to a buffer. Calling it repeatedly is bad.
-                -- Better to hook into TeleportService.
-            end
-        end
-    end)
-    
-    local TpService = game:GetService("TeleportService")
-    local TeleportingConn = TpService.TeleportInit:Connect(function()
-        if Settings.AutoExecute and queue_on_teleport then
-            print("XAL: Queuing Auto Execute...")
-            -- We assume the file is named '47.lua' in the workspace or standard location
-            -- Since we can't be 100% sure of the path in all executors, we try a few common ones or the one we are editing.
-            -- The user is editing "XAL CLOUD/FishIt/47.lua". 
-            -- But inside the game, `readfile` paths are relative to workspace.
-            -- We'll try to read the file content currently running if possible, OR just hardcode the path.
-            queue_on_teleport([[
-                task.wait(5)
-                local paths = {"XAL CLOUD/FishIt/47.lua", "47.lua", "FishIt/47.lua"}
-                local scriptCode = nil
-                for _, p in ipairs(paths) do
-                    local s, c = pcall(function() return readfile(p) end)
-                    if s and c then scriptCode = c; break end
-                end
+-- if queue_on_teleport then
+--     task.spawn(function()
+--         while task.wait(1) do
+--             if Settings.AutoExecute then
                 
-                if scriptCode then
-                    loadstring(scriptCode)()
-                else
-                    warn("XAL AutoExecute: Could not find script file to execute!")
-                end
-            ]])
-        end
-    end)
-    table.insert(Connections, TeleportingConn)
-end
+--             end
+--         end
+--     end)
+    
+--     local TpService = game:GetService("TeleportService")
+--     local TeleportingConn = TpService.TeleportInit:Connect(function()
+--         if Settings.AutoExecute and queue_on_teleport then
+--             print("XAL: Queuing Auto Execute...")
+--             queue_on_teleport([[
+--                 task.wait(5)
+--                 local paths = {"XAL CLOUD/FishIt/47.lua", "47.lua", "FishIt/47.lua"}
+--                 local scriptCode = nil
+--                 for _, p in ipairs(paths) do
+--                     local s, c = pcall(function() return readfile(p) end)
+--                     if s and c then scriptCode = c; break end
+--                 end
+                
+--                 if scriptCode then
+--                     loadstring(scriptCode)()
+--                 else
+--                     warn("XAL AutoExecute: Could not find script file to execute!")
+--                 end
+--             ]])
+--         end
+--     end)
+--     table.insert(Connections, TeleportingConn)
+-- end
 
 local TagList = {} 
 local TagUIElements = {} 
