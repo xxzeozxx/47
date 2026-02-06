@@ -1115,48 +1115,7 @@ CreateToggle(Page_Setting, "Walk On Water", false, function(state)
 end)
 
 -- SETTING FEATURES
--- 0. Coordinate Grabber
-local CoordInput = CreateInput(Page_Setting, "Coordinates", "", function(v) end)
-
-local GrabFrame = Instance.new("Frame", Page_Setting)
-GrabFrame.BackgroundColor3 = Theme.Content
-GrabFrame.Size = UDim2.new(1, -5, 0, 36)
-GrabFrame.BorderSizePixel = 0
-Instance.new("UICorner", GrabFrame).CornerRadius = UDim.new(0, 6)
-AddStroke(GrabFrame, Theme.Border, 1)
-
-local GrabBtn = Instance.new("TextButton", GrabFrame)
-GrabBtn.BackgroundColor3 = Theme.Accent
-GrabBtn.Size = UDim2.new(1, -10, 1, -10)
-GrabBtn.Position = UDim2.new(0, 5, 0, 5)
-GrabBtn.Font = Enum.Font.GothamBold
-GrabBtn.Text = "GET CURRENT COORDINATES"
-GrabBtn.TextColor3 = Color3.new(1, 1, 1)
-GrabBtn.TextSize = 12
-Instance.new("UICorner", GrabBtn).CornerRadius = UDim.new(0, 4)
-
-GrabBtn.MouseButton1Click:Connect(function()
-    ShowNotification("Grabbing...", false)
-    local char = Players.LocalPlayer.Character
-    local hrp = char and char:FindFirstChild("HumanoidRootPart")
-    local cam = workspace.CurrentCamera
-    
-    if hrp and cam then
-        local pos = hrp.Position
-        local look = cam.CFrame.LookVector
-        
-        local posStr = string.format("Vector3.new(%.3f, %.3f, %.3f)", pos.X, pos.Y, pos.Z)
-        local lookStr = string.format("Vector3.new(%.3f, %.3f, %.3f)", look.X, look.Y, look.Z)
-        
-        local fullStr = string.format('["New Location"] = {Pos = %s, Look = %s},', posStr, lookStr)
-        
-        CoordInput.Text = fullStr
-        pcall(function() setclipboard(fullStr) end) 
-        ShowNotification("Coords --> Input Box!", false)
-    else
-        ShowNotification("Character not found!", true)
-    end
-end)
+-- SETTING FEATURES
 
 -- 1. Remove Fish Notification Pop-up
 local DisableNotificationConnection = nil
