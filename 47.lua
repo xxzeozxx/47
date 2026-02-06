@@ -590,23 +590,24 @@ local Page_Teleport = CreatePage("Teleport")
 
 
 
-local TeleportGrid = Instance.new("UIGridLayout", Page_Teleport)
-TeleportGrid.CellSize = UDim2.new(0.5, -5, 0, 35)
-TeleportGrid.CellPadding = UDim2.new(0, 5, 0, 5)
-TeleportGrid.SortOrder = Enum.SortOrder.LayoutOrder
+local TeleportList = Instance.new("UIListLayout", Page_Teleport)
+TeleportList.Padding = UDim.new(0, 5)
+TeleportList.SortOrder = Enum.SortOrder.LayoutOrder
 
 CreateTab("Teleport", Page_Teleport)
 
--- Helper for independent buttons
-local function CreateStyledButton(parent, text, color, callback)
+-- Helper for independent buttons inside Row
+local function CreateTeleportButton(parent, text, pos, size, callback)
     local Frame = Instance.new("Frame", parent)
     Frame.BackgroundColor3 = Theme.Content
+    Frame.Size = size
+    Frame.Position = pos
     Frame.BorderSizePixel = 0
     Instance.new("UICorner", Frame).CornerRadius = UDim.new(0, 6)
     AddStroke(Frame, Theme.Border, 1)
     
     local Btn = Instance.new("TextButton", Frame)
-    Btn.BackgroundColor3 = color
+    Btn.BackgroundColor3 = Theme.Accent
     Btn.BackgroundTransparency = 0.1
     Btn.Size = UDim2.new(1, -10, 1, -10)
     Btn.Position = UDim2.new(0, 5, 0, 5)
@@ -620,16 +621,30 @@ local function CreateStyledButton(parent, text, color, callback)
     return Btn
 end
 
--- Populate Teleport Buttons (Grid Mode)
+-- Populate Teleport Buttons (Manual Row Mode)
 local sortedAreas = {}
 for name, _ in pairs(FishingAreas) do table.insert(sortedAreas, name) end
 table.sort(sortedAreas)
 
-for _, name in ipairs(sortedAreas) do
-    local data = FishingAreas[name]
-    CreateStyledButton(Page_Teleport, name, Theme.Accent, function()
-        TeleportToLookAt(data.Pos, data.Look)
+for i = 1, #sortedAreas, 2 do
+    local name1 = sortedAreas[i]
+    local name2 = sortedAreas[i+1] -- Can be nil
+    
+    local Row = Instance.new("Frame", Page_Teleport)
+    Row.BackgroundTransparency = 1
+    Row.Size = UDim2.new(1, 0, 0, 35)
+    
+    local data1 = FishingAreas[name1]
+    CreateTeleportButton(Row, name1, UDim2.new(0, 0, 0, 0), UDim2.new(0.5, -3, 1, 0), function()
+        TeleportToLookAt(data1.Pos, data1.Look)
     end)
+    
+    if name2 then
+        local data2 = FishingAreas[name2]
+        CreateTeleportButton(Row, name2, UDim2.new(0.5, 3, 0, 0), UDim2.new(0.5, -3, 1, 0), function()
+            TeleportToLookAt(data2.Pos, data2.Look)
+        end)
+    end
 end
 
 CreateTab("Notification", Page_Webhook)
