@@ -108,8 +108,44 @@ local Settings = {
     PlayerNonPSAuto = false,
     ForeignDetection = false,
     SpoilerName = true,
-    PingMonitor = false
+    PingMonitor = false,
+    AutoExecute = false
 }
+
+-- Queue On Teleport Logic
+task.spawn(function()
+    local success, err = pcall(function()
+        local queueTeleport = queue_on_teleport or (syn and syn.queue_on_teleport) or (fluxus and fluxus.queue_on_teleport) or (request and request.queue_on_teleport)
+        
+        if queueTeleport then
+            local TpService = game:GetService("TeleportService")
+            local TeleportingConn = TpService.TeleportInit:Connect(function()
+                if Settings.AutoExecute then
+                    print("XAL: Queuing Auto Execute...")
+                    pcall(function()
+                        queueTeleport([[
+                            task.wait(5)
+                            local paths = {"XAL CLOUD/FishIt/47.lua", "47.lua", "FishIt/47.lua"}
+                            local scriptCode = nil
+                            for _, p in ipairs(paths) do
+                                local s, c = pcall(function() return readfile(p) end)
+                                if s and c then scriptCode = c; break end
+                            end
+                            
+                            if scriptCode then
+                                loadstring(scriptCode)()
+                            else
+                                warn("XAL AutoExecute: Could not find script file to execute!")
+                            end
+                        ]])
+                    end)
+                end
+            end)
+            table.insert(Connections, TeleportingConn)
+        end
+    end)
+    if not success then warn("XAL: AutoExecute Not Supported: " .. tostring(err)) end
+end)
 
 local TagList = {} 
 local TagUIElements = {} 
@@ -1132,32 +1168,6 @@ local function RefreshConfigList()
     end
 end
 
-SaveBtn.MouseButton1Click:Connect(function()
-    local name = SaveInput.Text
-    if name == "" then ShowNotification("Name cannot be empty!", true) return end
-    
-    local saveData = {
-        Webhooks = {
-            Fish = Current_Webhook_Fish,
-            Leave = Current_Webhook_Leave,
-            List = Current_Webhook_List,
-            Admin = Current_Webhook_Admin
-        },
-        Players = TagList
-    }
-    
-    local success, err = pcall(function()
-        writefile("XAL_Configs/" .. name .. ".json", HttpService:JSONEncode(saveData))
-    end)
-    
-    if success then
-        ShowNotification("Config Saved!", false)
-        RefreshConfigList()
-    else
-        ShowNotification("Save Failed!", true)
-    end
-end)
-
 local function LoadConfig(configName)
     local success, content = pcall(function() return readfile("XAL_Configs/" .. configName .. ".json") end)
     if not success then ShowNotification("Read Failed!", true) return false end
@@ -1192,6 +1202,18 @@ local function LoadConfig(configName)
                 end
             end
         end
+
+        if data.Settings then
+            for k, v in pairs(data.Settings) do
+                if Settings[k] ~= nil then
+                    Settings[k] = v
+                end
+            end
+            -- Note: Toggles won't visually update automatically unless we track their UI elements
+            -- Ideally we should refresh the toggle UIs here, but for now we load the values.
+            -- Since AutoExecute is critical, we check it explicitly if needed.
+        end
+
         ShowNotification("Config Loaded!", false)
         return true
     else
@@ -1199,6 +1221,33 @@ local function LoadConfig(configName)
         return false
     end
 end
+
+SaveBtn.MouseButton1Click:Connect(function()
+    local name = SaveInput.Text
+    if name == "" then ShowNotification("Name cannot be empty!", true) return end
+    
+    local saveData = {
+        Webhooks = {
+            Fish = Current_Webhook_Fish,
+            Leave = Current_Webhook_Leave,
+            List = Current_Webhook_List,
+            Admin = Current_Webhook_Admin
+        },
+        Players = TagList,
+        Settings = Settings
+    }
+    
+    local success, err = pcall(function()
+        writefile("XAL_Configs/" .. name .. ".json", HttpService:JSONEncode(saveData))
+    end)
+    
+    if success then
+        ShowNotification("Config Saved!", false)
+        RefreshConfigList()
+    else
+        ShowNotification("Save Failed!", true)
+    end
+end)
 
 LoadBtn.MouseButton1Click:Connect(function()
     if not selectedConfig then ShowNotification("Select a config!", true) return end
@@ -1754,6 +1803,7 @@ CreateToggle(Page_AdminBoost, "Hide Player Name (Spoiler)", Settings.SpoilerName
 CreateToggle(Page_AdminBoost, "Lag Detector (Ping > 500ms)", Settings.PingMonitor, function(v) Settings.PingMonitor = v end, function() return Current_Webhook_Admin ~= "" end)
 CreateToggle(Page_AdminBoost, "Player Leave Server", Settings.LeaveEnabled, function(v) Settings.LeaveEnabled = v end, function() return Current_Webhook_Leave ~= "" end)
 CreateToggle(Page_AdminBoost, "Player Not On Server (30 minutes)", Settings.PlayerNonPSAuto, function(v) Settings.PlayerNonPSAuto = v end, function() return Current_Webhook_List ~= "" end)
+CreateToggle(Page_Setting, "Auto Execute on Server Hop", Settings.AutoExecute, function(v) Settings.AutoExecute = v end)
 
 local LastPingAlert = 0
 task.spawn(function()
@@ -2308,7 +2358,7 @@ local function StartInventoryWatcher()
 end
 task.spawn(StartInventoryWatcher)
 
-print("✅ XAL System Session v1.3 Loaded!")
+print("✅ XAL System Session v1.4 Loaded!")
 
 -- Trigger Autoload
 task.delay(1, function()
