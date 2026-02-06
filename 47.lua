@@ -113,38 +113,39 @@ local Settings = {
 }
 
 -- Queue On Teleport Logic
--- if queue_on_teleport then
---     task.spawn(function()
---         while task.wait(1) do
---             if Settings.AutoExecute then
-                
---             end
---         end
---     end)
-    
---     local TpService = game:GetService("TeleportService")
---     local TeleportingConn = TpService.TeleportInit:Connect(function()
---         if Settings.AutoExecute and queue_on_teleport then
---             print("XAL: Queuing Auto Execute...")
---             queue_on_teleport([[
---                 task.wait(5)
---                 local paths = {"XAL CLOUD/FishIt/47.lua", "47.lua", "FishIt/47.lua"}
---                 local scriptCode = nil
---                 for _, p in ipairs(paths) do
---                     local s, c = pcall(function() return readfile(p) end)
---                     if s and c then scriptCode = c; break end
---                 end
-                
---                 if scriptCode then
---                     loadstring(scriptCode)()
---                 else
---                     warn("XAL AutoExecute: Could not find script file to execute!")
---                 end
---             ]])
---         end
---     end)
---     table.insert(Connections, TeleportingConn)
--- end
+task.spawn(function()
+    local success, err = pcall(function()
+        local queueTeleport = queue_on_teleport or (syn and syn.queue_on_teleport) or (fluxus and fluxus.queue_on_teleport) or (request and request.queue_on_teleport)
+        
+        if queueTeleport then
+            local TpService = game:GetService("TeleportService")
+            local TeleportingConn = TpService.TeleportInit:Connect(function()
+                if Settings.AutoExecute then
+                    print("XAL: Queuing Auto Execute...")
+                    pcall(function()
+                        queueTeleport([[
+                            task.wait(5)
+                            local paths = {"XAL CLOUD/FishIt/47.lua", "47.lua", "FishIt/47.lua"}
+                            local scriptCode = nil
+                            for _, p in ipairs(paths) do
+                                local s, c = pcall(function() return readfile(p) end)
+                                if s and c then scriptCode = c; break end
+                            end
+                            
+                            if scriptCode then
+                                loadstring(scriptCode)()
+                            else
+                                warn("XAL AutoExecute: Could not find script file to execute!")
+                            end
+                        ]])
+                    end)
+                end
+            end)
+            table.insert(Connections, TeleportingConn)
+        end
+    end)
+    if not success then warn("XAL: AutoExecute Not Supported: " .. tostring(err)) end
+end)
 
 local TagList = {} 
 local TagUIElements = {} 
