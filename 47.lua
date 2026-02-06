@@ -98,6 +98,42 @@ local SecretList = {
 
 local StoneList = { "Ruby" }
 
+local function TeleportToLookAt(position, lookVector)
+    local Character = Players.LocalPlayer.Character
+    if not Character then Character = Players.LocalPlayer.CharacterAdded:Wait() end
+    local hrp = Character:WaitForChild("HumanoidRootPart", 5)
+    
+    if hrp and typeof(position) == "Vector3" and typeof(lookVector) == "Vector3" then
+        local targetCFrame = CFrame.new(position, position + lookVector)
+        hrp.CFrame = targetCFrame * CFrame.new(0, 3, 0) -- Slight height offset
+        ShowNotification("Teleported!", false)
+    else
+        ShowNotification("Invalid TP Data", true)
+    end
+end
+
+local FishingAreas = {
+    ["Iron Cavern"] = {Pos = Vector3.new(-8792.546, -588.000, 230.642), Look = Vector3.new(0.718, 0.000, 0.696)},
+    ["Classic Island"] = {Pos = Vector3.new(1440.843, 46.062, 2777.175), Look = Vector3.new(0.940, -0.000, 0.342)},
+    ["Ancient Jungle"] = {Pos = Vector3.new(1535.639, 3.159, -193.352), Look = Vector3.new(0.505, -0.000, 0.863)},
+    ["Coral Reef"] = {Pos = Vector3.new(-3207.538, 6.087, 2011.079), Look = Vector3.new(0.973, 0.000, 0.229)},
+    ["Crater Island"] = {Pos = Vector3.new(1058.976, 2.330, 5032.878), Look = Vector3.new(-0.789, 0.000, 0.615)},
+    ["Crystalline Passage"] = {Pos = Vector3.new(6051.567, -538.900, 4370.979), Look = Vector3.new(0.109, 0.000, 0.994)},
+    ["Ancient Ruin"] = {Pos = Vector3.new(6031.981, -585.924, 4713.157), Look = Vector3.new(0.316, -0.000, -0.949)},
+    ["Enchant Room"] = {Pos = Vector3.new(3255.670, -1301.530, 1371.790), Look = Vector3.new(-0.000, -0.000, -1.000)},
+    ["Esoteric Island"] = {Pos = Vector3.new(2164.470, 3.220, 1242.390), Look = Vector3.new(-0.000, -0.000, -1.000)},
+    ["Fisherman Island"] = {Pos = Vector3.new(74.030, 9.530, 2705.230), Look = Vector3.new(-0.000, -0.000, -1.000)},
+    ["Kohana"] = {Pos = Vector3.new(-668.732, 3.000, 681.580), Look = Vector3.new(0.889, -0.000, 0.458)},
+    ["Lost Isle"] = {Pos = Vector3.new(-3804.105, 2.344, -904.653), Look = Vector3.new(-0.901, -0.000, 0.433)},
+    ["Sacred Temple"] = {Pos = Vector3.new(1461.815, -22.125, -670.234), Look = Vector3.new(-0.990, -0.000, 0.143)},
+    ["Second Enchant Altar"] = {Pos = Vector3.new(1479.587, 128.295, -604.224), Look = Vector3.new(-0.298, 0.000, -0.955)},
+    ["Sisyphus Statue"] = {Pos = Vector3.new(-3743.745, -135.074, -1007.554), Look = Vector3.new(0.310, 0.000, 0.951)},
+    ["Treasure Room"] = {Pos = Vector3.new(-3598.440, -281.274, -1645.855), Look = Vector3.new(-0.065, 0.000, -0.998)},
+    ["Tropical Island"] = {Pos = Vector3.new(-2162.920, 2.825, 3638.445), Look = Vector3.new(0.381, -0.000, 0.925)},
+    ["Underground Cellar"] = {Pos = Vector3.new(2118.417, -91.448, -733.800), Look = Vector3.new(0.854, 0.000, 0.521)},
+    ["Volcano"] = {Pos = Vector3.new(-605.121, 19.516, 160.010), Look = Vector3.new(0.854, 0.000, 0.520)},
+}
+
 local Settings = { 
     SecretEnabled = false, 
     RubyEnabled = false, 
@@ -545,6 +581,37 @@ end
 
 CreateTab("Server Info", Page_SessionStats, true)
 CreateTab("Fhising", Page_Fhising)
+
+local Page_Teleport = CreatePage("Teleport")
+
+
+
+local TeleportGrid = Instance.new("UIGridLayout", Page_Teleport)
+TeleportGrid.CellSize = UDim2.new(0.5, -3, 0, 30)
+TeleportGrid.CellPadding = UDim2.new(0, 5, 0, 5)
+
+CreateTab("Teleport", Page_Teleport)
+-- Populate Teleport Buttons
+local sortedAreas = {}
+for name, _ in pairs(FishingAreas) do table.insert(sortedAreas, name) end
+table.sort(sortedAreas)
+
+for _, name in ipairs(sortedAreas) do
+    local data = FishingAreas[name]
+    local TpBtn = Instance.new("TextButton", Page_Teleport)
+    TpBtn.BackgroundColor3 = Theme.Content
+    TpBtn.Font = Enum.Font.GothamBold
+    TpBtn.Text = name
+    TpBtn.TextColor3 = Theme.TextPrimary
+    TpBtn.TextSize = 11
+    Instance.new("UICorner", TpBtn).CornerRadius = UDim.new(0, 6)
+    AddStroke(TpBtn, Theme.Border, 1)
+    
+    TpBtn.MouseButton1Click:Connect(function()
+        TeleportToLookAt(data.Pos, data.Look)
+    end)
+end
+
 CreateTab("Notification", Page_Webhook)
 CreateTab("Admin Boost", Page_AdminBoost)
 CreateTab("List Player", Page_Tag)
@@ -1011,6 +1078,39 @@ CreateToggle(Page_Setting, "Walk On Water", false, function(state)
 end)
 
 -- SETTING FEATURES
+-- 0. Coordinate Grabber
+local CoordInput = CreateInput(Page_Setting, "Coordinates will appear here", "", function(v) end)
+local GrabBtn = Instance.new("TextButton", Page_Setting)
+GrabBtn.BackgroundColor3 = Theme.Accent
+GrabBtn.Size = UDim2.new(1, -5, 0, 30)
+GrabBtn.Font = Enum.Font.GothamBold
+GrabBtn.Text = "GET CURRENT COORDINATES"
+GrabBtn.TextColor3 = Color3.new(1, 1, 1)
+GrabBtn.TextSize = 12
+Instance.new("UICorner", GrabBtn).CornerRadius = UDim.new(0, 6)
+
+GrabBtn.MouseButton1Click:Connect(function()
+    local char = Players.LocalPlayer.Character
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    local cam = workspace.CurrentCamera
+    
+    if hrp and cam then
+        local pos = hrp.Position
+        local look = cam.CFrame.LookVector
+        
+        local posStr = string.format("Vector3.new(%.3f, %.3f, %.3f)", pos.X, pos.Y, pos.Z)
+        local lookStr = string.format("Vector3.new(%.3f, %.3f, %.3f)", look.X, look.Y, look.Z)
+        
+        local fullStr = string.format('["New Location"] = {Pos = %s, Look = %s},', posStr, lookStr)
+        
+        CoordInput.Text = fullStr
+        pcall(function() setclipboard(fullStr) end) 
+        ShowNotification("Coords --> Input Box!", false)
+    else
+        ShowNotification("Character not found!", true)
+    end
+end)
+
 -- 1. Remove Fish Notification Pop-up
 local DisableNotificationConnection = nil
 CreateToggle(Page_Setting, "Remove Fish Notification Pop-up", "DisablePopups", function(state)
