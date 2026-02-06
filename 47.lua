@@ -109,7 +109,9 @@ local Settings = {
     ForeignDetection = false,
     SpoilerName = true,
     PingMonitor = false,
-    AutoExecute = false
+    AutoExecute = false,
+    NoAnimation = false,
+    RemoveVFX = false
 }
 
 -- Anti-AFK (Always On)
@@ -543,7 +545,6 @@ CreateTab("Server Info", Page_SessionStats, true)
 CreateTab("Fhising", Page_Fhising)
 CreateTab("Notification", Page_Webhook)
 CreateTab("Admin Boost", Page_AdminBoost)
--- CreateTab("Webhook", Page_Url) -- Removed
 CreateTab("List Player", Page_Tag)
 -- SETTING TAB
 Page_Setting = Instance.new("ScrollingFrame", ContentContainer)
@@ -552,9 +553,9 @@ Instance.new("UIListLayout", Page_Setting).Padding = UDim.new(0, 5)
 CreateTab("Setting", Page_Setting)
 CreateTab("Save Config", Page_Save) 
 
+local ToggleRegistry = {}
 
-
-local function CreateToggle(parent, text, default, callback, validationFunc)
+local function CreateToggle(parent, text, settingKey, callback, validationFunc)
     local Frame = Instance.new("Frame", parent)
     Frame.BackgroundColor3 = Theme.Content
     Frame.BackgroundTransparency = 0
@@ -567,6 +568,8 @@ local function CreateToggle(parent, text, default, callback, validationFunc)
     Label.BackgroundTransparency = 1; Label.Position = UDim2.new(0, 10, 0, 0); Label.Size = UDim2.new(0, 180, 1, 0)
     Label.Font = Enum.Font.GothamBold; Label.Text = text; Label.TextColor3 = Theme.TextPrimary; Label.TextSize = 12; Label.TextXAlignment = "Left"
     
+    local default = Settings[settingKey] or false
+    
     local Switch = Instance.new("TextButton", Frame)
     Switch.BackgroundColor3 = default and Theme.Success or Theme.Input
     Switch.BackgroundTransparency = 0; Switch.Position = UDim2.new(1, -45, 0.5, -10); Switch.Size = UDim2.new(0, 36, 0, 20); Switch.Text = ""
@@ -577,17 +580,30 @@ local function CreateToggle(parent, text, default, callback, validationFunc)
     Circle.Position = default and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8); Circle.Size = UDim2.new(0, 16, 0, 16)
     Instance.new("UICorner", Circle).CornerRadius = UDim.new(1, 0)
     
-    Switch.MouseButton1Click:Connect(function()
-        local n = not (Switch.BackgroundColor3 == Theme.Success)
-        if n and validationFunc and not validationFunc() then ShowNotification("Webhook Empty!", true) return end
-        
-        local targetColor = n and Theme.Success or Theme.Input
-        local targetPos = n and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8)
+    local function UpdateUI(state)
+        local targetColor = state and Theme.Success or Theme.Input
+        local targetPos = state and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8)
         
         TweenService:Create(Switch, TweenInfo.new(0.2), {BackgroundColor3 = targetColor}):Play()
         Circle:TweenPosition(targetPos, "Out", "Sine", 0.15, true)
+    end
+    
+    ToggleRegistry[settingKey] = function(val)
+        UpdateUI(val)
+        if callback then callback(val) end
+    end
+
+    Switch.MouseButton1Click:Connect(function()
+        local n = not (Switch.BackgroundColor3 == Theme.Success) -- Toggle based on visual state
+        if n and validationFunc and not validationFunc() then ShowNotification("Webhook Empty!", true) return end
         
-        callback(n); ShowNotification(text .. (n and " Enabled" or " Disabled"))
+        -- Update Settings
+        Settings[settingKey] = n
+        
+        UpdateUI(n)
+        if callback then callback(n) end
+        
+        ShowNotification(text .. (n and " Enabled" or " Disabled"))
     end)
 end
 
@@ -1069,7 +1085,7 @@ table.insert(Connections, Players.LocalPlayer.CharacterAdded:Connect(function(ne
     end
 end))
 
-CreateToggle(Page_Setting, "No Animation", false, function(state)
+CreateToggle(Page_Setting, "No Animation", "NoAnimation", function(state)
     isNoAnimationActive = state
     if state then
         DisableAnimations()
@@ -1085,7 +1101,7 @@ local VFXControllerModule = require(ReplicatedStorage.Controllers.VFXController)
 local originalVFXHandle = VFXControllerModule.Handle
 local isVFXDisabled = false
 
-CreateToggle(Page_Setting, "Remove Skin Effect", false, function(state)
+CreateToggle(Page_Setting, "Remove Skin Effect", "RemoveVFX", function(state)
     isVFXDisabled = state
     if state then
         VFXControllerModule.Handle = function(...) end
@@ -1224,11 +1240,12 @@ local function LoadConfig(configName)
             for k, v in pairs(data.Settings) do
                 if Settings[k] ~= nil then
                     Settings[k] = v
+                    -- Trigger UI update and callback if registered
+                    if ToggleRegistry[k] then
+                        ToggleRegistry[k](v)
+                    end
                 end
             end
-            -- Note: Toggles won't visually update automatically unless we track their UI elements
-            -- Ideally we should refresh the toggle UIs here, but for now we load the values.
-            -- Since AutoExecute is critical, we check it explicitly if needed.
         end
 
         ShowNotification("Config Loaded!", false)
@@ -1701,11 +1718,27 @@ BtnViewWebhook.MouseButton1Click:Connect(function()
 end)
 
 -- Move Toggles to View_Notif
-CreateToggle(View_Notif, "Secret Fish Caught", Settings.SecretEnabled, function(v) Settings.SecretEnabled = v end, function() return Current_Webhook_Fish ~= "" end)
-CreateToggle(View_Notif, "Ruby Gemstone", Settings.RubyEnabled, function(v) Settings.RubyEnabled = v end, function() return Current_Webhook_Fish ~= "" end)
-CreateToggle(View_Notif, "Notif Cave Crystal", Settings.CaveCrystalEnabled, function(v) Settings.CaveCrystalEnabled = v end, function() return Current_Webhook_Fish ~= "" end)
-CreateToggle(View_Notif, "Evolved Enchant Stone", Settings.EvolvedEnabled, function(v) Settings.EvolvedEnabled = v end, function() return Current_Webhook_Fish ~= "" end)
-CreateToggle(View_Notif, "Mutation Crystalized (Legendary)", Settings.MutationCrystalized, function(v) Settings.MutationCrystalized = v end, function() return Current_Webhook_Fish ~= "" end)
+-- Move Toggles to View_Notif
+CreateToggle(View_Notif, "Secret Fish Caught", "SecretEnabled", function(v) Settings.SecretEnabled = v end, function() return Current_Webhook_Fish ~= "" end)
+CreateToggle(View_Notif, "Ruby Gemstone", "RubyEnabled", function(v) Settings.RubyEnabled = v end, function() return Current_Webhook_Fish ~= "" end)
+CreateToggle(View_Notif, "Notif Cave Crystal", "CaveCrystalEnabled", function(v) Settings.CaveCrystalEnabled = v end, function() return Current_Webhook_Fish ~= "" end)
+CreateToggle(View_Notif, "Evolved Enchant Stone", "EvolvedEnabled", function(v) Settings.EvolvedEnabled = v end, function() return Current_Webhook_Fish ~= "" end)
+CreateToggle(View_Notif, "Mutation Crystalized (Legendary)", "MutationCrystalized", function(v) Settings.MutationCrystalized = v end, function() return Current_Webhook_Fish ~= "" end)
+
+-- Move Webhook Inputs to View_Webhook
+local TestAllBtn = Instance.new("TextButton", View_Webhook)
+-- ... (skipping unchanged lines) ...
+
+-- (Skipping down to Page_AdminBoost Toggles at 1835)
+-- Wait, replace_file_content works on contiguous blocks.
+-- Logic Check: Lines 1721-1725 are separate from 1835-1840.
+-- I should use multi_replace for non-contiguous, or just two replaces.
+-- I'll do 1721 first.
+CreateToggle(View_Notif, "Secret Fish Caught", "SecretEnabled", function(v) Settings.SecretEnabled = v end, function() return Current_Webhook_Fish ~= "" end)
+CreateToggle(View_Notif, "Ruby Gemstone", "RubyEnabled", function(v) Settings.RubyEnabled = v end, function() return Current_Webhook_Fish ~= "" end)
+CreateToggle(View_Notif, "Notif Cave Crystal", "CaveCrystalEnabled", function(v) Settings.CaveCrystalEnabled = v end, function() return Current_Webhook_Fish ~= "" end)
+CreateToggle(View_Notif, "Evolved Enchant Stone", "EvolvedEnabled", function(v) Settings.EvolvedEnabled = v end, function() return Current_Webhook_Fish ~= "" end)
+CreateToggle(View_Notif, "Mutation Crystalized (Legendary)", "MutationCrystalized", function(v) Settings.MutationCrystalized = v end, function() return Current_Webhook_Fish ~= "" end)
 
 -- Move Webhook Inputs to View_Webhook
 local TestAllBtn = Instance.new("TextButton", View_Webhook)
@@ -1815,12 +1848,12 @@ end)
 local SpacerAdmin = Instance.new("Frame", Page_AdminBoost)
 SpacerAdmin.BackgroundTransparency = 1; SpacerAdmin.Size = UDim2.new(1,0,0,0)
 
-CreateToggle(Page_AdminBoost, "Deteksi Player Asing", Settings.ForeignDetection, function(v) Settings.ForeignDetection = v end, function() return Current_Webhook_Admin ~= "" end)
-CreateToggle(Page_AdminBoost, "Hide Player Name (Spoiler)", Settings.SpoilerName, function(v) Settings.SpoilerName = v end, nil)
-CreateToggle(Page_AdminBoost, "Lag Detector (Ping > 500ms)", Settings.PingMonitor, function(v) Settings.PingMonitor = v end, function() return Current_Webhook_Admin ~= "" end)
-CreateToggle(Page_AdminBoost, "Player Leave Server", Settings.LeaveEnabled, function(v) Settings.LeaveEnabled = v end, function() return Current_Webhook_Leave ~= "" end)
-CreateToggle(Page_AdminBoost, "Player Not On Server (30 minutes)", Settings.PlayerNonPSAuto, function(v) Settings.PlayerNonPSAuto = v end, function() return Current_Webhook_List ~= "" end)
-CreateToggle(Page_Setting, "Auto Execute on Server Hop", Settings.AutoExecute, function(v) Settings.AutoExecute = v end)
+CreateToggle(Page_AdminBoost, "Deteksi Player Asing", "ForeignDetection", function(v) Settings.ForeignDetection = v end, function() return Current_Webhook_Admin ~= "" end)
+CreateToggle(Page_AdminBoost, "Hide Player Name (Spoiler)", "SpoilerName", function(v) Settings.SpoilerName = v end, nil)
+CreateToggle(Page_AdminBoost, "Lag Detector (Ping > 500ms)", "PingMonitor", function(v) Settings.PingMonitor = v end, function() return Current_Webhook_Admin ~= "" end)
+CreateToggle(Page_AdminBoost, "Player Leave Server", "LeaveEnabled", function(v) Settings.LeaveEnabled = v end, function() return Current_Webhook_Leave ~= "" end)
+CreateToggle(Page_AdminBoost, "Player Not On Server (30 minutes)", "PlayerNonPSAuto", function(v) Settings.PlayerNonPSAuto = v end, function() return Current_Webhook_List ~= "" end)
+CreateToggle(Page_Setting, "Auto Execute on Server Hop", "AutoExecute", function(v) Settings.AutoExecute = v end)
 
 local LastPingAlert = 0
 task.spawn(function()
