@@ -134,6 +134,7 @@ local FishingAreas = {
     ["Underground Cellar"] = {Pos = Vector3.new(2118.417, -91.448, -733.800), Look = Vector3.new(0.854, 0.000, 0.521)},
     ["Volcano"] = {Pos = Vector3.new(-552.797, 21.174, 186.940), Look = Vector3.new(-0.251, -0.534, -0.808)},
     ["Volcanic Cavern"] = {Pos = Vector3.new(1249.005, 82.830, -10224.920), Look = Vector3.new(-0.649, -0.666, 0.368)},
+    ["Heartfelt Island"] = {Pos = Vector3.new(1107.128, 23.193, 2701.930), Look = Vector3.new(0.705, -0.000, -0.709)},
 }
 
 local Settings = { 
