@@ -110,9 +110,18 @@ local function SendWebhook(data, category)
     local descriptionText = "" 
     local contentMsg = ""
     
-    local pName = Settings.SpoilerName and ("||`" .. data.Player .. "`||") or ("`" .. data.Player .. "`") 
+    local pName = data.Player 
+    if Settings.SpoilerName and pName then
+        pName = "||`" .. pName .. "`||"
+    elseif pName then
+        pName = "`" .. pName .. "`"
+    end
 
-    if category == "SECRET" then
+    if category == "STARTUP" then
+        embedTitle = "Script Executed!"
+        embedColor = 5763719
+        descriptionText = "The XAL Headless Script is now active on **" .. Players.LocalPlayer.Name .. "**'s client.\nAuto Click, Anti-AFK, and Webhooks are monitoring..."
+    elseif category == "SECRET" then
         embedTitle = "Secret Caught!"
         embedColor = 3447003
         local lines = { "⚓ Fish: " .. data.Item }
@@ -283,6 +292,12 @@ table.insert(Connections, Players.PlayerRemoving:Connect(function(p)
     if not ScriptActive then return end
     task.spawn(function() SendWebhook({ Player = p.Name }, "LEAVE") end) 
 end))
+
+-- Send Startup Notification
+task.spawn(function()
+    task.wait(2) -- Wait for game to fully load just in case
+    SendWebhook({}, "STARTUP")
+end)
 
 if getgenv then
     getgenv().XAL_StopHeadless = function()
