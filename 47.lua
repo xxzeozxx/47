@@ -9,9 +9,10 @@ local Settings = {
     SecretEnabled = true, 
     RubyEnabled = true,   
     MutationCrystalized = true,
-    CaveCrystalEnabled = true,
     EvolvedEnabled = true,
     LeaveEnabled = true,
+    PingMonitor = true,
+    AutoReconnect = true, -- Auto rejoin kalau disconnect/kicked
     
     -- Menyembunyikan nama pemain di Webhook?
     SpoilerName = false 
@@ -42,7 +43,7 @@ local SecretList = {
     "Ancient Lochness Monster", "Talon Serpent", "Hacker Shark", "ElRetro Gran Maja",
     "Strawberry Choc Megalodon", "Krampus Shark", "Emerald Winter Whale",
     "Winter Frost Shark", "Icebreaker Whale", "Leviathan", "Pirate Megalodon", "Viridis Lurker",
-    "Cursed Kraken", "Ancient Magma Whale",
+    "Cursed Kraken", "Ancient Magma Whale", "Cosmic Mutant Shark",
 }
 local StoneList = { "Ruby" }
 
@@ -99,7 +100,6 @@ local function SendWebhook(data, category)
     if category == "STONE" and not Settings.RubyEnabled then return end
     if category == "EVOLVED" and not Settings.EvolvedEnabled then return end 
     if category == "CRYSTALIZED" and not Settings.MutationCrystalized then return end 
-    if category == "CAVECRYSTAL" and not Settings.CaveCrystalEnabled then return end 
     if category == "LEAVE" and not Settings.LeaveEnabled then return end 
 
     local TargetURL = (category == "LEAVE") and Settings.WebhookUrl_Leave or Settings.WebhookUrl_Fish
@@ -121,6 +121,16 @@ local function SendWebhook(data, category)
         embedTitle = "Script Executed!"
         embedColor = 5763719
         descriptionText = "The XAL Headless Script is now active on **" .. Players.LocalPlayer.Name .. "**'s client.\nAuto Click, Anti-AFK, and Webhooks are monitoring..."
+    elseif category == "DISCONNECT" then
+        embedTitle = "Server Disconnected!"
+        embedColor = 16711680
+        contentMsg = "⚠️ **Attempting Auto-Reconnect...**"
+        descriptionText = "```\nReason: " .. (data.KickMsg or "Client Closed") .. "\n```\nPlayer: " .. pName
+    elseif category == "HIGHPING" then
+        embedTitle = "Server Lag Alert"
+        embedColor = 16776960
+        contentMsg = "⚠️ **HIGH PING DETECTED!**"
+        descriptionText = "```\nCurrent Ping: " .. data.Ping .. " ms\n```\nPlayer: " .. pName
     elseif category == "SECRET" then
         embedTitle = "Secret Caught!"
         embedColor = 3447003
@@ -145,10 +155,6 @@ local function SendWebhook(data, category)
         embedColor = 3407871
         local lines = { "💎 Fish: " .. data.Item, "✨ Mutation: Crystalized", "⚖️ Weight: " .. data.Weight }
         descriptionText = "Player: " .. pName .. "\n\n```\n" .. table.concat(lines, "\n") .. "\n```"
-    elseif category == "CAVECRYSTAL" then
-        embedTitle = "💎 Cave Crystal Event!"
-        embedColor = 16776960
-        descriptionText = "Information\n" .. data.ListText
     elseif category == "LEAVE" then
         embedTitle = data.Player .. " Left the server."
         embedColor = 16711680
@@ -292,6 +298,91 @@ table.insert(Connections, Players.PlayerRemoving:Connect(function(p)
     if not ScriptActive then return end
     task.spawn(function() SendWebhook({ Player = p.Name }, "LEAVE") end) 
 end))
+
+-- 5. Ping Monitor
+task.spawn(function()
+    local LastPingAlert = 0
+    while ScriptActive do
+        task.wait(5)
+        if Settings.PingMonitor and ScriptActive then
+            local success, ping = pcall(function() return game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue() end)
+            if success and ping > 500 then
+                 -- Mencegah spam webhook, kirim notifikasi paling cepat setiap 60 detik
+                 if tick() - LastPingAlert > 60 then
+                     LastPingAlert = tick()
+                     SendWebhook({ Player = Players.LocalPlayer.Name, Ping = math.floor(ping) }, "HIGHPING")
+                 end
+            end
+        end
+    end
+end)
+
+-- 6. Auto Reconnect & Auto Execute
+local CoreGui = game:GetService("CoreGui")
+local TeleportService = game:GetService("TeleportService")
+local GuiService = game:GetService("GuiService")
+
+task.spawn(function()
+    if Settings.AutoReconnect then
+        local function triggerReconnect(kickMsg)
+            if not ScriptActive then return end
+            print("XAL: Disconnected! Auto reconnecting in 5 seconds... (" .. tostring(kickMsg) .. ")")
+            
+            SendWebhook({Player = Players.LocalPlayer.Name, KickMsg = kickMsg or "Unknown"}, "DISCONNECT")
+            
+            -- Queue script to execute upon joining
+            local queue_on_teleport = queue_on_teleport or (syn and syn.queue_on_teleport) or (fluxus and fluxus.queue_on_teleport) or (request and request.queue_on_teleport)
+            if queue_on_teleport then
+                pcall(function()
+                    queue_on_teleport([[
+                        task.wait(5)
+                        local paths = {"XAL CLOUD/FishIt/xal-no-gui.lua", "xal-no-gui.lua", "FishIt/xal-no-gui.lua"}
+                        local code = nil
+                        for _, p in ipairs(paths) do
+                            local s, c = pcall(function() return readfile(p) end)
+                            if s and c then code = c; break end
+                        end
+                        if code then
+                            loadstring(code)()
+                        else
+                            warn("XAL AutoExecute: Path xal-no-gui.lua not found!")
+                        end
+                    ]])
+                end)
+            end
+            
+            task.wait(5)
+            pcall(function()
+                if #Players:GetPlayers() <= 1 then
+                    TeleportService:Teleport(game.PlaceId, Players.LocalPlayer)
+                else
+                    TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, Players.LocalPlayer)
+                end
+            end)
+        end
+
+        -- Deteksi melalui GuiService Error Prompt (Biasanya muncul saat Kick/Banned/Disconnect)
+        local conn = GuiService.ErrorMessageChanged:Connect(function(msg)
+            triggerReconnect(msg)
+        end)
+        table.insert(Connections, conn)
+        
+        -- Deteksi khusus prompt Roblox GUI fallback
+        local promptGui = CoreGui:FindFirstChild("RobloxPromptGui")
+        if promptGui then
+            local promptOverlay = promptGui:FindFirstChild("promptOverlay", true)
+            if promptOverlay then
+                local conn2 = promptOverlay.DescendantAdded:Connect(function(child)
+                    if child.Name == "ErrorTitle" or child.Name == "ErrorMessage" then
+                        task.wait(0.5)
+                        triggerReconnect(child.Text)
+                    end
+                end)
+                table.insert(Connections, conn2)
+            end
+        end
+    end
+end)
 
 -- Send Startup Notification
 task.spawn(function()
