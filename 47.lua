@@ -28,17 +28,7 @@ local SafeName = generateRandomName()
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (gethui and function(g) g.Parent = gethui() end) or function(g) g.Parent = CoreGui end
 local FishingController = require(ReplicatedStorage.Controllers.FishingController)
 
-task.spawn(function()
-    while ScriptActive do
-        task.wait(5)
-        local success, err = pcall(function()
-            local core = game:GetService("CoreGui")
-            if core:FindFirstChild("DarkDetex") or core:FindFirstChild("RemoteSpy") or core:FindFirstChild("TurtleSpy") then
-
-            end
-        end)
-    end
-end)
+-- Anti-cheat scanner removed to avoid leaving execution traces.
 
 if getgenv and getgenv().XAL_Stop then
     pcall(getgenv().XAL_Stop)
@@ -113,9 +103,33 @@ local function TeleportToLookAt(position, lookVector)
     local hrp = Character:WaitForChild("HumanoidRootPart", 5)
     
     if hrp and typeof(position) == "Vector3" and typeof(lookVector) == "Vector3" then
-        local targetCFrame = CFrame.new(position, position + lookVector)
-        hrp.CFrame = targetCFrame * CFrame.new(0, 3, 0)
-        ShowNotification("Teleported!", false)
+        local targetCFrame = CFrame.new(position, position + lookVector) * CFrame.new(0, 3, 0)
+        
+        -- Bypass Anti-Cheat dengan TweenService (tidak instan)
+        local distance = (hrp.Position - targetCFrame.Position).Magnitude
+        local speed = 150 -- Kecepatan teleport (studs per detik)
+        local tweenTime = distance / speed
+        
+        -- Batasi waktu tween maksimum agar tidak terlalu lama
+        if tweenTime < 0.5 then tweenTime = 0.5 end
+        if tweenTime > 15 then tweenTime = 15 end
+        
+        local tweenInfo = TweenInfo.new(tweenTime, Enum.EasingStyle.Linear, Enum.EasingDirection.Out)
+        local tween = TweenService:Create(hrp, tweenInfo, {CFrame = targetCFrame})
+        
+        -- Nonaktifkan gravitasi sementara agar tidak jatuh saat tween
+        local bv = Instance.new("BodyVelocity")
+        bv.Velocity = Vector3.new(0, 0, 0)
+        bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+        bv.Parent = hrp
+        
+        tween:Play()
+        ShowNotification("Teleporting safely...", false)
+        
+        tween.Completed:Connect(function()
+            if bv then bv:Destroy() end
+            ShowNotification("Teleported!", false)
+        end)
     else
         ShowNotification("Invalid TP Data", true)
     end
@@ -921,8 +935,16 @@ CreateToggle(Page_Fhising, "Auto Click Fishing", false, function(val)
         if clickEffect then clickEffect.Enabled = false end
         task.spawn(function()
             while AutoShakeEnabled and ScriptActive do
-                pcall(function() FishingController:RequestFishingMinigameClick() end)
-                task.wait(0.1)
+                -- Bypass Anti-Cheat AutoClicker dengan menambahkan delay dan parameter click yang tidak konstan
+                local randomDelay = math.random(80, 150) / 1000 -- delay 0.08 s/d 0.15 detik
+                
+                -- Beberapa game mendeteksi posisi klik layar statis (Vector2/Vector3.new(0,0,0))
+                -- Jika FishingController menerima parameter, kita bisa tambahkan. Jika tidak, delay acak sudah cukup membantu.
+                local success, err = pcall(function() 
+                    FishingController:RequestFishingMinigameClick() 
+                end)
+                
+                task.wait(randomDelay)
             end
         end)
     elseif clickEffect then
@@ -1035,16 +1057,23 @@ local WaterPlatform = nil
 local WalkConnection = nil
 
 task.spawn(function()
+    -- Bypass Anti-Cheat: Menghapus VirtualUser karena sering dideteksi sebagai bot input
+    local bb = game:GetService("VirtualUser")
+    local uis = game:GetService("UserInputService")
+    
     local afkConn = Players.LocalPlayer.Idled:Connect(function()
-        VirtualUser:CaptureController()
-        VirtualUser:ClickButton2(Vector2.new())
+        -- Alih-alih menggunakan VirtualUser, kita cukup memalsukan input keyboard/mouse secara tak terlihat
+        -- atau menonaktifkan event Idled jika executor mendukung.
+        pcall(function()
+            uis.InputBegan:Fire(Enum.KeyCode.F20, false)
+        end)
     end)
     table.insert(Connections, afkConn)
 
     for i, v in pairs(getconnections(Players.LocalPlayer.Idled)) do
         if v.Disable then v:Disable() end
     end
-    print("XAL: Anti-AFK Active")
+    print("XAL: Anti-AFK Secure Active")
 end)
 
 CreateToggle(Page_Setting, "Walk On Water", false, function(state)
