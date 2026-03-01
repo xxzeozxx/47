@@ -15,7 +15,16 @@ local ScriptActive = true
 local Connections = {}
 local ScreenGui
 local VirtualUser = game:GetService("VirtualUser")
-local SafeName = "RobloxReplicatedService"
+local function generateRandomName()
+    local chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    local result = ""
+    for i = 1, math.random(15, 25) do
+        local r = math.random(1, #chars)
+        result = result .. string.sub(chars, r, r)
+    end
+    return result
+end
+local SafeName = generateRandomName()
 local ProtectGui = protectgui or (syn and syn.protect_gui) or (gethui and function(g) g.Parent = gethui() end) or function(g) g.Parent = CoreGui end
 local FishingController = require(ReplicatedStorage.Controllers.FishingController)
 
@@ -105,7 +114,7 @@ local function TeleportToLookAt(position, lookVector)
     
     if hrp and typeof(position) == "Vector3" and typeof(lookVector) == "Vector3" then
         local targetCFrame = CFrame.new(position, position + lookVector)
-        hrp.CFrame = targetCFrame * CFrame.new(0, 3, 0) -- Slight height offset
+        hrp.CFrame = targetCFrame * CFrame.new(0, 3, 0)
         ShowNotification("Teleported!", false)
     else
         ShowNotification("Invalid TP Data", true)
@@ -155,7 +164,6 @@ local Settings = {
     EvolvedEnabled = false
 }
 
--- Anti-AFK (Always On)
 task.spawn(function()
     local VirtualUser = game:GetService("VirtualUser")
     Players.LocalPlayer.Idled:Connect(function()
@@ -163,7 +171,6 @@ task.spawn(function()
         VirtualUser:ClickButton2(Vector2.new())
     end)
     
-    -- Additional check using getconnections if available
     pcall(function()
         for i,v in pairs(getconnections(Players.LocalPlayer.Idled)) do
             v:Disable()
@@ -172,7 +179,6 @@ task.spawn(function()
     print("XAL: Anti-AFK Active")
 end)
 
--- Queue On Teleport Logic
 task.spawn(function()
     local success, err = pcall(function()
         local queueTeleport = queue_on_teleport or (syn and syn.queue_on_teleport) or (fluxus and fluxus.queue_on_teleport) or (request and request.queue_on_teleport)
@@ -239,11 +245,15 @@ end
 
 UpdateTagData() 
 
-local oldUI = CoreGui:FindFirstChild(SafeName) or CoreGui:FindFirstChild("XAL_System")
+if getgenv and getgenv().XAL_UI then
+    pcall(function() getgenv().XAL_UI:Destroy() end)
+end
+local oldUI = CoreGui:FindFirstChild("XAL_System")
 if oldUI then oldUI:Destroy() task.wait(0.1) end
 
 ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = SafeName
+if getgenv then getgenv().XAL_UI = ScreenGui end
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
 pcall(function() 
@@ -425,7 +435,7 @@ local MenuContainer = Instance.new("Frame", Sidebar)
 MenuContainer.BackgroundTransparency = 1
 MenuContainer.Size = UDim2.new(1, 0, 1, -25) 
 MenuContainer.Position = UDim2.new(0, 0, 0, 5)
-MenuContainer.ZIndex = 5 -- Boost ZIndex
+MenuContainer.ZIndex = 5
 
 local SideLayout = Instance.new("UIListLayout", MenuContainer)
 SideLayout.Padding = UDim.new(0, 2) 
@@ -435,7 +445,7 @@ Instance.new("UIPadding", MenuContainer).PaddingTop = UDim.new(0, 8)
 
 local ContentContainer = Instance.new("Frame", MainFrame)
 ContentContainer.BackgroundTransparency = 1
-ContentContainer.Position = UDim2.new(0, 120, 0, 42) -- Increased offset
+ContentContainer.Position = UDim2.new(0, 120, 0, 42)
 ContentContainer.Size = UDim2.new(1, -120, 1, -48) 
 ContentContainer.ZIndex = 3
 
@@ -447,7 +457,7 @@ ModalFrame.Position = UDim2.new(0.5, -120, 0.5, -55)
 ModalFrame.BorderSizePixel = 0
 ModalFrame.ZIndex = 100 
 ModalFrame.Visible = false
-ModalFrame.Active = false  -- Changed to false to prevent blocking input
+ModalFrame.Active = false
 Instance.new("UICorner", ModalFrame).CornerRadius = UDim.new(0, 8)
 AddStroke(ModalFrame, Theme.Border, 1)
 
@@ -518,14 +528,13 @@ local function CreatePage(name)
 end
 
 local Page_Webhook = CreatePage("Webhook")
-local Page_Config = nil -- Deprecated
+local Page_Config = nil
 local Page_Save = CreatePage("SaveConfig") 
--- local Page_Url = CreatePage("UrlWebhook") -- Removed
 local Page_Tag = CreatePage("TagDiscord")
 local Page_AdminBoost = CreatePage("AdminBoost")
 local Page_SessionStats = CreatePage("SessionStats")
 local Page_Fhising = CreatePage("Fhising")
-local Page_Setting -- Forward declaration for Setting Tab
+local Page_Setting
 
 Page_Webhook.Visible = false
 
@@ -551,7 +560,6 @@ local function CreateTab(name, target, isDefault)
     Instance.new("UICorner", Indicator).CornerRadius = UDim.new(1, 0)
 
     TabBtn.MouseButton1Click:Connect(function()
-        -- Geneic Page Hiding (Hide all pages in ContentContainer)
         for _, page in pairs(ContentContainer:GetChildren()) do
             if page:IsA("ScrollingFrame") or page:IsA("Frame") then
                 page.Visible = false
@@ -599,7 +607,6 @@ TeleportList.SortOrder = Enum.SortOrder.LayoutOrder
 
 CreateTab("Teleport", Page_Teleport)
 
--- Helper for independent buttons inside Row
 local function CreateTeleportButton(parent, text, pos, size, callback)
     local Frame = Instance.new("Frame", parent)
     Frame.BackgroundColor3 = Theme.Content
@@ -624,14 +631,13 @@ local function CreateTeleportButton(parent, text, pos, size, callback)
     return Btn
 end
 
--- Populate Teleport Buttons (Manual Row Mode)
 local sortedAreas = {}
 for name, _ in pairs(FishingAreas) do table.insert(sortedAreas, name) end
 table.sort(sortedAreas)
 
 for i = 1, #sortedAreas, 2 do
     local name1 = sortedAreas[i]
-    local name2 = sortedAreas[i+1] -- Can be nil
+    local name2 = sortedAreas[i+1]
     
     local Row = Instance.new("Frame", Page_Teleport)
     Row.BackgroundTransparency = 1
@@ -653,7 +659,6 @@ end
 CreateTab("Notification", Page_Webhook)
 CreateTab("Admin Boost", Page_AdminBoost)
 CreateTab("List Player", Page_Tag)
--- SETTING TAB
 Page_Setting = Instance.new("ScrollingFrame", ContentContainer)
 Page_Setting.Name = "Page_Setting"; Page_Setting.Size = UDim2.new(1, 0, 1, 0); Page_Setting.BackgroundTransparency = 1; Page_Setting.Visible = false; Page_Setting.ScrollBarThickness = 2
 Instance.new("UIListLayout", Page_Setting).Padding = UDim.new(0, 5)
@@ -701,10 +706,9 @@ local function CreateToggle(parent, text, settingKey, callback, validationFunc)
     end
 
     Switch.MouseButton1Click:Connect(function()
-        local n = not (Switch.BackgroundColor3 == Theme.Success) -- Toggle based on visual state
+        local n = not (Switch.BackgroundColor3 == Theme.Success)
         if n and validationFunc and not validationFunc() then ShowNotification("Webhook Empty!", true) return end
         
-        -- Update Settings
         Settings[settingKey] = n
         
         UpdateUI(n)
@@ -836,7 +840,6 @@ local function CreateDropdown(parent, labelText, options, default, callback)
     end)
 end
 
--- Feature Helpers
 local RPath = {"Packages", "_Index", "sleitnick_net@0.2.0", "net"}
 local function GetRemote(name)
     local curr = ReplicatedStorage
@@ -847,7 +850,6 @@ local function GetRemote(name)
     return curr:FindFirstChild(name)
 end
 
--- Helper for Detector Stuck
 local function getFishCount()
     local playerGui = Players.LocalPlayer:WaitForChild("PlayerGui", 5)
     if not playerGui then return 0 end
@@ -899,7 +901,6 @@ CreateToggle(Page_Fhising, "Detector Stuck (15s)", false, function(state)
                          StuckTimer = 0
                          LastFishCount = getFishCount()
                          
-                         -- Re-Equip Rod (Assuming slot 1)
                          local RE_Equip = GetRemote("RE/EquipToolFromHotbar")
                          if RE_Equip then pcall(function() RE_Equip:FireServer(1) end) end
                     end
@@ -929,7 +930,6 @@ CreateToggle(Page_Fhising, "Auto Click Fishing", false, function(val)
     end
 end)
 
--- AUTO SELL FISH
 local AutoSellEnabled = false
 local SellMethod = "Count" 
 local SellValue = 600 
@@ -965,7 +965,6 @@ CreateToggle(Page_Fhising, "Auto Sell (10m / 600 Items)", false, function(state)
     end
 end)
 
--- AUTO BUY WEATHER
 local WeatherList = { "Wind", "Cloudy", "Storm" }
 local SimpleWeatherEnabled = false
 
@@ -988,7 +987,6 @@ CreateToggle(Page_Fhising, "Enable Auto Buy Weather", false, function(state)
     end
 end)
 
--- AUTO SPAWN TOTEM
 local TotemList = {"Luck Totem", "Mutation Totem", "Shiny Totem"}
 local SelectedTotem = "Luck Totem"
 local TotemMap = {["Luck Totem"]=1, ["Mutation Totem"]=2, ["Shiny Totem"]=3}
@@ -1032,13 +1030,10 @@ CreateToggle(Page_Fhising, "Enable Auto Spawn Totem", false, function(state)
     end
 end)
 
--- WALK ON WATER
 local WalkOnWaterEnabled = false
 local WaterPlatform = nil
 local WalkConnection = nil
 
--- ANTI AFK
--- Anti AFK (Always Active)
 task.spawn(function()
     local afkConn = Players.LocalPlayer.Idled:Connect(function()
         VirtualUser:CaptureController()
@@ -1115,10 +1110,6 @@ CreateToggle(Page_Setting, "Walk On Water", false, function(state)
     end
 end)
 
--- SETTING FEATURES
--- SETTING FEATURES
-
--- 1. Remove Fish Notification Pop-up
 local DisableNotificationConnection = nil
 CreateToggle(Page_Setting, "Remove Fish Notification Pop-up", "DisablePopups", function(state)
     local PlayerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
@@ -1149,7 +1140,6 @@ CreateToggle(Page_Setting, "Remove Fish Notification Pop-up", "DisablePopups", f
     end
 end)
 
--- 2. No Animation
 local isNoAnimationActive = false
 local originalAnimator = nil
 local originalAnimateScript = nil
@@ -1205,7 +1195,6 @@ CreateToggle(Page_Setting, "No Animation", "NoAnimation", function(state)
     end
 end)
 
--- 3. Remove Skin Effect
 local VFXControllerModule = require(ReplicatedStorage.Controllers.VFXController)
 local originalVFXHandle = VFXControllerModule.Handle
 local isVFXDisabled = false
@@ -1230,7 +1219,6 @@ local BulkContainer = nil
 local BulkInput = nil
 local ImportBtnWrapper = nil
 local ImportBtn = nil
--- End Moved
 
 
 local SaveInput = CreateInput(Page_Save, "Config Name", "", function(v) end, 36)
@@ -1349,7 +1337,6 @@ local function LoadConfig(configName)
             for k, v in pairs(data.Settings) do
                 if Settings[k] ~= nil then
                     Settings[k] = v
-                    -- Trigger UI update and callback if registered
                     if ToggleRegistry[k] then
                         ToggleRegistry[k](v)
                     end
@@ -1369,8 +1356,6 @@ SaveBtn.MouseButton1Click:Connect(function()
     local name = SaveInput.Text
     if name == "" then ShowNotification("Name cannot be empty!", true) return end
     
-    -- 1. Sanitize Settings (Whitelist Approach)
-    -- Only save known valid keys to avoid garbage data from corruption
     local validKeys = {
         "SecretEnabled", "RubyEnabled", "MutationCrystalized", "CaveCrystalEnabled", 
         "LeaveEnabled", "PlayerNonPSAuto", "ForeignDetection", "SpoilerName", 
@@ -1385,17 +1370,15 @@ SaveBtn.MouseButton1Click:Connect(function()
         end
     end
 
-    -- 2. Sanitize Players (Force Array 1-20)
     local cleanPlayers = {}
     for i = 1, 20 do
         if TagList[i] and type(TagList[i]) == "table" then
             cleanPlayers[i] = {tostring(TagList[i][1] or ""), tostring(TagList[i][2] or "")}
         else
-            cleanPlayers[i] = {"", ""} -- Default empty
+            cleanPlayers[i] = {"", ""}
         end
     end
 
-    -- 3. Sanitize Webhooks (Strings only)
     local cleanWebhooks = {
         Fish = tostring(Current_Webhook_Fish or ""),
         Leave = tostring(Current_Webhook_Leave or ""),
@@ -1442,7 +1425,6 @@ DeleteBtn.MouseButton1Click:Connect(function()
     RefreshConfigList()
 end)
 
--- AUTOLOAD FEATURE
 local AutoLoadToggle = nil
 local AutoLoadConfigPath = "XAL_Configs/autoload.json"
 local currentAutoLoad = nil
@@ -1507,16 +1489,14 @@ AutoLoadBtn.MouseButton1Click:Connect(function()
     UpdateAutoLoadBtnState()
 end)
 
--- Hook into selection change to update button status
 local originalRefresh = RefreshConfigList
 RefreshConfigList = function()
-    -- Clear list
     for _, v in pairs(ConfigList:GetChildren()) do
         if v:IsA("TextButton") then v:Destroy() end
     end
     selectedConfig = nil
     LoadBtn.BackgroundColor3 = Theme.Input
-    UpdateAutoLoadBtnState() -- Reset state
+    UpdateAutoLoadBtnState()
     
     local success, files = pcall(function() return listfiles("XAL_Configs") end)
     if not success or not files then files = {} end
@@ -1524,7 +1504,6 @@ RefreshConfigList = function()
     for _, file in pairs(files) do
         local name = file:match("([^/\\]+)$") or file
         
-        -- Skip autoload.json
         if name ~= "autoload.json" then 
             name = name:gsub("%.json$", "")
             
@@ -1543,7 +1522,7 @@ RefreshConfigList = function()
                 Btn.TextColor3 = Color3.new(1, 1, 1)
                 selectedConfig = name
                 LoadBtn.BackgroundColor3 = Theme.Success 
-                UpdateAutoLoadBtnState() -- Update AutoLoad button
+                UpdateAutoLoadBtnState()
             end)
         end
     end
@@ -1645,8 +1624,6 @@ local function TestWebhook(url, name)
 end
 
 
-
--- Page_Tag Sub-Menu Setup
 local SubTabContainer = Instance.new("Frame", Page_Tag)
 SubTabContainer.BackgroundColor3 = Theme.Content
 SubTabContainer.BackgroundTransparency = 1
@@ -1709,7 +1686,6 @@ BtnImportList.MouseButton1Click:Connect(function()
     BtnImportList.TextColor3 = Color3.new(1,1,1)
 end)
 
--- Move Bulk/Import Content to View_Import
 local BulkLabel = Instance.new("TextLabel", View_Import)
 BulkLabel.BackgroundTransparency = 1; BulkLabel.Size = UDim2.new(1, 0, 0, 20)
 BulkLabel.Font = Enum.Font.GothamBold; BulkLabel.Text = "Bulk Input (Format: User:DiscordID)"; BulkLabel.TextColor3 = Theme.TextSecondary; BulkLabel.TextSize = 11; BulkLabel.TextXAlignment = "Left"
@@ -1757,7 +1733,6 @@ ImportBtn.MouseButton1Click:Connect(function()
 end)
 
 
--- Generate List Player Rows in View_List
 for i = 1, 20 do
     local rowData = TagList[i]
     local Row = Instance.new("Frame", View_List)
@@ -1791,7 +1766,6 @@ for i = 1, 20 do
     UserInput.FocusLost:Connect(Sync); IDInput.FocusLost:Connect(Sync)
 end
 
--- Force Update UI from loaded data
 if #TagList > 0 then
     for i = 1, 20 do
         if TagUIElements[i] and TagList[i] then
@@ -1801,7 +1775,6 @@ if #TagList > 0 then
     end
 end
 
--- Page_Webhook Sub-Menu Setup
 local NotifSubContainer = Instance.new("Frame", Page_Webhook)
 NotifSubContainer.BackgroundColor3 = Theme.Content
 NotifSubContainer.BackgroundTransparency = 1
@@ -1864,18 +1837,14 @@ BtnViewWebhook.MouseButton1Click:Connect(function()
     BtnViewWebhook.TextColor3 = Color3.new(1,1,1)
 end)
 
--- Move Toggles to View_Notif
--- Move Toggles to View_Notif
 CreateToggle(View_Notif, "Secret Fish Caught", "SecretEnabled", function(v) Settings.SecretEnabled = v end, function() return Current_Webhook_Fish ~= "" end)
 CreateToggle(View_Notif, "Ruby Gemstone", "RubyEnabled", function(v) Settings.RubyEnabled = v end, function() return Current_Webhook_Fish ~= "" end)
 CreateToggle(View_Notif, "Notif Cave Crystal", "CaveCrystalEnabled", function(v) Settings.CaveCrystalEnabled = v end, function() return Current_Webhook_Fish ~= "" end)
 CreateToggle(View_Notif, "Evolved Enchant Stone", "EvolvedEnabled", function(v) Settings.EvolvedEnabled = v end, function() return Current_Webhook_Fish ~= "" end)
 CreateToggle(View_Notif, "Mutation Crystalized (Legendary)", "MutationCrystalized", function(v) Settings.MutationCrystalized = v end, function() return Current_Webhook_Fish ~= "" end)
 
--- Move Webhook Inputs to View_Webhook
 local TestAllBtn = Instance.new("TextButton", View_Webhook)
 
--- Move Webhook Inputs to View_Webhook
 local TestAllBtn = Instance.new("TextButton", View_Webhook)
 TestAllBtn.BackgroundColor3 = Theme.Accent
 TestAllBtn.Size = UDim2.new(1, -5, 0, 30)
@@ -2545,7 +2514,6 @@ task.spawn(StartInventoryWatcher)
 
 print("✅ XAL System Session v1.4 Loaded!")
 
--- Trigger Autoload
 task.delay(1, function()
     local autoPref = GetAutoLoadPref()
     if autoPref and autoPref.enabled and autoPref.config then
